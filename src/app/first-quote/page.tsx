@@ -1,18 +1,20 @@
 "use client";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDesignerId } from "@/lib/useDesignerId";
 import template from "@/data/template.json";
 import type { Template, QuoteLine } from "@/lib/types";
 import { buildFirstQuote } from "@/lib/buildQuote";
-import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun } from "@/lib/pricing";
+import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
+import { setPendingQuote } from "@/lib/quoteStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import Plan2D from "@/components/Plan2D";
+import PrintDocument from "@/components/PrintDocument";
 
 const TPL = template as unknown as Template;
 
-// Vision-extracted sample plans (Phase-2 demo). run = (W + H − 900).
 const DEMOS: Record<string, { bhk: string; run: number }> = {
   "3BHK plan (Kitchen 10'×10'2\")": { bhk: "3 BHK", run: feetInchesToMm(10, 0) + feetInchesToMm(10, 2) - 900 },
   "2BHK Floor Plan C (7'10\"²)": { bhk: "2 BHK", run: estimateKitchenRun(feetInchesToMm(7, 10), feetInchesToMm(7, 10)) },
@@ -22,6 +24,7 @@ const DEMOS: Record<string, { bhk: string; run: number }> = {
 
 export default function FirstQuotePage() {
   const designerId = useDesignerId();
+  const router = useRouter();
   const [client, setClient] = useState("");
   const [mobile, setMobile] = useState("");
   const [location, setLocation] = useState("Pune");
@@ -30,61 +33,88 @@ export default function FirstQuotePage() {
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [king, setKing] = useState(false);
   const [lines, setLines] = useState<QuoteLine[]>([]);
-  const [tab, setTab] = useState<"quote" | "plan">("quote");
-  const [saved, setSaved] = useState<string>("");
+  const [tab, setTab] = useState<"quote" | "plan" | "pdf">("quote");
+  const [status, setStatus] = useState("");
+  const [preview, setPreview] = useState<string>("");
 
   const rooms = BHK_ROOMS[bhk] ?? [];
   const optionals = useMemo(
-    () =>
-      rooms.flatMap((r) =>
-        (r === "Parents Bedroom" ? TPL["Guest Bedroom"] : TPL[r] ?? [])
-          .filter((it) => !it.def)
-          .map((it) => ({ room: r, p: it.p }))
-      ),
+    () => rooms.flatMap((r) => (r === "Parents Bedroom" ? TPL["Guest Bedroom"] : TPL[r] ?? []).filter((it) => !it.def).map((it) => ({ room: r, p: it.p }))),
     [bhk] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  function build() {
-    setLines(buildFirstQuote({ bhk, kitchenRun: run, enabledOptional: enabled, kingMaster: king }));
-    setSaved("");
+  function build(nextBhk = bhk, nextRun = run) {
+    setLines(buildFirstQuote({ bhk: nextBhk, kitchenRun: nextRun, enabledOptional: enabled, kingMaster: king }));
+    setStatus("");
   }
+
+  async function onUpload(file?: File) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = String(e.target?.result || "");
+      setPreview(dataUrl.startsWith("data:image") ? dataUrl : "");
+      const base64 = dataUrl.split(",")[1];
+      if (!base64) return;
+      setStatus("Reading floor plan…");
+      try {
+        const res = await fetch("/api/extract-plan", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ imageBase64: base64, mediaType: file.type || "image/jpeg" }),
+        });
+        if (res.status === 501) { setStatus("Vision not configured — set the config, or enter the kitchen run manually."); return; }
+        if (!res.ok) { setStatus("Couldn't read the plan — enter the kitchen run manually."); return; }
+        const d = await res.json();
+        if (d.bhk) setBhk(d.bhk);
+        if (d.kitchenRun) setRun(d.kitchenRun);
+        const detected = (d.rooms || []).map((r: any) => r.name).filter(Boolean).join(", ");
+        setStatus(`Detected ${d.bhk}, kitchen run ${d.kitchenRun} mm. Rooms: ${detected}. Confirm & Build.`);
+        setTimeout(() => build(d.bhk, d.kitchenRun), 0);
+      } catch {
+        setStatus("Extraction failed — enter the kitchen run manually.");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   function applyDemo(k: string) {
     const d = DEMOS[k];
     if (!d) return;
-    setBhk(d.bhk);
-    setRun(d.run);
-    setTimeout(build, 0);
-  }
-  async function save() {
-    if (!lines.length) return;
-    const tpv = lines.reduce((s, l) => (l.wc === "MO-01" ? s + l.amount : s + l.amount), 0);
-    try {
-      await saveQuote({
-        designer_id: designerId,
-        client_name: client || "—",
-        mobile,
-        location,
-        bhk,
-        kitchen_run: run,
-        lines,
-        tpv,
-      });
-      setSaved("Saved ✓");
-    } catch {
-      setSaved("Save failed (configure Supabase).");
-    }
+    setBhk(d.bhk); setRun(d.run);
+    setTimeout(() => build(d.bhk, d.run), 0);
   }
 
+  async function save() {
+    if (!lines.length) return;
+    const tpv = computeTotals(lines).tpv;
+    try {
+      await saveQuote({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv });
+      setStatus("Saved ✓");
+    } catch { setStatus("Save failed — configure Supabase."); }
+  }
+
+  function reviseInBuilder() {
+    if (!lines.length) return;
+    setPendingQuote({ client, mobile, location, bhk, kitchenRun: run, lines });
+    router.push("/builder");
+  }
+
+  const meta = { client, mobile, location, bhk };
+
   return (
-    <div className="grid grid-cols-1 gap-0 lg:grid-cols-[330px_1fr]">
+    <div className="grid grid-cols-1 lg:grid-cols-[330px_1fr]">
       <aside className="no-print space-y-3 border-r border-brand-line bg-white p-4">
-        <Section title="1 · Read from plan">
-          <label className="text-xs text-neutral-600">Auto-fill from a plan (Phase 2 demo)</label>
+        <Section title="1 · Floor plan">
+          <label className="block cursor-pointer rounded-lg border-2 border-dashed border-brand-light bg-orange-50/40 p-3 text-center text-xs text-neutral-600">
+            {preview ? "Change floor plan" : "Upload floor plan (image)"}
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => onUpload(e.target.files?.[0])} />
+          </label>
+          {preview && <img src={preview} alt="plan" className="max-h-40 w-full rounded object-contain" />}
+          <label className="text-xs text-neutral-600">…or auto-fill a sample plan</label>
           <select className="input" onChange={(e) => applyDemo(e.target.value)} defaultValue="">
             <option value="">— pick —</option>
-            {Object.keys(DEMOS).map((k) => (
-              <option key={k} value={k}>{k}</option>
-            ))}
+            {Object.keys(DEMOS).map((k) => <option key={k} value={k}>{k}</option>)}
           </select>
         </Section>
         <Section title="2 · Project">
@@ -115,30 +145,34 @@ export default function FirstQuotePage() {
             <input type="checkbox" checked={king} onChange={(e) => setKing(e.target.checked)} /> Master: King bed
           </label>
         </Section>
-        <button onClick={build} className="btn">Build first quotation ▸</button>
-        <button onClick={save} className="btn-sec">Save quotation</button>
-        <button onClick={() => window.print()} className="btn-sec">Print / PDF</button>
-        {saved && <p className="text-center text-xs text-green-700">{saved}</p>}
+        <button onClick={() => build()} className="btn">Build first quotation ▸</button>
+        <button onClick={save} className="btn-sec">Save</button>
+        <button onClick={reviseInBuilder} className="btn-sec">Revise in Full Builder →</button>
+        {status && <p className="rounded bg-brand-band px-2 py-1 text-center text-[11px] text-neutral-700">{status}</p>}
       </aside>
 
       <section className="p-5">
         <div className="no-print mb-3 flex gap-2">
           <Tab on={tab === "quote"} onClick={() => setTab("quote")}>Quotation</Tab>
           <Tab on={tab === "plan"} onClick={() => setTab("plan")}>2D plan</Tab>
+          <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
+          {tab === "pdf" && <button onClick={() => window.print()} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">Print / Save PDF</button>}
         </div>
         {lines.length === 0 ? (
-          <p className="text-neutral-500">Pick a plan or set the project, then Build.</p>
+          <p className="text-neutral-500">Upload a plan (or pick a sample), set the project, then Build.</p>
         ) : tab === "quote" ? (
           <>
             <div className="mb-3 flex items-end justify-between border-b-2 border-brand pb-2">
-              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">First-draft quotation</div></div>
+              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">First-draft quotation · {inr(computeTotals(lines).tpv)}</div></div>
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
             <QuoteTable lines={lines} onChange={setLines} />
             <Totals lines={lines} />
           </>
-        ) : (
+        ) : tab === "plan" ? (
           <Plan2D lines={lines} />
+        ) : (
+          <PrintDocument meta={meta} lines={lines} />
         )}
       </section>
     </div>
@@ -154,9 +188,5 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 function Tab({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button onClick={onClick} className={`rounded-t-lg border border-b-0 border-brand-line px-4 py-2 text-sm font-semibold ${on ? "bg-white text-brand" : "bg-brand-band text-neutral-600"}`}>
-      {children}
-    </button>
-  );
+  return <button onClick={onClick} className={`rounded-t-lg border border-b-0 border-brand-line px-4 py-2 text-sm font-semibold ${on ? "bg-white text-brand" : "bg-brand-band text-neutral-600"}`}>{children}</button>;
 }

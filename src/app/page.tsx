@@ -1,15 +1,26 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDesignerId } from "@/lib/useDesignerId";
 import { listQuotes } from "@/lib/supabase";
+import { setPendingQuote } from "@/lib/quoteStore";
 import { inr } from "@/lib/pricing";
 import type { Quote } from "@/lib/types";
 
 export default function Dashboard() {
   const designerId = useDesignerId();
+  const router = useRouter();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
+
+  function revise(q: Quote) {
+    setPendingQuote({
+      client: q.client_name, mobile: q.mobile || "", location: q.location || "Pune",
+      bhk: q.bhk || "3 BHK", kitchenRun: q.kitchen_run || 0, lines: q.lines, fromId: q.id,
+    });
+    router.push("/builder");
+  }
 
   useEffect(() => {
     listQuotes(designerId)
@@ -57,6 +68,7 @@ export default function Dashboard() {
               <th className="px-3 py-2">Config</th>
               <th className="px-3 py-2 text-right">TPV</th>
               <th className="px-3 py-2">Date</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -66,6 +78,11 @@ export default function Dashboard() {
                 <td className="px-3 py-2">{q.bhk}</td>
                 <td className="px-3 py-2 text-right">{inr(q.tpv)}</td>
                 <td className="px-3 py-2">{q.created_at?.slice(0, 10)}</td>
+                <td className="px-3 py-2 text-right">
+                  <button onClick={() => revise(q)} className="rounded border border-brand px-2 py-1 text-xs font-semibold text-brand hover:bg-brand-band">
+                    Revise →
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
