@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+body { background: #f6f1ea; color: #2b2118; }
+
+@layer components {
+  .input {
+    @apply w-full rounded-md border border-brand-line px-2 py-1.5 text-[13px];
+  }
+  .btn {
+    @apply mt-2 w-full rounded-lg bg-brand px-3 py-2.5 text-sm font-bold text-white;
+  }
+  .btn-sec {
+    @apply mt-2 w-full rounded-lg border border-brand bg-white px-3 py-2.5 text-sm font-bold text-brand;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+}

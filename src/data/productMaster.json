@@ -1,0 +1,479 @@
+[
+ {
+  "product": "Base Cabinets- Tandems",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 16000,
+  "details": "Hardware:Tandems(BOSE , Hettich) with Single Rail",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Wall Cabinets",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2065,
+  "unit": null,
+  "details": "BWP Ply with Laminate Finish, \nCarcass: BWP Ply\nDoors: HDHMR",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Base Cabinets",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2035,
+  "unit": null,
+  "details": "BWP Ply with Laminate Finish, G Profile Handles\nCarcass: BWP Ply\nDoors: HDHMR",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Wall Cabinets- Glass Profile Shutters",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 8000,
+  "details": "Glass Shutter with Tinted Black/Brown Glass and Black Powder Coated Profile",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Dry Balcony- Base Storage",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 1855,
+  "unit": null,
+  "details": "BWP Ply And Laminate Finish \nConsidered with Base Storage",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Dry Balcony- Overhead Storage",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2035,
+  "unit": null,
+  "details": "Considered with Overhead Storage",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Tall Unit",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2065,
+  "unit": null,
+  "details": "BWP Ply And Laminate Finish \nConsidered with Internal Shelf",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Tall Pantry Unit",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2065,
+  "unit": null,
+  "details": "Considered with Internal Storage unit",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Appliance Unit",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 22000,
+  "details": "BWP Ply And Laminate Finish\nConsidered with internal shelf storage",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Breakfast Counter",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 20000,
+  "details": "As Per Design",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Platform Creation",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 18500,
+  "details": "On Actuals \nConsidered with Granite",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Granite Change",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 35000,
+  "details": "On Actuals",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Civil & Plumbing Changes",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 30000,
+  "details": "On Actuals",
+  "rooms": "Kitchen,Other"
+ },
+ {
+  "product": "Storage Unit",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2580,
+  "unit": null,
+  "details": "Considered Tall Storage with Internal Shelf",
+  "rooms": "Kitchen,Bedroom"
+ },
+ {
+  "product": "Loft (Frame with Shutter)",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 1910,
+  "unit": null,
+  "details": "Lofts with Push to Open Mechanism or Knobs",
+  "rooms": "Bedroom,Kitchen"
+ },
+ {
+  "product": "Premium Shutter Wardrobe",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2065,
+  "unit": null,
+  "details": "Shutter Wardrobe with Laminate Finish and  Soft close mechanism , Standard Handles, 1 Drawer per Door \nCarcass: BWP Ply\nDoors: HDHMR",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Headboard",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 12000,
+  "details": "2 Feet Cushion Headboard",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Queen size Bed- Hydraulic Storage",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 54000,
+  "details": "Hydraulic Storage(Bose/EBCO)",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Dressing Unit- Mirror",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 5000,
+  "details": "5 MM thick edge finishied Mirror, Rectangular",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Workstation",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 12000,
+  "details": "BWP  Ply and Laminate Finish \nConsidered with Wall Mounted workstation with Drawers",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Dressing Unit- Base Storage",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 7500,
+  "details": "Base Storage with Single Drawer",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Workstation- Overhead",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 12500,
+  "details": "BWP Ply And Laminate Finish \nConsidered with Overhead Storage",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "King size Bed- Hydraulic Storage",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 64000,
+  "details": "Hydraulic Storage(Bose/EBCO)",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Dressing Unit- Back Storage",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 1240,
+  "unit": null,
+  "details": "Back Storage, 8 MM Deep",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Side Table",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 7500,
+  "details": "Base Storage with Single Drawer",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Bed",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 15000,
+  "details": "As Per Design",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Window Seatout",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 20000,
+  "details": "As Per Design",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Single Bed",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 40000,
+  "details": "Box Storage",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Study Unit",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 1650,
+  "unit": null,
+  "details": "BWP Ply And Laminate Finish \nConsidered with Drawer with Wall mounted Workstation and Overhead Storage",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Sofa Cum Bed",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 55000,
+  "details": "As Per Design",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Walk-In Premium Shutter Wardrobe",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2580,
+  "unit": null,
+  "details": "Shutter Wardrobe with Laminate Finish and  Soft close mechanism , Standard Handles, 1 Drawer per Door \nCarcass: BWP Ply\nDoors: HDHMR",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Bay Window",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 24000,
+  "details": "As Per Design",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Murphy Bed",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 60000,
+  "details": "As Per Design",
+  "rooms": "Bedroom,Other"
+ },
+ {
+  "product": "Sliding Wardrobe",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2260,
+  "unit": null,
+  "details": "Shutter Wardrobe with Laminate Finish and  Soft close mechanism , Standard Handles, 1 Drawer per Door \nCarcass: BWP Ply\nDoors: HDHMR",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Day Bed",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 52500,
+  "details": "As Per Design",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "Sliding Mechanism",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 12000,
+  "details": "Sliders Mechanism for sliders (Bose/ Hettich)",
+  "rooms": "Bedroom"
+ },
+ {
+  "product": "TV Unit",
+  "wc": "NM-01",
+  "type": "Area",
+  "rate": 1265,
+  "unit": null,
+  "details": "As Per Design \n BWP Ply And Laminate Finish \n(Considered with Back Panelling and Base Storage)",
+  "rooms": "Living"
+ },
+ {
+  "product": "Mandir",
+  "wc": "NM-01",
+  "type": "Area",
+  "rate": 1890,
+  "unit": null,
+  "details": "As per Design- Considered with structure , pullout , Drawer, and base storage",
+  "rooms": "Living"
+ },
+ {
+  "product": "Console Unit/Shoe Rack",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 1910,
+  "unit": null,
+  "details": "Considered with Internal Shelf Sotrage",
+  "rooms": "Living"
+ },
+ {
+  "product": "Safety Door",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 39000,
+  "details": "As Per Design \nConsidered with Jali, Handle and Lock",
+  "rooms": "Living"
+ },
+ {
+  "product": "Foyer Unit",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 1910,
+  "unit": null,
+  "details": "Console unit/Shoe rack considered with internal shelf with seating \nBWP Ply with laminate Finish",
+  "rooms": "Living"
+ },
+ {
+  "product": "Sofa Back Wall Décor",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 15000,
+  "details": "As Per Design",
+  "rooms": "Living"
+ },
+ {
+  "product": "Crockery Unit",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 36500,
+  "details": "Glass Shutter with Tinted Black/Brown Glass and Black Powder Coated Profile",
+  "rooms": "Living,Kitchen"
+ },
+ {
+  "product": "Partition",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 20000,
+  "details": "As Per Design",
+  "rooms": "Living,Other,Kitchen"
+ },
+ {
+  "product": "Entrance Décor",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 20000,
+  "details": "As Per Design",
+  "rooms": "Living"
+ },
+ {
+  "product": "Foldable Dining",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 17000,
+  "details": "As Per Design",
+  "rooms": "Living"
+ },
+ {
+  "product": "Foyer Décor",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 15000,
+  "details": "As Per Design",
+  "rooms": "Living"
+ },
+ {
+  "product": "Bookshelf",
+  "wc": "MO-01",
+  "type": "Area",
+  "rate": 2065,
+  "unit": null,
+  "details": "BWP Ply And Laminate Finish \nConsidered open shelf bookshelf with glass profile shutter",
+  "rooms": "Living,Bedroom,Study"
+ },
+ {
+  "product": "False Ceiling (per room)",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 34500,
+  "details": "False Ceiling with Single Layer. Wiring and Panel Lights Inculded \nSheet: Saint Gobain\nFrame: Gyproc by Saint Gobain\nWires: Polycab\nLights: Polycab/Havells/Orient(Similar Brands)",
+  "rooms": "Other"
+ },
+ {
+  "product": "Vanity Unit",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 20000,
+  "details": "BWP Ply and Laminate finish \nConsidered with Base Storage \nCarcass: BWP Ply\nDoors: HDHMR",
+  "rooms": "Other"
+ },
+ {
+  "product": "Minimal False Ceiling (per room)",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 27000,
+  "details": "False Ceiling with Single Layer. Wiring and Panel Lights Inculded \nSheet: Saint Gobain\nFrame: Gyproc by Saint Gobain\nWires: Polycab\nLights: Polycab/Havells/Orient(Similar Brands)",
+  "rooms": "Other"
+ },
+ {
+  "product": "Painting",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 55000,
+  "details": "Asian Paints- Emulsion(26 Rs.Sq.ft)",
+  "rooms": "Other"
+ },
+ {
+  "product": "Electricals",
+  "wc": "NM-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 50000,
+  "details": "On Actuals \nConsidered 30 points Approx",
+  "rooms": "Other"
+ }
+]
