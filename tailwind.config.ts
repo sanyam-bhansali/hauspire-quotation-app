@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#6B4226", light: "#8B5E3C", band: "#EFE7DE", line: "#D9CFC4" },
+        brand: { DEFAULT: "#531220", light: "#7A2A3A", band: "#F3E9EC", line: "#E0CDD3" },
       },
     },
   },

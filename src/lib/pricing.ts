@@ -58,8 +58,8 @@ export function computeTotals(lines: QuoteLine[]): Totals {
   const tpv = subTotal - discount;
   const after = tpv - BOOKING_ADVANCE;
   const stages = [
-    { label: "Booking Advance (refundable 3 days)", amount: BOOKING_ADVANCE },
-    { label: "Design Advance (5%)", amount: Math.round(after * 0.05) },
+    { label: "Booking Advance (Fully Refundable for 3 days)", amount: BOOKING_ADVANCE },
+    { label: "Design First Draft (5%)", amount: Math.round(after * 0.05) },
     { label: "Design Closure (10%)", amount: Math.round(after * 0.1) },
     { label: "Material Procurement (40%)", amount: Math.round(after * 0.4) },
     { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4) },
