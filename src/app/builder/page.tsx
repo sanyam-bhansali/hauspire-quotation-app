@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useDesignerId } from "@/lib/useDesignerId";
 import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
 import { areaAmount, inr } from "@/lib/pricing";
@@ -15,7 +15,7 @@ const ROOMS = [
 ];
 
 export default function BuilderPage() {
-  const { user } = useUser();
+  const designerId = useDesignerId();
   const [client, setClient] = useState("");
   const [bhk, setBhk] = useState("3 BHK");
   const [lines, setLines] = useState<QuoteLine[]>([]);
@@ -46,7 +46,7 @@ export default function BuilderPage() {
     if (!lines.length) return;
     const tpv = lines.reduce((s, l) => s + l.amount, 0);
     try {
-      await saveQuote({ designer_id: user?.id ?? "anon", client_name: client || "—", mobile: "", location: "Pune", bhk, kitchen_run: 0, lines, tpv });
+      await saveQuote({ designer_id: designerId, client_name: client || "—", mobile: "", location: "Pune", bhk, kitchen_run: 0, lines, tpv });
       alert("Saved ✓");
     } catch {
       alert("Save failed — configure Supabase.");

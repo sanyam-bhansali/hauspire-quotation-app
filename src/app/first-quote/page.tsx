@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useDesignerId } from "@/lib/useDesignerId";
 import template from "@/data/template.json";
 import type { Template, QuoteLine } from "@/lib/types";
 import { buildFirstQuote } from "@/lib/buildQuote";
@@ -21,7 +21,7 @@ const DEMOS: Record<string, { bhk: string; run: number }> = {
 };
 
 export default function FirstQuotePage() {
-  const { user } = useUser();
+  const designerId = useDesignerId();
   const [client, setClient] = useState("");
   const [mobile, setMobile] = useState("");
   const [location, setLocation] = useState("Pune");
@@ -60,7 +60,7 @@ export default function FirstQuotePage() {
     const tpv = lines.reduce((s, l) => (l.wc === "MO-01" ? s + l.amount : s + l.amount), 0);
     try {
       await saveQuote({
-        designer_id: user?.id ?? "anon",
+        designer_id: designerId,
         client_name: client || "—",
         mobile,
         location,

@@ -1,29 +1,26 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useDesignerId } from "@/lib/useDesignerId";
 import { listQuotes } from "@/lib/supabase";
 import { inr } from "@/lib/pricing";
 import type { Quote } from "@/lib/types";
 
 export default function Dashboard() {
-  const { user } = useUser();
+  const designerId = useDesignerId();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
-    listQuotes(user.id)
+    listQuotes(designerId)
       .then(setQuotes)
       .catch(() => setQuotes([]))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [designerId]);
 
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <h1 className="text-2xl font-bold text-brand">
-        Welcome{user?.firstName ? `, ${user.firstName}` : ""}
-      </h1>
+      <h1 className="text-2xl font-bold text-brand">Welcome</h1>
       <p className="mt-1 text-sm text-neutral-600">
         Auto-build a first quotation from a floor plan, or open the full builder.
       </p>
