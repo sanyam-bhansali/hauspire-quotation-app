@@ -49,11 +49,28 @@ function parseDim(text: string): { w: number; h: number } | null {
   return { w, h };
 }
 
+// Render page 1 of a PDF to a canvas so OCR (which needs an image) can read it.
+async function pdfToCanvas(file: File): Promise<HTMLCanvasElement> {
+  const pdfjs: any = await import("pdfjs-dist");
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement("canvas");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
+  return canvas;
+}
+
 export async function ocrExtractPlan(file: File): Promise<PlanExtract | null> {
+  // Images go straight to OCR; PDFs are rasterized to an image first.
+  const input: File | HTMLCanvasElement = file.type.includes("pdf") ? await pdfToCanvas(file) : file;
   const worker = await Tesseract.createWorker("eng");
   let lines: string[] = [];
   try {
-    const { data } = await worker.recognize(file);
+    const { data } = await worker.recognize(input as any);
     lines = (data.lines || []).map((l: any) => l.text.trim()).filter(Boolean);
     if (!lines.length && data.text) lines = data.text.split("\n").map((s) => s.trim()).filter(Boolean);
   } finally {

@@ -106,9 +106,9 @@ export default function FirstQuotePage() {
     const base64 = dataUrl.split(",")[1];
     if (!base64) return;
 
-    // 1) Free in-browser OCR first (images only, no key, no cost).
-    if (file.type.startsWith("image")) {
-      setStatus("Reading floor plan (free OCR)…");
+    // 1) Free in-browser OCR first (images and PDFs, no key, no cost).
+    if (file.type.startsWith("image") || file.type.includes("pdf")) {
+      setStatus("Reading floor plan (free OCR)… first read downloads data, ~10s.");
       try {
         const d = await ocrExtractPlan(file);
         if (d && d.kitchenRun) { applyExtract(d, "free OCR"); return; }
