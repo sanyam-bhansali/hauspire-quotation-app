@@ -8,6 +8,7 @@ import { buildFirstQuote } from "@/lib/buildQuote";
 import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
 import { setPendingQuote } from "@/lib/quoteStore";
+import { ocrExtractPlan } from "@/lib/ocrPlan";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import Plan2D from "@/components/Plan2D";
@@ -68,41 +69,54 @@ export default function FirstQuotePage() {
     setStatus("");
   }
 
+  function applyExtract(d: any, source: string) {
+    if (d.bhk) setBhk(d.bhk);
+    if (d.kitchenRun) setRun(d.kitchenRun);
+    if (typeof d.bathrooms === "number") setBathrooms(d.bathrooms);
+    setHasBalcony(!!d.hasBalcony);
+    setHasStudy(!!d.hasStudy);
+    const dims: Record<string, { w: number; h: number }> = {};
+    (d.rooms || []).forEach((r: any) => { if (r.name) dims[r.name] = { w: r.widthMm || 0, h: r.depthMm || 0 }; });
+    setRoomDims(dims);
+    const conf = d.confidence ? ` · confidence: ${d.confidence}` : "";
+    setStatus(`Read via ${source}: ${d.bhk}, kitchen run ${d.kitchenRun} mm, ${d.bathrooms} bath${d.hasBalcony ? ", balcony" : ""}${d.hasStudy ? ", study" : ""}. Check §4 and Build.${conf}`);
+    setTimeout(() => build({ bhk: d.bhk, run: d.kitchenRun, bathrooms: d.bathrooms, hasBalcony: d.hasBalcony, hasStudy: d.hasStudy }), 0);
+  }
+
+  async function visionExtract(base64: string, mediaType: string) {
+    const res = await fetch("/api/extract-plan", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ imageBase64: base64, mediaType }),
+    });
+    if (res.status === 501) { setStatus("Free OCR couldn't read it and vision isn't configured — enter the kitchen run in §2 and counts in §4."); return; }
+    if (!res.ok) { setStatus("Couldn't read the plan — enter the kitchen run manually."); return; }
+    applyExtract(await res.json(), "vision");
+  }
+
   async function onUpload(file?: File) {
     if (!file) return;
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const dataUrl = String(e.target?.result || "");
-      setPreview(dataUrl.startsWith("data:image") ? dataUrl : "");
-      const base64 = dataUrl.split(",")[1];
-      if (!base64) return;
-      setStatus("Reading floor plan…");
+    const dataUrl: string = await new Promise((resolve) => {
+      const r = new FileReader();
+      r.onload = (e) => resolve(String(e.target?.result || ""));
+      r.readAsDataURL(file);
+    });
+    setPreview(dataUrl.startsWith("data:image") ? dataUrl : "");
+    const base64 = dataUrl.split(",")[1];
+    if (!base64) return;
+
+    // 1) Free in-browser OCR first (images only, no key, no cost).
+    if (file.type.startsWith("image")) {
+      setStatus("Reading floor plan (free OCR)…");
       try {
-        const res = await fetch("/api/extract-plan", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ imageBase64: base64, mediaType: file.type || "image/jpeg" }),
-        });
-        if (res.status === 501) { setStatus("Vision not configured — set the config, or enter the kitchen run manually."); return; }
-        if (!res.ok) { setStatus("Couldn't read the plan — enter the kitchen run manually."); return; }
-        const d = await res.json();
-        if (d.bhk) setBhk(d.bhk);
-        if (d.kitchenRun) setRun(d.kitchenRun);
-        if (typeof d.bathrooms === "number") setBathrooms(d.bathrooms);
-        setHasBalcony(!!d.hasBalcony);
-        setHasStudy(!!d.hasStudy);
-        const dims: Record<string, { w: number; h: number }> = {};
-        (d.rooms || []).forEach((r: any) => { if (r.name) dims[r.name] = { w: r.widthMm || 0, h: r.depthMm || 0 }; });
-        setRoomDims(dims);
-        const conf = d.confidence ? ` · read confidence: ${d.confidence}` : "";
-        setStatus(`Detected ${d.bhk}, kitchen run ${d.kitchenRun} mm, ${d.bathrooms} bath${d.hasBalcony ? ", balcony" : ""}${d.hasStudy ? ", study" : ""}. Check §4 and Build.${conf}`);
-        setTimeout(() => build({ bhk: d.bhk, run: d.kitchenRun, bathrooms: d.bathrooms, hasBalcony: d.hasBalcony, hasStudy: d.hasStudy }), 0);
-      } catch {
-        setStatus("Extraction failed — enter the kitchen run manually.");
-      }
-    };
-    reader.readAsDataURL(file);
+        const d = await ocrExtractPlan(file);
+        if (d && d.kitchenRun) { applyExtract(d, "free OCR"); return; }
+      } catch { /* fall through to vision */ }
+      setStatus("Free OCR couldn't read it clearly — trying vision…");
+    }
+    // 2) Fallback: vision model (needs ANTHROPIC_API_KEY), else manual.
+    await visionExtract(base64, file.type || "image/jpeg");
   }
 
   function applyDemo(k: string) {
