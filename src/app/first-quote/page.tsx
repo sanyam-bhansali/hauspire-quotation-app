@@ -83,15 +83,27 @@ export default function FirstQuotePage() {
     setTimeout(() => build({ bhk: d.bhk, run: d.kitchenRun, bathrooms: d.bathrooms, hasBalcony: d.hasBalcony, hasStudy: d.hasStudy }), 0);
   }
 
-  async function visionExtract(base64: string, mediaType: string) {
-    const res = await fetch("/api/extract-plan", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ imageBase64: base64, mediaType }),
-    });
-    if (res.status === 501) { setStatus("Free OCR couldn't read it and vision isn't configured — enter the kitchen run in §2 and counts in §4."); return; }
-    if (!res.ok) { setStatus("Couldn't read the plan — enter the kitchen run manually."); return; }
-    applyExtract(await res.json(), "vision");
+  // Returns "ok" (applied), "not_configured" (no key), or "error" (surfaced).
+  async function visionExtract(base64: string, mediaType: string): Promise<"ok" | "not_configured" | "error"> {
+    try {
+      const res = await fetch("/api/extract-plan", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mediaType }),
+      });
+      if (res.status === 501) return "not_configured";
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({} as any));
+        const detail = e.detail ? ` — ${String(e.detail).slice(0, 160)}` : "";
+        setStatus(`Claude read failed (${e.error || res.status})${detail}`);
+        return "error";
+      }
+      applyExtract(await res.json(), "Claude");
+      return "ok";
+    } catch (err: any) {
+      setStatus(`Network error calling Claude: ${String(err?.message || err)}`);
+      return "error";
+    }
   }
 
   async function onUpload(file?: File) {
@@ -106,17 +118,20 @@ export default function FirstQuotePage() {
     const base64 = dataUrl.split(",")[1];
     if (!base64) return;
 
-    // 1) Free in-browser OCR first (images and PDFs, no key, no cost).
+    // 1) Claude vision first (accurate). Uses ANTHROPIC_API_KEY on the server.
+    setStatus("Reading floor plan with Claude…");
+    const v = await visionExtract(base64, file.type || "image/jpeg");
+    if (v === "ok" || v === "error") return; // error status already shown
+
+    // 2) Only if Claude isn't configured: free in-browser OCR fallback.
     if (file.type.startsWith("image") || file.type.includes("pdf")) {
-      setStatus("Reading floor plan (free OCR)… first read downloads data, ~10s.");
+      setStatus("Claude not configured — trying free OCR…");
       try {
         const d = await ocrExtractPlan(file);
         if (d && d.kitchenRun) { applyExtract(d, "free OCR"); return; }
-      } catch { /* fall through to vision */ }
-      setStatus("Free OCR couldn't read it clearly — trying vision…");
+      } catch { /* fall through */ }
     }
-    // 2) Fallback: vision model (needs ANTHROPIC_API_KEY), else manual.
-    await visionExtract(base64, file.type || "image/jpeg");
+    setStatus("Claude not configured and OCR couldn't read it — set ANTHROPIC_API_KEY, or enter the kitchen run in §2 and counts in §4.");
   }
 
   function applyDemo(k: string) {
