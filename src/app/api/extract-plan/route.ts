@@ -6,7 +6,29 @@ export const maxDuration = 60;
 // Reads a floor plan with a vision model and returns structured room data.
 // Requires ANTHROPIC_API_KEY in the environment. Model is configurable via
 // ANTHROPIC_MODEL (defaults to a current vision-capable Claude).
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
+// Pick a model the account actually has: honor ANTHROPIC_MODEL, else ask the
+// API which models are available and prefer a Sonnet (good vision + value).
+async function resolveModel(key: string): Promise<string> {
+  if (process.env.ANTHROPIC_MODEL) return process.env.ANTHROPIC_MODEL;
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/models?limit=100", {
+      headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
+    });
+    if (r.ok) {
+      const j = await r.json();
+      const ids: string[] = (j.data || []).map((m: any) => m.id).filter(Boolean);
+      return (
+        ids.find((id) => id.includes("sonnet")) ||
+        ids.find((id) => id.includes("opus")) ||
+        ids[0] ||
+        "claude-3-5-sonnet-20241022"
+      );
+    }
+  } catch {
+    /* fall through */
+  }
+  return "claude-3-5-sonnet-20241022";
+}
 
 const PROMPT = `You are reading an architectural floor plan for an interior-design quotation in India.
 Extract the flat configuration and each room's printed dimensions (usually like 10'0"X10'2", feet and inches).
@@ -39,6 +61,8 @@ export async function POST(req: NextRequest) {
       ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
       : { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: imageBase64 } };
 
+    const model = await resolveModel(key);
+
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -47,7 +71,7 @@ export async function POST(req: NextRequest) {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         max_tokens: 1024,
         messages: [
           {
@@ -60,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     if (!resp.ok) {
       const t = await resp.text();
-      return NextResponse.json({ error: "vision_failed", detail: t }, { status: 502 });
+      return NextResponse.json({ error: "vision_failed", model, detail: t }, { status: 502 });
     }
     const data = await resp.json();
     const text: string = data?.content?.[0]?.text ?? "";
