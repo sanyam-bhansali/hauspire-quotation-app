@@ -32,6 +32,9 @@ export default function FirstQuotePage() {
   const [run, setRun] = useState(3960);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [king, setKing] = useState(false);
+  const [bathrooms, setBathrooms] = useState(2);
+  const [hasBalcony, setHasBalcony] = useState(false);
+  const [hasStudy, setHasStudy] = useState(false);
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
   const [lines, setLines] = useState<QuoteLine[]>([]);
@@ -45,8 +48,18 @@ export default function FirstQuotePage() {
     [bhk] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  function build(nextBhk = bhk, nextRun = run) {
-    setLines(buildFirstQuote({ bhk: nextBhk, kitchenRun: nextRun, enabledOptional: enabled, kingMaster: king }));
+  function build(o: { bhk?: string; run?: number; bathrooms?: number; hasBalcony?: boolean; hasStudy?: boolean } = {}) {
+    setLines(
+      buildFirstQuote({
+        bhk: o.bhk ?? bhk,
+        kitchenRun: o.run ?? run,
+        bathrooms: o.bathrooms ?? bathrooms,
+        hasBalcony: o.hasBalcony ?? hasBalcony,
+        hasStudy: o.hasStudy ?? hasStudy,
+        enabledOptional: enabled,
+        kingMaster: king,
+      })
+    );
     setStatus("");
   }
 
@@ -70,9 +83,12 @@ export default function FirstQuotePage() {
         const d = await res.json();
         if (d.bhk) setBhk(d.bhk);
         if (d.kitchenRun) setRun(d.kitchenRun);
-        const detected = (d.rooms || []).map((r: any) => r.name).filter(Boolean).join(", ");
-        setStatus(`Detected ${d.bhk}, kitchen run ${d.kitchenRun} mm. Rooms: ${detected}. Confirm & Build.`);
-        setTimeout(() => build(d.bhk, d.kitchenRun), 0);
+        if (typeof d.bathrooms === "number") setBathrooms(d.bathrooms);
+        setHasBalcony(!!d.hasBalcony);
+        setHasStudy(!!d.hasStudy);
+        const conf = d.confidence ? ` · read confidence: ${d.confidence}` : "";
+        setStatus(`Detected ${d.bhk}, kitchen run ${d.kitchenRun} mm, ${d.bathrooms} bath${d.hasBalcony ? ", balcony" : ""}${d.hasStudy ? ", study" : ""}. Check §4 and Build.${conf}`);
+        setTimeout(() => build({ bhk: d.bhk, run: d.kitchenRun, bathrooms: d.bathrooms, hasBalcony: d.hasBalcony, hasStudy: d.hasStudy }), 0);
       } catch {
         setStatus("Extraction failed — enter the kitchen run manually.");
       }
@@ -84,7 +100,7 @@ export default function FirstQuotePage() {
     const d = DEMOS[k];
     if (!d) return;
     setBhk(d.bhk); setRun(d.run);
-    setTimeout(() => build(d.bhk, d.run), 0);
+    setTimeout(() => build({ bhk: d.bhk, run: d.run }), 0);
   }
 
   async function save() {
@@ -145,6 +161,16 @@ export default function FirstQuotePage() {
           })}
           <label className="flex items-center gap-2 text-[12.5px]">
             <input type="checkbox" checked={king} onChange={(e) => setKing(e.target.checked)} /> Master: King bed
+          </label>
+        </Section>
+        <Section title="4 · Detected from plan — confirm">
+          <label className="text-xs text-neutral-600">Bathrooms (→ vanities)</label>
+          <input className="input" type="number" min={0} value={bathrooms} onChange={(e) => setBathrooms(Number(e.target.value) || 0)} />
+          <label className="flex items-center gap-2 text-[12.5px]">
+            <input type="checkbox" checked={hasBalcony} onChange={(e) => setHasBalcony(e.target.checked)} /> Dry balcony present
+          </label>
+          <label className="flex items-center gap-2 text-[12.5px]">
+            <input type="checkbox" checked={hasStudy} onChange={(e) => setHasStudy(e.target.checked)} /> Study / office room
           </label>
         </Section>
         <button onClick={() => build()} className="btn">Build first quotation ▸</button>

@@ -51,7 +51,8 @@
    "H": 600,
    "rate": 2580,
    "details": "Overhead utility storage for the dry balcony. BWP plywood with laminate finish.",
-   "def": false
+   "def": false,
+   "balcony": true
   }
  ],
  "Master Bedroom": [
@@ -281,7 +282,8 @@
    "H": 600,
    "rate": 2580,
    "details": "Bathroom vanity in moisture-resistant WPC / plywood with laminate finish and internal storage.",
-   "def": true
+   "def": true,
+   "perBath": true
   },
   {
    "p": "Painting",
@@ -290,6 +292,44 @@
    "amt": 55000,
    "details": "Complete home painting in Asian Paints. Priced by home size (3 / 4 / 5 BHK).",
    "def": true
+  }
+ ],
+ "Office / Study": [
+  {
+   "p": "Workstation",
+   "wc": "MO-01",
+   "kind": "unit",
+   "amt": 12000,
+   "det": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish.",
+   "def": true
+  },
+  {
+   "p": "Workstation- Overhead",
+   "wc": "MO-01",
+   "kind": "unit",
+   "amt": 15000,
+   "det": "Overhead storage shelves above the workstation. BWP plywood with laminate finish.",
+   "def": true
+  },
+  {
+   "p": "Loft (Frame with Shutter)",
+   "wc": "MO-01",
+   "kind": "fixed",
+   "W": 1500,
+   "H": 600,
+   "rate": 2065,
+   "det": "Overhead loft storage with framed shutters and push-to-open or knob operation.",
+   "def": false
+  },
+  {
+   "p": "Premium Shutter wardrobe",
+   "wc": "MO-01",
+   "kind": "fixed",
+   "W": 1500,
+   "H": 2100,
+   "rate": 2580,
+   "det": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish.",
+   "def": false
   }
  ]
 }

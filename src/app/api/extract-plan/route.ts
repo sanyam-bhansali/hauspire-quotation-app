@@ -11,9 +11,12 @@ const MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-latest";
 const PROMPT = `You are reading an architectural floor plan for an interior-design quotation in India.
 Extract the flat configuration and each room's printed dimensions (usually like 10'0"X10'2", feet and inches).
 Return ONLY strict minified JSON, no prose, in this exact shape:
-{"bhk":"1 BHK"|"2 BHK"|"3 BHK"|"4 BHK","kitchen":{"widthFt":number,"depthFt":number}|null,"rooms":[{"name":string,"widthFt":number,"depthFt":number}]}
+{"bhk":"1 BHK"|"2 BHK"|"3 BHK"|"4 BHK","kitchen":{"widthFt":number,"depthFt":number}|null,"bathrooms":number,"hasBalcony":boolean,"hasStudy":boolean,"confidence":"high"|"medium"|"low","rooms":[{"name":string,"widthFt":number,"depthFt":number}]}
 Rules:
-- bhk = number of bedrooms; if a Study/Office is a separate room, count it toward BHK.
+- bhk = number of bedrooms; if a Study/Office is a separate room, count it toward BHK and set hasStudy=true.
+- bathrooms = count of Toilet / Bathroom / W.C. rooms.
+- hasBalcony = true if any Balcony / Dry Balcony / Terrace / Dry Terrace is present.
+- confidence = how clearly the dimensions were printed and legible (low for handwritten/blurred).
 - name should be one of: Kitchen, Master Bedroom, Kids Bedroom, Guest Bedroom, Parents Bedroom, Living/Dining, Study, Toilet, Balcony, Foyer.
 - Convert any dimension to decimal feet (e.g. 10'6" -> 10.5). If a dimension is missing/unreadable use 0.
 - Include the kitchen both in "kitchen" and in "rooms".`;
@@ -74,7 +77,15 @@ export async function POST(req: NextRequest) {
       depthMm: ftToMm(r.depthFt || 0),
     }));
 
-    return NextResponse.json({ bhk: parsed.bhk || "3 BHK", kitchenRun, rooms });
+    return NextResponse.json({
+      bhk: parsed.bhk || "3 BHK",
+      kitchenRun,
+      bathrooms: Number(parsed.bathrooms) || 1,
+      hasBalcony: !!parsed.hasBalcony,
+      hasStudy: !!parsed.hasStudy,
+      confidence: parsed.confidence || "medium",
+      rooms,
+    });
   } catch (e: any) {
     return NextResponse.json({ error: "server_error", message: String(e?.message || e) }, { status: 500 });
   }

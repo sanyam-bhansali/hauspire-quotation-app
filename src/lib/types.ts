@@ -28,6 +28,8 @@ export interface TemplateItem {
   W?: number; // fixed width (mm)
   H?: number; // height (mm)
   amt?: number; // Unit amount (from ProductMaster)
+  perBath?: boolean; // multiply by number of bathrooms (e.g. Vanity)
+  balcony?: boolean; // include only when the plan has a balcony
 }
 
 export type Template = Record<string, TemplateItem[]>;
