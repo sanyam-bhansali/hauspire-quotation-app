@@ -94,7 +94,8 @@ export default function FirstQuotePage() {
       if (res.status === 501) return "not_configured";
       if (!res.ok) {
         const e = await res.json().catch(() => ({} as any));
-        const detail = e.detail ? ` — ${String(e.detail).slice(0, 160)}` : "";
+        const info = e.detail || e.raw || "";
+        const detail = info ? ` — ${String(info).slice(0, 200)}` : "";
         setStatus(`Claude read failed (${e.error || res.status})${detail}`);
         return "error";
       }
