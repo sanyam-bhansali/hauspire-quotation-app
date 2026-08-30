@@ -81,6 +81,7 @@ export async function ocrExtractPlan(file: File): Promise<PlanExtract | null> {
   let bathrooms = 0;
   let hasBalcony = false;
   let hasStudy = false;
+  let bedCount = 0; // count each bedroom label occurrence (→ BHK)
   let lastRoom: string | null = null;
 
   for (const line of lines) {
@@ -88,30 +89,40 @@ export async function ocrExtractPlan(file: File): Promise<PlanExtract | null> {
     if (rm === "Toilet") bathrooms++;
     if (rm === "Balcony") hasBalcony = true;
     if (rm === "Study") hasStudy = true;
+    if (rm && rm.includes("Bedroom")) bedCount++;
     if (rm && rm !== "Toilet" && rm !== "Balcony") lastRoom = rm;
 
     const dim = parseDim(line);
     if (dim) {
-      // attach to the room named on this line, else the most recent room label
       const name = rm && rm !== "Toilet" && rm !== "Balcony" ? rm : lastRoom;
       if (name) rooms.push({ name, widthMm: dim.w, depthMm: dim.h });
     }
   }
 
-  // Kitchen run from a detected kitchen dimension.
+  // Kitchen run — accept only realistic kitchen dimensions (7–15 ft/side).
+  let kitchenRun = 0;
+  let runOk = true;
   const kitchen = rooms.find((r) => r.name === "Kitchen");
-  const kitchenRun = kitchen ? Math.max(600, kitchen.widthMm + kitchen.depthMm - 900) : 0;
+  if (kitchen) {
+    const sane = (mm: number) => mm >= 2000 && mm <= 4600;
+    if (sane(kitchen.widthMm) && sane(kitchen.depthMm)) {
+      kitchenRun = kitchen.widthMm + kitchen.depthMm - 900;
+    } else {
+      runOk = false; // misread dimension — leave for the designer
+    }
+  }
 
-  // Bedrooms (incl. study) → BHK.
-  const bedNames = new Set(rooms.filter((r) => r.name.includes("Bedroom")).map((r) => r.name));
-  let beds = bedNames.size || rooms.filter((r) => r.name === "Bedroom").length;
+  // Bedrooms (by label count, incl. study) → BHK.
+  let beds = bedCount || rooms.filter((r) => r.name.includes("Bedroom")).length;
   if (hasStudy) beds += 1;
-  const bhk = beds >= 1 && beds <= 4 ? `${beds} BHK` : "3 BHK";
+  beds = Math.min(4, Math.max(beds, 0));
+  const bhk = beds >= 1 ? `${beds} BHK` : "3 BHK";
 
   // Not enough signal → let the caller fall back.
   if (!kitchenRun && rooms.length < 2) return null;
 
-  const conf: PlanExtract["confidence"] = kitchenRun && rooms.length >= 3 ? "medium" : "low";
+  const conf: PlanExtract["confidence"] =
+    runOk && kitchenRun && beds >= 1 && rooms.length >= 3 ? "medium" : "low";
   return {
     bhk,
     kitchenRun: kitchenRun || 3960,
