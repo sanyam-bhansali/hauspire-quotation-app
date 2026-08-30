@@ -35,12 +35,15 @@ export default function FirstQuotePage() {
   const [bathrooms, setBathrooms] = useState(2);
   const [hasBalcony, setHasBalcony] = useState(false);
   const [hasStudy, setHasStudy] = useState(false);
+  const [sizeToPlan, setSizeToPlan] = useState(false);
+  const [roomDims, setRoomDims] = useState<Record<string, { w: number; h: number }>>({});
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [tab, setTab] = useState<"quote" | "plan" | "pdf">("quote");
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<string>("");
+  const [fileName, setFileName] = useState<string>("");
 
   const rooms = BHK_ROOMS[bhk] ?? [];
   const optionals = useMemo(
@@ -56,6 +59,8 @@ export default function FirstQuotePage() {
         bathrooms: o.bathrooms ?? bathrooms,
         hasBalcony: o.hasBalcony ?? hasBalcony,
         hasStudy: o.hasStudy ?? hasStudy,
+        sizeToPlan,
+        roomDims,
         enabledOptional: enabled,
         kingMaster: king,
       })
@@ -65,6 +70,7 @@ export default function FirstQuotePage() {
 
   async function onUpload(file?: File) {
     if (!file) return;
+    setFileName(file.name);
     const reader = new FileReader();
     reader.onload = async (e) => {
       const dataUrl = String(e.target?.result || "");
@@ -86,6 +92,9 @@ export default function FirstQuotePage() {
         if (typeof d.bathrooms === "number") setBathrooms(d.bathrooms);
         setHasBalcony(!!d.hasBalcony);
         setHasStudy(!!d.hasStudy);
+        const dims: Record<string, { w: number; h: number }> = {};
+        (d.rooms || []).forEach((r: any) => { if (r.name) dims[r.name] = { w: r.widthMm || 0, h: r.depthMm || 0 }; });
+        setRoomDims(dims);
         const conf = d.confidence ? ` · read confidence: ${d.confidence}` : "";
         setStatus(`Detected ${d.bhk}, kitchen run ${d.kitchenRun} mm, ${d.bathrooms} bath${d.hasBalcony ? ", balcony" : ""}${d.hasStudy ? ", study" : ""}. Check §4 and Build.${conf}`);
         setTimeout(() => build({ bhk: d.bhk, run: d.kitchenRun, bathrooms: d.bathrooms, hasBalcony: d.hasBalcony, hasStudy: d.hasStudy }), 0);
@@ -125,10 +134,14 @@ export default function FirstQuotePage() {
       <aside className="no-print space-y-3 border-r border-brand-line bg-white p-4">
         <Section title="1 · Floor plan">
           <label className="block cursor-pointer rounded-lg border-2 border-dashed border-brand-light bg-orange-50/40 p-3 text-center text-xs text-neutral-600">
-            {preview ? "Change floor plan" : "Upload floor plan (image)"}
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => onUpload(e.target.files?.[0])} />
+            {fileName ? "Change floor plan" : "Upload floor plan (image or PDF)"}
+            <input type="file" accept="image/*,application/pdf,.pdf" className="hidden" onChange={(e) => onUpload(e.target.files?.[0])} />
           </label>
-          {preview && <img src={preview} alt="plan" className="max-h-40 w-full rounded object-contain" />}
+          {preview ? (
+            <img src={preview} alt="plan" className="max-h-40 w-full rounded object-contain" />
+          ) : fileName ? (
+            <p className="text-[11px] text-neutral-500">📄 {fileName}</p>
+          ) : null}
           <label className="text-xs text-neutral-600">…or auto-fill a sample plan</label>
           <select className="input" onChange={(e) => applyDemo(e.target.value)} defaultValue="">
             <option value="">— pick —</option>
@@ -172,6 +185,10 @@ export default function FirstQuotePage() {
           <label className="flex items-center gap-2 text-[12.5px]">
             <input type="checkbox" checked={hasStudy} onChange={(e) => setHasStudy(e.target.checked)} /> Study / office room
           </label>
+          <label className="flex items-center gap-2 text-[12.5px]">
+            <input type="checkbox" checked={sizeToPlan} onChange={(e) => setSizeToPlan(e.target.checked)} /> Size wardrobes to plan walls
+          </label>
+          <p className="text-[10.5px] text-neutral-400">Off = standard sizes (1800/1500). On = suggested from each bedroom’s wall; rebuild to apply.</p>
         </Section>
         <button onClick={() => build()} className="btn">Build first quotation ▸</button>
         <button onClick={save} className="btn-sec">Save</button>

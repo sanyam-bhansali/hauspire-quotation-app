@@ -33,6 +33,12 @@ export async function POST(req: NextRequest) {
     const { imageBase64, mediaType } = await req.json();
     if (!imageBase64) return NextResponse.json({ error: "no_image" }, { status: 400 });
 
+    // Floor plan can be an image OR a PDF — the vision model reads both.
+    const isPdf = String(mediaType || "").includes("pdf");
+    const mediaBlock = isPdf
+      ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
+      : { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: imageBase64 } };
+
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -46,10 +52,7 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: imageBase64 } },
-              { type: "text", text: PROMPT },
-            ],
+            content: [mediaBlock, { type: "text", text: PROMPT }],
           },
         ],
       }),
