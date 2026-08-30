@@ -6,7 +6,7 @@ export const maxDuration = 60;
 // Reads a floor plan with a vision model and returns structured room data.
 // Requires ANTHROPIC_API_KEY in the environment. Model is configurable via
 // ANTHROPIC_MODEL (defaults to a current vision-capable Claude).
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-latest";
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
 
 const PROMPT = `You are reading an architectural floor plan for an interior-design quotation in India.
 Extract the flat configuration and each room's printed dimensions (usually like 10'0"X10'2", feet and inches).
