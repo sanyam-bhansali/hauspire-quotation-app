@@ -49,6 +49,8 @@ export interface Totals {
   fee: number;
   subTotal: number;
   discount: number;
+  onSpot: number;
+  modularPct: number;
   tpv: number;
   stages: { label: string; amount: number }[];
 }

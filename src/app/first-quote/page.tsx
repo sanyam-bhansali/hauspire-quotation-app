@@ -32,6 +32,8 @@ export default function FirstQuotePage() {
   const [run, setRun] = useState(3960);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [king, setKing] = useState(false);
+  const [modularPct, setModularPct] = useState(0.15);
+  const [onSpot, setOnSpot] = useState(0);
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [tab, setTab] = useState<"quote" | "plan" | "pdf">("quote");
   const [status, setStatus] = useState("");
@@ -87,7 +89,7 @@ export default function FirstQuotePage() {
 
   async function save() {
     if (!lines.length) return;
-    const tpv = computeTotals(lines).tpv;
+    const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
       await saveQuote({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv });
       setStatus("Saved ✓");
@@ -100,7 +102,7 @@ export default function FirstQuotePage() {
     router.push("/builder");
   }
 
-  const meta = { client, mobile, location, bhk };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[330px_1fr]">
@@ -163,11 +165,11 @@ export default function FirstQuotePage() {
         ) : tab === "quote" ? (
           <>
             <div className="mb-3 flex items-end justify-between border-b-2 border-brand pb-2">
-              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">First-draft quotation · {inr(computeTotals(lines).tpv)}</div></div>
+              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">First-draft quotation · {inr(computeTotals(lines, { modularPct, onSpot }).tpv)}</div></div>
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
             <QuoteTable lines={lines} onChange={setLines} />
-            <Totals lines={lines} />
+            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onModularPct={setModularPct} onOnSpot={setOnSpot} />
           </>
         ) : tab === "plan" ? (
           <Plan2D lines={lines} />

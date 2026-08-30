@@ -1,6 +1,6 @@
 "use client";
 import type { QuoteLine } from "@/lib/types";
-import { computeTotals, inr, MODULAR_DISCOUNT } from "@/lib/pricing";
+import { computeTotals, inr } from "@/lib/pricing";
 
 export interface QuoteMeta {
   client: string;
@@ -9,6 +9,8 @@ export interface QuoteMeta {
   bhk: string;
   quoteNo?: string;
   revision?: number;
+  modularPct?: number;
+  onSpot?: number;
 }
 
 // Branded quotation document that matches Hauspire's PDF exactly:
@@ -16,7 +18,7 @@ export interface QuoteMeta {
 // artwork; the quotation/summary/totals pages in between are generated.
 export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines: QuoteLine[] }) {
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
-  const t = computeTotals(lines);
+  const t = computeTotals(lines, { modularPct: meta.modularPct, onSpot: meta.onSpot });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
   const date = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const quoteNo = meta.quoteNo || "HI/2026/001";
@@ -93,9 +95,9 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
               <Row k="Sum-Total (NM-01)  ·  Non-Modular" v={fmt(t.nm)} />
               <Row k="Professional fees (7%)" v={fmt(t.fee)} />
               <Row k="Sub-Total" v={fmt(t.subTotal)} bold />
-              <Row k={`Discount on Modular (${MODULAR_DISCOUNT * 100}%)`} v={`${MODULAR_DISCOUNT * 100}%`} />
+              <Row k={`Discount on Modular (${Math.round(t.modularPct * 100)}%)`} v={`${Math.round(t.modularPct * 100)}%`} />
               <Row k="Discounted Value" v={fmt(t.discount)} />
-              <Row k="On-Spot Discount (₹)" v="0" />
+              <Row k="On-Spot Discount (₹)" v={fmt(t.onSpot)} />
               <tr className="bg-brand font-extrabold text-white">
                 <td className="border border-brand-line px-2 py-1">Total Project Value</td>
                 <td className="border border-brand-line px-2 py-1 text-right">₹{fmt(t.tpv)}</td>

@@ -22,6 +22,8 @@ export default function BuilderPage() {
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [banner, setBanner] = useState("");
   const [tab, setTab] = useState<"quote" | "pdf">("quote");
+  const [modularPct, setModularPct] = useState(0.15);
+  const [onSpot, setOnSpot] = useState(0);
 
   // add-line form
   const [room, setRoom] = useState(ROOMS[0]);
@@ -52,14 +54,14 @@ export default function BuilderPage() {
   }
   async function save() {
     if (!lines.length) return;
-    const tpv = computeTotals(lines).tpv;
+    const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
       await saveQuote({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: 0, lines, tpv });
       setBanner("Saved ✓");
     } catch { setBanner("Save failed — configure Supabase."); }
   }
 
-  const meta = { client, mobile, location, bhk };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr]">
@@ -103,11 +105,11 @@ export default function BuilderPage() {
         ) : tab === "quote" ? (
           <>
             <div className="mb-3 flex items-end justify-between border-b-2 border-brand pb-2">
-              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">Quotation · {inr(computeTotals(lines).tpv)}</div></div>
+              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">Quotation · {inr(computeTotals(lines, { modularPct, onSpot }).tpv)}</div></div>
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
             <QuoteTable lines={lines} onChange={setLines} />
-            <Totals lines={lines} />
+            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onModularPct={setModularPct} onOnSpot={setOnSpot} />
           </>
         ) : (
           <PrintDocument meta={meta} lines={lines} />

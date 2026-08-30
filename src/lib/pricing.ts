@@ -45,7 +45,14 @@ export function lineAmount(
   }
 }
 
-export function computeTotals(lines: QuoteLine[]): Totals {
+export interface DiscountOpts {
+  modularPct?: number; // e.g. 0.15 for 15%
+  onSpot?: number; // flat ₹ off
+}
+
+export function computeTotals(lines: QuoteLine[], opts: DiscountOpts = {}): Totals {
+  const modularPct = opts.modularPct ?? MODULAR_DISCOUNT;
+  const onSpot = opts.onSpot ?? 0;
   let mo = 0;
   let nm = 0;
   for (const l of lines) {
@@ -54,8 +61,8 @@ export function computeTotals(lines: QuoteLine[]): Totals {
   }
   const fee = Math.round((mo + nm) * FEE_RATE);
   const subTotal = mo + nm + fee;
-  const discount = Math.round(mo * MODULAR_DISCOUNT);
-  const tpv = subTotal - discount;
+  const discount = Math.round(mo * modularPct);
+  const tpv = subTotal - discount - onSpot;
   const after = tpv - BOOKING_ADVANCE;
   const stages = [
     { label: "Booking Advance (Fully Refundable for 3 days)", amount: BOOKING_ADVANCE },
@@ -65,7 +72,7 @@ export function computeTotals(lines: QuoteLine[]): Totals {
     { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4) },
     { label: "Project Handover (5%)", amount: Math.round(after * 0.05) },
   ];
-  return { mo, nm, fee, subTotal, discount, tpv, stages };
+  return { mo, nm, fee, subTotal, discount, onSpot, modularPct, tpv, stages };
 }
 
 export function inr(n: number): string {
