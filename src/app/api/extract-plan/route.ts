@@ -43,6 +43,28 @@ Rules:
 - Convert any dimension to decimal feet (e.g. 10'6" -> 10.5). If a dimension is missing/unreadable use 0.
 - Include the kitchen both in "kitchen" and in "rooms".`;
 
+// Extract the first complete, brace-balanced JSON object from a string
+// (robust to any prose before/after, and to braces inside strings).
+function extractJson(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start < 0) return null;
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === "\\") esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') inStr = true;
+    else if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
@@ -72,7 +94,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 1024,
+        max_tokens: 2048,
         messages: [
           {
             role: "user",
@@ -92,15 +114,15 @@ export async function POST(req: NextRequest) {
       .filter((b: any) => b?.type === "text" && typeof b.text === "string")
       .map((b: any) => b.text)
       .join("\n") || data?.content?.[0]?.text || "";
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) {
+    const jsonStr = extractJson(text);
+    if (!jsonStr) {
       return NextResponse.json({ error: "parse_failed", model, raw: text.slice(0, 400) }, { status: 502 });
     }
     let parsed: any;
     try {
-      parsed = JSON.parse(match[0]);
+      parsed = JSON.parse(jsonStr);
     } catch {
-      return NextResponse.json({ error: "parse_failed", model, raw: match[0].slice(0, 400) }, { status: 502 });
+      return NextResponse.json({ error: "parse_failed", model, raw: jsonStr.slice(0, 400) }, { status: 502 });
     }
 
     // Derive kitchen run (mm): (width + depth) − 900 (L-kitchen allowance).
