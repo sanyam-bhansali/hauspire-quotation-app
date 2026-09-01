@@ -35,7 +35,8 @@ Extract the flat configuration and each room's printed dimensions (usually like 
 Return ONLY strict minified JSON, no prose, in this exact shape:
 {"bhk":"1 BHK"|"2 BHK"|"3 BHK"|"4 BHK","kitchen":{"widthFt":number,"depthFt":number}|null,"bathrooms":number,"hasBalcony":boolean,"hasStudy":boolean,"confidence":"high"|"medium"|"low","rooms":[{"name":string,"widthFt":number,"depthFt":number}]}
 Rules:
-- bhk = number of bedrooms; if a Study/Office is a separate room, count it toward BHK and set hasStudy=true.
+- bhk = the number of BEDROOM rooms ONLY. Do NOT count a Study/Office/Sitout as a bedroom (e.g. 3 bedrooms + a study is "3 BHK", not "4 BHK").
+- hasStudy = true if there is a separate Study or Office room (it is added separately, not as a bedroom).
 - bathrooms = count of Toilet / Bathroom / W.C. rooms.
 - hasBalcony = true if any Balcony / Dry Balcony / Terrace / Dry Terrace is present.
 - confidence = how clearly the dimensions were printed and legible (low for handwritten/blurred).

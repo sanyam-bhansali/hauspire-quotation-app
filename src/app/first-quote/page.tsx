@@ -231,7 +231,11 @@ export default function FirstQuotePage() {
           <Tab on={tab === "quote"} onClick={() => setTab("quote")}>Quotation</Tab>
           <Tab on={tab === "plan"} onClick={() => setTab("plan")}>2D plan</Tab>
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
-          {tab === "pdf" && <button onClick={() => window.print()} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">Print / Save PDF</button>}
+          {lines.length > 0 && (
+            <button onClick={() => { setTab("pdf"); setTimeout(() => window.print(), 350); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
+              ⬇ Save as PDF
+            </button>
+          )}
         </div>
         {lines.length === 0 ? (
           <p className="text-neutral-500">Upload a plan (or pick a sample), set the project, then Build.</p>
