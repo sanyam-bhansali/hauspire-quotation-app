@@ -54,11 +54,11 @@
   "rooms": "Kitchen"
  },
  {
-  "product": "Appliance Unit",
+  "product": "Appliance Unit With Glass Profile Shutter",
   "wc": "MO-01",
-  "type": "Area",
-  "rate": 3870,
-  "unit": null,
+  "type": "Unit",
+  "rate": null,
+  "unit": 22000,
   "details": "Built-in appliance housing with dedicated storage and a glass profile shutter.",
   "rooms": "Kitchen"
  },
@@ -322,5 +322,32 @@
   "unit": 100000,
   "details": "Civil and plumbing modifications, charged on actuals.",
   "rooms": "Other"
+ },
+ {
+  "product": "Appliance Unit With Rolling Shutter",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 31000,
+  "details": "Built-in appliance housing with Internal Shelf And Rolling Shutter As Per Selection",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Appliance Unit",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 16000,
+  "details": "Built-in appliance housing with Internal Shelf",
+  "rooms": "Kitchen"
+ },
+ {
+  "product": "Rolling Shutter",
+  "wc": "MO-01",
+  "type": "Unit",
+  "rate": null,
+  "unit": 15000,
+  "details": "Rolling Shutter Mechanism As per Selection",
+  "rooms": "Kitchen"
  }
 ]
