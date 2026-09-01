@@ -112,8 +112,9 @@ export async function ocrExtractPlan(file: File): Promise<PlanExtract | null> {
     }
   }
 
-  // Bedrooms only → BHK. The study is added separately (not counted here).
+  // Bedrooms → BHK; a study counts toward the BHK total (Hauspire preference).
   let beds = bedCount || rooms.filter((r) => r.name.includes("Bedroom")).length;
+  if (hasStudy) beds += 1;
   beds = Math.min(4, Math.max(beds, 0));
   const bhk = beds >= 1 ? `${beds} BHK` : "3 BHK";
 
