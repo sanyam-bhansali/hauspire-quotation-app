@@ -24,3 +24,23 @@ alter table quotes enable row level security;
 -- or wire Clerk JWT into Supabase and replace the policy below with
 -- `auth.jwt() ->> 'sub' = designer_id`.
 create policy "app manages access" on quotes for all using (true) with check (true);
+
+-- ---- Product Master (editable rates / materials) ----
+create table if not exists product_master (
+  id uuid primary key default gen_random_uuid(),
+  product text not null,
+  wc text,               -- MO-01 / NM-01
+  type text,             -- Area / Unit
+  rate int,              -- ₹/sqft for Area
+  unit int,              -- flat ₹ for Unit
+  details text,
+  rooms text,            -- comma-separated category tags
+  sort int default 0
+);
+
+alter table product_master enable row level security;
+drop policy if exists "product master access" on product_master;
+create policy "product master access"
+  on product_master for all
+  to anon, authenticated
+  using (true) with check (true);

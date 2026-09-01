@@ -20,6 +20,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           <nav className="flex gap-4 text-sm opacity-90">
             <Link href="/first-quote">First Quote</Link>
             <Link href="/builder">Full Builder</Link>
+            <Link href="/products">Products</Link>
           </nav>
           {clerkEnabled && (
             <div className="ml-auto">

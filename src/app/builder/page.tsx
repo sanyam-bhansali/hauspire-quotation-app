@@ -6,11 +6,12 @@ import type { Product, QuoteLine } from "@/lib/types";
 import { areaAmount, computeTotals, inr } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
 import { takePendingQuote } from "@/lib/quoteStore";
+import { loadProducts } from "@/lib/productStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import PrintDocument from "@/components/PrintDocument";
 
-const PM = productMaster as unknown as Product[];
+const SEED = productMaster as unknown as Product[];
 const ROOMS = ["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Parents Bedroom", "Living, Dining & Foyer", "Other Services"];
 
 export default function BuilderPage() {
@@ -26,11 +27,17 @@ export default function BuilderPage() {
   const [onSpot, setOnSpot] = useState(0);
 
   // add-line form
+  const [products, setProducts] = useState<Product[]>(SEED);
   const [room, setRoom] = useState(ROOMS[0]);
-  const [productName, setProductName] = useState(PM[0].product);
+  const [productName, setProductName] = useState(SEED[0].product);
   const [w, setW] = useState(1800);
   const [h, setH] = useState(2100);
   const [qty, setQty] = useState(1);
+
+  // Load the configured Product Master (Supabase) so the picker uses your rates.
+  useEffect(() => {
+    loadProducts().then(setProducts).catch(() => {});
+  }, []);
 
   // Receive a first quote handed off from the First-Quote page.
   useEffect(() => {
@@ -42,7 +49,7 @@ export default function BuilderPage() {
     }
   }, []);
 
-  const product = useMemo(() => PM.find((p) => p.product === productName)!, [productName]);
+  const product = useMemo(() => products.find((p) => p.product === productName) ?? products[0], [products, productName]);
   const previewAmt = product.type === "Area" ? areaAmount(w, h, product.rate ?? 0) : (product.unit ?? 0) * qty;
 
   function addLine() {
@@ -78,7 +85,7 @@ export default function BuilderPage() {
 
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Add a line</h2>
         <select className="input" value={room} onChange={(e) => setRoom(e.target.value)}>{ROOMS.map((r) => <option key={r}>{r}</option>)}</select>
-        <select className="input" value={productName} onChange={(e) => setProductName(e.target.value)}>{PM.map((p) => <option key={p.product}>{p.product}</option>)}</select>
+        <select className="input" value={productName} onChange={(e) => setProductName(e.target.value)}>{products.map((p) => <option key={p.product}>{p.product}</option>)}</select>
         <p className="text-[11px] text-neutral-500">{product.wc} · {product.type} {product.type === "Area" ? `· ₹${product.rate}/sqft` : `· ₹${product.unit}/unit`}</p>
         {product.type === "Area" ? (
           <div className="grid grid-cols-2 gap-2">
