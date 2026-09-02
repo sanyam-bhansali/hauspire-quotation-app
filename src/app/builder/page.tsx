@@ -57,6 +57,7 @@ export default function BuilderPage() {
       room, product: product.product, wc: product.wc, details: product.details,
       width: product.type === "Area" ? w : null, height: product.type === "Area" ? h : null,
       amount: previewAmt,
+      rate: product.type === "Area" ? product.rate ?? undefined : undefined,
     }]);
   }
   async function save() {

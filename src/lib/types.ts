@@ -43,6 +43,7 @@ export interface QuoteLine {
   width: number | null;
   height: number | null;
   amount: number;
+  rate?: number; // ₹/sqft for area lines — lets Width×Height recompute the amount
 }
 
 export interface Totals {

@@ -82,7 +82,8 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
       }
 
       const details = it.perBath && bathrooms > 1 ? `${it.details} (×${bathrooms} bathrooms)` : it.details;
-      lines.push({ room, product, wc: it.wc, details, width, height, amount });
+      const rate = it.kind === "run" || it.kind === "fixed" ? it.rate : undefined;
+      lines.push({ room, product, wc: it.wc, details, width, height, amount, rate });
     }
   }
   return lines;
