@@ -68,9 +68,34 @@ function extractJson(text: string): string | null {
 
 type CallResult = { text: string; model: string } | { error: string; model: string };
 
+// Pick an available Gemini model: honor GEMINI_MODEL, else ask the API and
+// prefer a current Flash model (fast + free). Robust to model renames.
+async function resolveGeminiModel(key: string): Promise<string> {
+  if (process.env.GEMINI_MODEL) return process.env.GEMINI_MODEL;
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if (r.ok) {
+      const j = await r.json();
+      const names: string[] = (j.models || [])
+        .filter((m: any) => (m.supportedGenerationMethods || []).includes("generateContent"))
+        .map((m: any) => String(m.name || "").replace(/^models\//, ""))
+        .filter(Boolean);
+      const pick =
+        names.find((n) => n.includes("flash") && !n.includes("thinking") && !n.includes("lite")) ||
+        names.find((n) => n.includes("flash")) ||
+        names.find((n) => n.includes("pro")) ||
+        names[0];
+      if (pick) return pick;
+    }
+  } catch {
+    /* fall through */
+  }
+  return "gemini-3.6-flash";
+}
+
 // Google Gemini (free tier via AI Studio key). Reads images and PDFs.
 async function callGemini(key: string, imageBase64: string, mediaType: string, isPdf: boolean): Promise<CallResult> {
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = await resolveGeminiModel(key);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
   const body = {
     contents: [{ parts: [
