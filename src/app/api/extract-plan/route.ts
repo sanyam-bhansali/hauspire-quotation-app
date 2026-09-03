@@ -66,11 +66,51 @@ function extractJson(text: string): string | null {
   return null;
 }
 
+type CallResult = { text: string; model: string } | { error: string; model: string };
+
+// Google Gemini (free tier via AI Studio key). Reads images and PDFs.
+async function callGemini(key: string, imageBase64: string, mediaType: string, isPdf: boolean): Promise<CallResult> {
+  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const body = {
+    contents: [{ parts: [
+      { inline_data: { mime_type: isPdf ? "application/pdf" : (mediaType || "image/jpeg"), data: imageBase64 } },
+      { text: PROMPT },
+    ] }],
+    generationConfig: { temperature: 0, maxOutputTokens: 2048 },
+  };
+  const resp = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  if (!resp.ok) return { error: await resp.text(), model };
+  const data = await resp.json();
+  const text = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join("\n") || "";
+  return { text, model };
+}
+
+// Anthropic Claude (paid). Reads images and PDFs.
+async function callAnthropic(key: string, imageBase64: string, mediaType: string, isPdf: boolean): Promise<CallResult> {
+  const model = await resolveModel(key);
+  const mediaBlock = isPdf
+    ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
+    : { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: imageBase64 } };
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: "user", content: [mediaBlock, { type: "text", text: PROMPT }] }] }),
+  });
+  if (!resp.ok) return { error: await resp.text(), model };
+  const data = await resp.json();
+  const text = (data?.content || [])
+    .filter((b: any) => b?.type === "text" && typeof b.text === "string")
+    .map((b: any) => b.text).join("\n") || data?.content?.[0]?.text || "";
+  return { text, model };
+}
+
 export async function POST(req: NextRequest) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) {
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!geminiKey && !anthropicKey) {
     return NextResponse.json(
-      { error: "not_configured", message: "ANTHROPIC_API_KEY is not set — enter dimensions manually." },
+      { error: "not_configured", message: "No vision key set (GEMINI_API_KEY or ANTHROPIC_API_KEY) — enter dimensions manually." },
       { status: 501 }
     );
   }
@@ -78,43 +118,16 @@ export async function POST(req: NextRequest) {
     const { imageBase64, mediaType } = await req.json();
     if (!imageBase64) return NextResponse.json({ error: "no_image" }, { status: 400 });
 
-    // Floor plan can be an image OR a PDF — the vision model reads both.
+    // Floor plan can be an image OR a PDF. Prefer Gemini (free tier) when set.
     const isPdf = String(mediaType || "").includes("pdf");
-    const mediaBlock = isPdf
-      ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: imageBase64 } }
-      : { type: "image", source: { type: "base64", media_type: mediaType || "image/jpeg", data: imageBase64 } };
-
-    const model = await resolveModel(key);
-
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 2048,
-        messages: [
-          {
-            role: "user",
-            content: [mediaBlock, { type: "text", text: PROMPT }],
-          },
-        ],
-      }),
-    });
-
-    if (!resp.ok) {
-      const t = await resp.text();
-      return NextResponse.json({ error: "vision_failed", model, detail: t }, { status: 502 });
+    const r: CallResult = geminiKey
+      ? await callGemini(geminiKey, imageBase64, mediaType, isPdf)
+      : await callAnthropic(anthropicKey!, imageBase64, mediaType, isPdf);
+    if ("error" in r) {
+      return NextResponse.json({ error: "vision_failed", provider: geminiKey ? "gemini" : "anthropic", model: r.model, detail: r.error }, { status: 502 });
     }
-    const data = await resp.json();
-    // Concatenate all text blocks (newer models may emit a reasoning block first).
-    const text: string = (data?.content || [])
-      .filter((b: any) => b?.type === "text" && typeof b.text === "string")
-      .map((b: any) => b.text)
-      .join("\n") || data?.content?.[0]?.text || "";
+    const text = r.text;
+    const model = r.model;
     const jsonStr = extractJson(text);
     if (!jsonStr) {
       return NextResponse.json({ error: "parse_failed", model, raw: text.slice(0, 400) }, { status: 502 });

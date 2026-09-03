@@ -64,13 +64,74 @@ async function pdfToCanvas(file: File): Promise<HTMLCanvasElement> {
   return canvas;
 }
 
+// Draw an image File onto a canvas.
+async function fileToCanvas(file: File): Promise<HTMLCanvasElement> {
+  const bmp = await createImageBitmap(file);
+  const c = document.createElement("canvas");
+  c.width = bmp.width;
+  c.height = bmp.height;
+  c.getContext("2d")!.drawImage(bmp, 0, 0);
+  return c;
+}
+
+// Preprocess for OCR: upscale, grayscale, contrast-stretch, and Otsu binarize.
+// This is the single biggest free accuracy win — Tesseract reads clean black
+// text on white far better than a raw photo.
+function preprocess(src: HTMLCanvasElement): HTMLCanvasElement {
+  const target = 2200;
+  const scale = Math.min(3, Math.max(1, target / Math.max(src.width, src.height)));
+  const c = document.createElement("canvas");
+  c.width = Math.round(src.width * scale);
+  c.height = Math.round(src.height * scale);
+  const ctx = c.getContext("2d")!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(src, 0, 0, c.width, c.height);
+
+  const img = ctx.getImageData(0, 0, c.width, c.height);
+  const d = img.data;
+  const n = c.width * c.height;
+  const gray = new Uint8Array(n);
+  const hist = new Array(256).fill(0);
+  for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+    const g = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
+    gray[j] = g;
+    hist[g]++;
+  }
+  // Otsu threshold
+  let sum = 0;
+  for (let t = 0; t < 256; t++) sum += t * hist[t];
+  let sumB = 0, wB = 0, maxVar = 0, thr = 127;
+  for (let t = 0; t < 256; t++) {
+    wB += hist[t];
+    if (!wB) continue;
+    const wF = n - wB;
+    if (!wF) break;
+    sumB += t * hist[t];
+    const mB = sumB / wB;
+    const mF = (sum - sumB) / wF;
+    const between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > maxVar) { maxVar = between; thr = t; }
+  }
+  for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+    const v = gray[j] > thr ? 255 : 0;
+    d[i] = d[i + 1] = d[i + 2] = v;
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+
 export async function ocrExtractPlan(file: File): Promise<PlanExtract | null> {
-  // Images go straight to OCR; PDFs are rasterized to an image first.
-  const input: File | HTMLCanvasElement = file.type.includes("pdf") ? await pdfToCanvas(file) : file;
+  // Rasterize PDFs; load images; then preprocess before OCR.
+  const base = file.type.includes("pdf") ? await pdfToCanvas(file) : await fileToCanvas(file);
+  const processed = preprocess(base);
+
   const worker = await Tesseract.createWorker("eng");
   let lines: string[] = [];
   try {
-    const { data } = await worker.recognize(input as any);
+    // Sparse-text mode suits scattered floor-plan labels.
+    await worker.setParameters({ tessedit_pageseg_mode: "11" as any });
+    const { data } = await worker.recognize(processed);
     lines = (data.lines || []).map((l: any) => l.text.trim()).filter(Boolean);
     if (!lines.length && data.text) lines = data.text.split("\n").map((s) => s.trim()).filter(Boolean);
   } finally {

@@ -99,7 +99,7 @@ export default function FirstQuotePage() {
         setStatus(`Claude read failed (${e.error || res.status})${detail}`);
         return "error";
       }
-      applyExtract(await res.json(), "Claude");
+      applyExtract(await res.json(), "vision");
       return "ok";
     } catch (err: any) {
       setStatus(`Network error calling Claude: ${String(err?.message || err)}`);
