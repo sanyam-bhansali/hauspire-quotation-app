@@ -96,7 +96,7 @@ export default function FirstQuotePage() {
         const e = await res.json().catch(() => ({} as any));
         const info = e.detail || e.raw || "";
         const detail = info ? ` — ${String(info).slice(0, 200)}` : "";
-        setStatus(`Claude read failed (${e.error || res.status})${detail}`);
+        setStatus(`Vision read failed (${e.error || res.status})${detail}`);
         return "error";
       }
       applyExtract(await res.json(), "vision");
@@ -119,20 +119,22 @@ export default function FirstQuotePage() {
     const base64 = dataUrl.split(",")[1];
     if (!base64) return;
 
-    // 1) Claude vision first (accurate). Uses ANTHROPIC_API_KEY on the server.
-    setStatus("Reading floor plan with Claude…");
+    // 1) Vision first (Gemini/Claude on the server) — most accurate.
+    setStatus("Reading floor plan…");
     const v = await visionExtract(base64, file.type || "image/jpeg");
-    if (v === "ok" || v === "error") return; // error status already shown
+    if (v === "ok") return;
 
-    // 2) Only if Claude isn't configured: free in-browser OCR fallback.
+    // 2) Fallback to free in-browser OCR (covers no-key and transient outages).
     if (file.type.startsWith("image") || file.type.includes("pdf")) {
-      setStatus("Claude not configured — trying free OCR…");
       try {
         const d = await ocrExtractPlan(file);
         if (d && d.kitchenRun) { applyExtract(d, "free OCR"); return; }
       } catch { /* fall through */ }
     }
-    setStatus("Claude not configured and OCR couldn't read it — set ANTHROPIC_API_KEY, or enter the kitchen run in §2 and counts in §4.");
+    // Keep the detailed vision error if there was one; otherwise guide to manual.
+    if (v === "not_configured") {
+      setStatus("No vision key set and OCR couldn't read it — enter the kitchen run in §2 and counts in §4.");
+    }
   }
 
   function applyDemo(k: string) {

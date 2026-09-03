@@ -94,7 +94,10 @@ async function resolveGeminiModel(key: string): Promise<string> {
   return "gemini-3.6-flash";
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 // Google Gemini (free tier via AI Studio key). Reads images and PDFs.
+// Retries on transient 503 "high demand" errors before giving up.
 async function callGemini(key: string, imageBase64: string, mediaType: string, isPdf: boolean): Promise<CallResult> {
   const model = await resolveGeminiModel(key);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
@@ -105,11 +108,20 @@ async function callGemini(key: string, imageBase64: string, mediaType: string, i
     ] }],
     generationConfig: { temperature: 0, maxOutputTokens: 2048 },
   };
-  const resp = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-  if (!resp.ok) return { error: await resp.text(), model };
-  const data = await resp.json();
-  const text = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join("\n") || "";
-  return { text, model };
+  let lastErr = "";
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const resp = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (resp.ok) {
+      const data = await resp.json();
+      const text = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join("\n") || "";
+      return { text, model };
+    }
+    lastErr = await resp.text();
+    const overloaded = resp.status === 503 || /UNAVAILABLE|overloaded|high demand/i.test(lastErr);
+    if (overloaded && attempt < 3) { await sleep(800 * (attempt + 1)); continue; }
+    break;
+  }
+  return { error: lastErr || "unavailable", model };
 }
 
 // Anthropic Claude (paid). Reads images and PDFs.
@@ -144,13 +156,24 @@ export async function POST(req: NextRequest) {
     const { imageBase64, mediaType } = await req.json();
     if (!imageBase64) return NextResponse.json({ error: "no_image" }, { status: 400 });
 
-    // Floor plan can be an image OR a PDF. Prefer Gemini (free tier) when set.
+    // Floor plan can be an image OR a PDF. Prefer Gemini (free); fall back to
+    // Claude if Gemini errors or is overloaded and an Anthropic key is set.
     const isPdf = String(mediaType || "").includes("pdf");
-    const r: CallResult = geminiKey
-      ? await callGemini(geminiKey, imageBase64, mediaType, isPdf)
-      : await callAnthropic(anthropicKey!, imageBase64, mediaType, isPdf);
+    let r: CallResult;
+    let provider = "";
+    if (geminiKey) {
+      provider = "gemini";
+      r = await callGemini(geminiKey, imageBase64, mediaType, isPdf);
+      if ("error" in r && anthropicKey) {
+        provider = "claude (gemini unavailable)";
+        r = await callAnthropic(anthropicKey, imageBase64, mediaType, isPdf);
+      }
+    } else {
+      provider = "claude";
+      r = await callAnthropic(anthropicKey!, imageBase64, mediaType, isPdf);
+    }
     if ("error" in r) {
-      return NextResponse.json({ error: "vision_failed", provider: geminiKey ? "gemini" : "anthropic", model: r.model, detail: r.error }, { status: 502 });
+      return NextResponse.json({ error: "vision_failed", provider, model: r.model, detail: r.error }, { status: 502 });
     }
     const text = r.text;
     const model = r.model;
