@@ -161,16 +161,16 @@ export async function POST(req: NextRequest) {
     const isPdf = String(mediaType || "").includes("pdf");
     let r: CallResult;
     let provider = "";
-    if (geminiKey) {
-      provider = "gemini";
-      r = await callGemini(geminiKey, imageBase64, mediaType, isPdf);
-      if ("error" in r && anthropicKey) {
-        provider = "claude (gemini unavailable)";
-        r = await callAnthropic(anthropicKey, imageBase64, mediaType, isPdf);
+    if (anthropicKey) {
+      provider = "claude";
+      r = await callAnthropic(anthropicKey, imageBase64, mediaType, isPdf);
+      if ("error" in r && geminiKey) {
+        provider = "gemini (claude unavailable)";
+        r = await callGemini(geminiKey, imageBase64, mediaType, isPdf);
       }
     } else {
-      provider = "claude";
-      r = await callAnthropic(anthropicKey!, imageBase64, mediaType, isPdf);
+      provider = "gemini";
+      r = await callGemini(geminiKey!, imageBase64, mediaType, isPdf);
     }
     if ("error" in r) {
       return NextResponse.json({ error: "vision_failed", provider, model: r.model, detail: r.error }, { status: 502 });

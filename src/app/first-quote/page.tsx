@@ -1,14 +1,16 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDesignerId } from "@/lib/useDesignerId";
 import template from "@/data/template.json";
 import type { Template, QuoteLine } from "@/lib/types";
 import { buildFirstQuote } from "@/lib/buildQuote";
-import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr } from "@/lib/pricing";
+import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
+import { loadProducts } from "@/lib/productStore";
+import type { Product } from "@/lib/types";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import Plan2D from "@/components/Plan2D";
@@ -45,6 +47,63 @@ export default function FirstQuotePage() {
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
+  const [master, setMaster] = useState<Record<string, Product>>({});
+  const [productsArr, setProductsArr] = useState<Product[]>([]);
+  // Add-item picker
+  const [addRoom, setAddRoom] = useState("Kitchen");
+  const [addProductName, setAddProductName] = useState("");
+  const [addW, setAddW] = useState(1800);
+  const [addH, setAddH] = useState(2100);
+  const [addQty, setAddQty] = useState(1);
+
+  // Load the editable Product Master so rate/unit edits apply to the first quote.
+  useEffect(() => {
+    loadProducts().then((ps) => {
+      const m: Record<string, Product> = {};
+      ps.forEach((p) => { m[p.product.trim().toLowerCase()] = p; });
+      setMaster(m);
+      setProductsArr(ps);
+      if (ps[0]) setAddProductName(ps[0].product);
+    }).catch(() => {});
+  }, []);
+
+  const addProduct = productsArr.find((p) => p.product === addProductName);
+  function addItem() {
+    if (!addProduct) return;
+    const isArea = addProduct.type === "Area";
+    const amount = isArea ? areaAmount(addW, addH, addProduct.rate ?? 0) : (addProduct.unit ?? 0) * addQty;
+    setLines([
+      ...lines,
+      {
+        room: addRoom,
+        product: addProduct.product,
+        wc: addProduct.wc,
+        details: addProduct.details,
+        width: isArea ? addW : null,
+        height: isArea ? addH : null,
+        amount,
+        rate: isArea ? addProduct.rate ?? undefined : undefined,
+      },
+    ]);
+  }
+
+  function masterFor(name: string): Product | undefined {
+    const key = name.trim().toLowerCase();
+    if (master[key]) return master[key];
+    if (key.includes("false ceiling")) return master["minimal false ceiling (per room)"];
+    return undefined;
+  }
+  function applyMaster(ls: QuoteLine[]): QuoteLine[] {
+    return ls.map((l) => {
+      const m = masterFor(l.product);
+      if (!m) return l;
+      if (l.width && l.height && m.type === "Area" && m.rate) {
+        return { ...l, rate: m.rate, amount: areaAmount(l.width, l.height, m.rate) };
+      }
+      if (!l.width && m.type === "Unit" && m.unit) return { ...l, amount: m.unit };
+      return l;
+    });
+  }
 
   const rooms = BHK_ROOMS[bhk] ?? [];
   const optionals = useMemo(
@@ -54,7 +113,7 @@ export default function FirstQuotePage() {
 
   function build(o: { bhk?: string; run?: number; bathrooms?: number; hasBalcony?: boolean; hasStudy?: boolean } = {}) {
     setLines(
-      buildFirstQuote({
+      applyMaster(buildFirstQuote({
         bhk: o.bhk ?? bhk,
         kitchenRun: o.run ?? run,
         bathrooms: o.bathrooms ?? bathrooms,
@@ -64,7 +123,7 @@ export default function FirstQuotePage() {
         roomDims,
         enabledOptional: enabled,
         kingMaster: king,
-      })
+      }))
     );
     setStatus("");
   }
@@ -226,6 +285,29 @@ export default function FirstQuotePage() {
         <button onClick={save} className="btn-sec">Save</button>
         <button onClick={reviseInBuilder} className="btn-sec">Revise in Full Builder →</button>
         {status && <p className="rounded bg-brand-band px-2 py-1 text-center text-[11px] text-neutral-700">{status}</p>}
+
+        <Section title="＋ Add item">
+          <select className="input" value={addRoom} onChange={(e) => setAddRoom(e.target.value)}>
+            {["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Parents Bedroom", "Office / Study", "Living, Dining & Foyer", "Other Services"].map((r) => <option key={r}>{r}</option>)}
+          </select>
+          <select className="input" value={addProductName} onChange={(e) => setAddProductName(e.target.value)}>
+            {productsArr.map((p) => <option key={p.product}>{p.product}</option>)}
+          </select>
+          {addProduct && (
+            <p className="text-[11px] text-neutral-500">
+              {addProduct.wc} · {addProduct.type} {addProduct.type === "Area" ? `· ₹${addProduct.rate}/sqft` : `· ₹${addProduct.unit}/unit`}
+            </p>
+          )}
+          {addProduct?.type === "Area" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-xs">W (mm)<input className="input" type="number" value={addW} onChange={(e) => setAddW(Number(e.target.value) || 0)} /></label>
+              <label className="text-xs">H (mm)<input className="input" type="number" value={addH} onChange={(e) => setAddH(Number(e.target.value) || 0)} /></label>
+            </div>
+          ) : (
+            <label className="text-xs">Quantity<input className="input" type="number" value={addQty} onChange={(e) => setAddQty(Number(e.target.value) || 1)} /></label>
+          )}
+          <button onClick={addItem} className="btn-sec">＋ Add to quotation</button>
+        </Section>
       </aside>
 
       <section className="p-5">
