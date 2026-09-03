@@ -80,11 +80,12 @@ async function resolveGeminiModel(key: string): Promise<string> {
         .filter((m: any) => (m.supportedGenerationMethods || []).includes("generateContent"))
         .map((m: any) => String(m.name || "").replace(/^models\//, ""))
         .filter(Boolean);
-      const pick =
-        names.find((n) => n.includes("flash") && !n.includes("thinking") && !n.includes("lite")) ||
-        names.find((n) => n.includes("flash")) ||
-        names.find((n) => n.includes("pro")) ||
-        names[0];
+      const ver = (n: string) => { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
+      // Prefer the newest plain Flash model (highest version number).
+      const flash = names
+        .filter((n) => n.includes("flash") && !n.includes("lite") && !n.includes("thinking") && !/preview|exp/.test(n))
+        .sort((a, b) => ver(b) - ver(a));
+      const pick = flash[0] || names.filter((n) => n.includes("flash")).sort((a, b) => ver(b) - ver(a))[0] || names[0];
       if (pick) return pick;
     }
   } catch {
