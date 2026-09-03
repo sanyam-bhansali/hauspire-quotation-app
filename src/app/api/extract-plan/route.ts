@@ -33,8 +33,9 @@ async function resolveModel(key: string): Promise<string> {
 const PROMPT = `You are reading an architectural floor plan for an interior-design quotation in India.
 Extract the flat configuration and each room's printed dimensions (usually like 10'0"X10'2", feet and inches).
 Return ONLY strict minified JSON, no prose, in this exact shape:
-{"bhk":"1 BHK"|"2 BHK"|"3 BHK"|"4 BHK","kitchen":{"widthFt":number,"depthFt":number}|null,"bathrooms":number,"hasBalcony":boolean,"hasStudy":boolean,"confidence":"high"|"medium"|"low","rooms":[{"name":string,"widthFt":number,"depthFt":number}]}
+{"bhk":"1 BHK"|"2 BHK"|"3 BHK"|"4 BHK","kitchen":{"widthFt":number,"depthFt":number}|null,"bathrooms":number,"hasBalcony":boolean,"hasStudy":boolean,"confidence":"high"|"medium"|"low","rooms":[{"name":string,"widthFt":number,"depthFt":number,"x":number,"y":number}]}
 Rules:
+- x,y = the room's approximate CENTRE as a percentage 0-100 of the plan image (x = left→right, y = top→bottom). Used to place rooms in a 3D layout, so keep relative positions correct.
 - bhk = number of bedrooms, counting a separate Study/Office room toward the total (e.g. 3 bedrooms + a study is "4 BHK").
 - hasStudy = true if there is a separate Study or Office room.
 - bathrooms = count of Toilet / Bathroom / W.C. rooms.
@@ -198,6 +199,8 @@ export async function POST(req: NextRequest) {
       name: r.name,
       widthMm: ftToMm(r.widthFt || 0),
       depthMm: ftToMm(r.depthFt || 0),
+      x: typeof r.x === "number" ? r.x : null,
+      y: typeof r.y === "number" ? r.y : null,
     }));
 
     return NextResponse.json({

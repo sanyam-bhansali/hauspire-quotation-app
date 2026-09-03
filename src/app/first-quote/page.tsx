@@ -15,6 +15,7 @@ import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import Plan2D from "@/components/Plan2D";
 import PrintDocument from "@/components/PrintDocument";
+import Isometric3D, { RoomLayout } from "@/components/Isometric3D";
 
 const TPL = template as unknown as Template;
 
@@ -43,7 +44,8 @@ export default function FirstQuotePage() {
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
   const [lines, setLines] = useState<QuoteLine[]>([]);
-  const [tab, setTab] = useState<"quote" | "plan" | "pdf">("quote");
+  const [roomLayout, setRoomLayout] = useState<RoomLayout[]>([]);
+  const [tab, setTab] = useState<"quote" | "plan" | "3d" | "pdf">("quote");
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
@@ -137,6 +139,10 @@ export default function FirstQuotePage() {
     const dims: Record<string, { w: number; h: number }> = {};
     (d.rooms || []).forEach((r: any) => { if (r.name) dims[r.name] = { w: r.widthMm || 0, h: r.depthMm || 0 }; });
     setRoomDims(dims);
+    setRoomLayout((d.rooms || []).map((r: any) => ({
+      name: r.name, wMm: r.widthMm || 0, dMm: r.depthMm || 0,
+      x: typeof r.x === "number" ? r.x : null, y: typeof r.y === "number" ? r.y : null,
+    })));
     const conf = d.confidence ? ` · confidence: ${d.confidence}` : "";
     setStatus(`Read via ${source}: ${d.bhk}, kitchen run ${d.kitchenRun} mm, ${d.bathrooms} bath${d.hasBalcony ? ", balcony" : ""}${d.hasStudy ? ", study" : ""}. Check §4 and Build.${conf}`);
     setTimeout(() => build({ bhk: d.bhk, run: d.kitchenRun, bathrooms: d.bathrooms, hasBalcony: d.hasBalcony, hasStudy: d.hasStudy }), 0);
@@ -314,6 +320,7 @@ export default function FirstQuotePage() {
         <div className="no-print mb-3 flex gap-2">
           <Tab on={tab === "quote"} onClick={() => setTab("quote")}>Quotation</Tab>
           <Tab on={tab === "plan"} onClick={() => setTab("plan")}>2D plan</Tab>
+          <Tab on={tab === "3d"} onClick={() => setTab("3d")}>3D view</Tab>
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
             <button onClick={() => { setTab("pdf"); setTimeout(() => window.print(), 350); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
@@ -334,6 +341,8 @@ export default function FirstQuotePage() {
           </>
         ) : tab === "plan" ? (
           <Plan2D lines={lines} />
+        ) : tab === "3d" ? (
+          <Isometric3D lines={lines} layout={roomLayout} />
         ) : (
           <PrintDocument meta={meta} lines={lines} />
         )}
