@@ -25,10 +25,10 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
   const rev = meta.revision ?? 0;
 
   return (
-    <div className="mx-auto max-w-4xl text-[12px] text-neutral-900">
+    <div className="mx-auto max-w-4xl text-[12px] text-neutral-900 print:max-w-none print:mx-0">
       {/* Cover + About + Terms are the exact branded pages */}
-      <img src="/brand/cover.png" alt="Cover" className="mx-auto block w-full break-after-page" />
-      <img src="/brand/about.png" alt="About" className="mx-auto block w-full break-after-page" />
+      <img src="/brand/cover.png" alt="Cover" className="brandpage block w-full brk-after" />
+      <img src="/brand/about.png" alt="About" className="brandpage block w-full brk-after" />
 
       {/* Quotation header */}
       <section className="px-2 pt-4">
@@ -44,7 +44,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         </div>
 
         {rooms.map((room) => (
-          <div key={room} className="mb-4 break-inside-avoid">
+          <div key={room} className="mb-4">
             <div className="bg-brand px-2 py-1 text-[12px] font-bold text-white">{room}</div>
             <table className="w-full border-collapse">
               <thead>
@@ -75,7 +75,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         ))}
 
         {/* Summary by room */}
-        <div className="mt-6 break-inside-avoid">
+        <div className="mt-6 avoid">
           <div className="bg-brand px-2 py-1 font-bold text-white">Summary By Room</div>
           <table className="w-full max-w-md border-collapse">
             <thead><tr className="bg-brand-light text-left text-white"><Th>S.No.</Th><Th>Rooms</Th><Th right>Amount (₹)</Th></tr></thead>
@@ -88,7 +88,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         </div>
 
         {/* Totals */}
-        <div className="mt-5 break-inside-avoid">
+        <div className="mt-5 avoid">
           <table className="w-full max-w-md border-collapse text-[11px]">
             <tbody>
               <Row k="Sum-Total (MO-01)  ·  Modular" v={fmt(t.mo)} />
@@ -107,7 +107,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         </div>
 
         {/* Payment stages */}
-        <div className="mt-6 break-inside-avoid">
+        <div className="mt-6 avoid">
           <div className="bg-brand px-2 py-1 font-bold text-white">Payment Stages</div>
           <table className="w-full max-w-lg border-collapse text-[11px]">
             <tbody>{t.stages.map((s) => <Row key={s.label} k={s.label} v={fmt(s.amount)} />)}</tbody>
@@ -116,7 +116,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
       </section>
 
       {/* Terms — exact branded page */}
-      <img src="/brand/terms.png" alt="Terms" className="mx-auto mt-4 block w-full break-before-page" />
+      <img src="/brand/terms.png" alt="Terms" className="brandpage block w-full brk-before" />
     </div>
   );
 }
