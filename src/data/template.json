@@ -283,7 +283,7 @@
    "kind": "unit",
    "amt": 20000,
    "details": "Minimal peripheral / cove false ceiling with panel lights. Priced by room area.",
-   "def": true
+   "def": false
   },
   {
    "p": "Minimal False Ceiling (per bedroom)",
@@ -291,7 +291,7 @@
    "kind": "perbed",
    "amt": 20000,
    "details": "Minimal peripheral / cove false ceiling with panel lights. Priced by room area.",
-   "def": true
+   "def": false
   },
   {
    "p": "Electricals",
