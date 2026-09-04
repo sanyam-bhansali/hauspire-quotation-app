@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useDesignerId } from "@/lib/useDesignerId";
 import template from "@/data/template.json";
 import type { Template, QuoteLine } from "@/lib/types";
-import { buildFirstQuote } from "@/lib/buildQuote";
-import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount } from "@/lib/pricing";
+import { buildFirstQuote, DEFAULT_FC_RATE } from "@/lib/buildQuote";
+import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
@@ -40,6 +40,8 @@ export default function FirstQuotePage() {
   const [hasBalcony, setHasBalcony] = useState(false);
   const [hasStudy, setHasStudy] = useState(false);
   const [sizeToPlan, setSizeToPlan] = useState(false);
+  const [falseCeiling, setFalseCeiling] = useState(false);
+  const [fcRate, setFcRate] = useState(DEFAULT_FC_RATE);
   const [roomDims, setRoomDims] = useState<Record<string, { w: number; h: number }>>({});
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
@@ -57,6 +59,7 @@ export default function FirstQuotePage() {
   const [addW, setAddW] = useState(1800);
   const [addH, setAddH] = useState(2100);
   const [addQty, setAddQty] = useState(1);
+  const [addSqft, setAddSqft] = useState(1000);
 
   // Load the editable Product Master so rate/unit edits apply to the first quote.
   useEffect(() => {
@@ -73,7 +76,10 @@ export default function FirstQuotePage() {
   function addItem() {
     if (!addProduct) return;
     const isArea = addProduct.type === "Area";
-    const amount = isArea ? areaAmount(addW, addH, addProduct.rate ?? 0) : (addProduct.unit ?? 0) * addQty;
+    const isSqft = addProduct.type === "SqFt";
+    const amount = isArea ? areaAmount(addW, addH, addProduct.rate ?? 0)
+      : isSqft ? sqftAmount(addSqft, addProduct.rate ?? 0)
+      : (addProduct.unit ?? 0) * addQty;
     setLines([
       ...lines,
       {
@@ -84,7 +90,10 @@ export default function FirstQuotePage() {
         width: isArea ? addW : null,
         height: isArea ? addH : null,
         amount,
-        rate: isArea ? addProduct.rate ?? undefined : undefined,
+        rate: isArea || isSqft ? addProduct.rate ?? undefined : undefined,
+        qty: isArea || isSqft ? undefined : addQty,
+        unitPrice: isArea || isSqft ? undefined : addProduct.unit ?? undefined,
+        sqft: isSqft ? addSqft : undefined,
       },
     ]);
   }
@@ -102,7 +111,13 @@ export default function FirstQuotePage() {
       if (l.width && l.height && m.type === "Area" && m.rate) {
         return { ...l, rate: m.rate, amount: areaAmount(l.width, l.height, m.rate) };
       }
-      if (!l.width && m.type === "Unit" && m.unit) return { ...l, amount: m.unit };
+      if (l.sqft != null && m.type === "SqFt" && m.rate) {
+        return { ...l, rate: m.rate, amount: sqftAmount(l.sqft, m.rate) };
+      }
+      if (!l.width && l.sqft == null && m.type === "Unit" && m.unit != null) {
+        const q = l.qty ?? 1;
+        return { ...l, unitPrice: m.unit, qty: q, amount: Math.round(q * (m.unit as number)) };
+      }
       return l;
     });
   }
@@ -125,6 +140,8 @@ export default function FirstQuotePage() {
         roomDims,
         enabledOptional: enabled,
         kingMaster: king,
+        falseCeiling,
+        fcRate,
       }))
     );
     setStatus("");
@@ -286,6 +303,15 @@ export default function FirstQuotePage() {
             <input type="checkbox" checked={sizeToPlan} onChange={(e) => setSizeToPlan(e.target.checked)} /> Size wardrobes to plan walls
           </label>
           <p className="text-[10.5px] text-neutral-400">Off = standard sizes (1800/1500). On = suggested from each bedroom’s wall; rebuild to apply.</p>
+          <label className="flex items-center gap-2 text-[12.5px]">
+            <input type="checkbox" checked={falseCeiling} onChange={(e) => setFalseCeiling(e.target.checked)} /> False ceiling (room-wise, by sqft)
+          </label>
+          {falseCeiling && (
+            <label className="text-xs text-neutral-600">False-ceiling rate (₹/sqft)
+              <input className="input" type="number" value={fcRate} onChange={(e) => setFcRate(Number(e.target.value) || 0)} />
+            </label>
+          )}
+          <p className="text-[10.5px] text-neutral-400">Adds one False Ceiling line per room = room area × ₹/sqft. Area auto-fills from the plan and stays editable; rebuild to apply.</p>
         </Section>
         <button onClick={() => build()} className="btn">Build first quotation ▸</button>
         <button onClick={save} className="btn-sec">Save</button>
@@ -301,7 +327,7 @@ export default function FirstQuotePage() {
           </select>
           {addProduct && (
             <p className="text-[11px] text-neutral-500">
-              {addProduct.wc} · {addProduct.type} {addProduct.type === "Area" ? `· ₹${addProduct.rate}/sqft` : `· ₹${addProduct.unit}/unit`}
+              {addProduct.wc} · {addProduct.type} {addProduct.type === "Area" || addProduct.type === "SqFt" ? `· ₹${addProduct.rate}/sqft` : `· ₹${addProduct.unit}/unit`}
             </p>
           )}
           {addProduct?.type === "Area" ? (
@@ -309,6 +335,8 @@ export default function FirstQuotePage() {
               <label className="text-xs">W (mm)<input className="input" type="number" value={addW} onChange={(e) => setAddW(Number(e.target.value) || 0)} /></label>
               <label className="text-xs">H (mm)<input className="input" type="number" value={addH} onChange={(e) => setAddH(Number(e.target.value) || 0)} /></label>
             </div>
+          ) : addProduct?.type === "SqFt" ? (
+            <label className="text-xs">Area (sq ft)<input className="input" type="number" value={addSqft} onChange={(e) => setAddSqft(Number(e.target.value) || 0)} /></label>
           ) : (
             <label className="text-xs">Quantity<input className="input" type="number" value={addQty} onChange={(e) => setAddQty(Number(e.target.value) || 1)} /></label>
           )}

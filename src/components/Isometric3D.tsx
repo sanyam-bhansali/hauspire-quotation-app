@@ -244,7 +244,8 @@ export default function Isometric3D({ lines, layout }: { lines: QuoteLine[]; lay
     try {
       const res = await fetch("/api/render-3d", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ imageBase64: url.split(",")[1] }) });
       if (res.status === 501) { setAiStatus("AI render not configured — set an image-generation key (see notes)."); return; }
-      if (!res.ok) { const e = await res.json().catch(() => ({} as any)); setAiStatus(`AI render failed: ${e.detail ? String(e.detail).slice(0, 160) : res.status}`); return; }
+      if (res.status === 429) { setAiStatus("Image-AI quota exceeded — this needs billing enabled. Use ⬇ Download image (free) instead."); return; }
+      if (!res.ok) { const e = await res.json().catch(() => ({} as any)); setAiStatus(`AI render failed: ${e.message || (e.detail ? String(e.detail).slice(0, 160) : res.status)}`); return; }
       const d = await res.json();
       if (d.image) { setAiImg(`data:image/png;base64,${d.image}`); setAiStatus(""); } else setAiStatus("No image returned.");
     } catch (e: any) { setAiStatus(`Error: ${String(e?.message || e)}`); } finally { setBusy(false); }

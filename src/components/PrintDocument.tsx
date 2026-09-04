@@ -50,7 +50,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
               <thead>
                 <tr className="bg-brand-light text-left text-[11px] text-white">
                   <Th>S.No.</Th><Th>Product</Th><Th>Work Code</Th><Th>Details</Th>
-                  <Th right>Width(mm)</Th><Th right>Height(mm)</Th><Th right>Amount (₹)</Th>
+                  <Th right>Units</Th><Th right>Width(mm)</Th><Th right>Height(mm)</Th><Th right>Amount (₹)</Th>
                 </tr>
               </thead>
               <tbody>
@@ -60,13 +60,14 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
                     <Td><b>{l.product}</b></Td>
                     <Td>{l.wc}</Td>
                     <Td className="whitespace-pre-line text-[10px] text-neutral-600">{l.details}</Td>
+                    <Td right>{l.unitPrice != null ? (l.qty ?? 1) : ""}</Td>
                     <Td right>{l.width ?? ""}</Td>
                     <Td right>{l.height ?? ""}</Td>
                     <Td right>{fmt(l.amount)}</Td>
                   </tr>
                 ))}
                 <tr className="bg-brand-band font-bold">
-                  <Td colSpan={6}>{room} (Sub-total)</Td>
+                  <Td colSpan={7}>{room} (Sub-total)</Td>
                   <Td right>{fmt(roomTotal(room))}</Td>
                 </tr>
               </tbody>

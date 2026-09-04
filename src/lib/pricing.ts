@@ -27,6 +27,11 @@ export function areaAmount(widthMm: number, heightMm: number, ratePerSqft: numbe
   return Math.round((widthMm * heightMm) / MM_PER_SQFT * ratePerSqft);
 }
 
+/** Price a service by a plain floor area in square feet (e.g. painting @ ₹26/sqft). */
+export function sqftAmount(sqft: number, ratePerSqft: number): number {
+  return Math.round(sqft * ratePerSqft);
+}
+
 /** Compute the amount for one template item given the project context. */
 export function lineAmount(
   it: TemplateItem,
@@ -39,6 +44,8 @@ export function lineAmount(
       return areaAmount(it.W ?? 0, it.H ?? 0, it.rate ?? 0);
     case "perbed":
       return (it.amt ?? 0) * ctx.bedrooms;
+    case "sqft":
+      return sqftAmount(it.area ?? 0, it.rate ?? 0);
     case "unit":
     default:
       return it.amt ?? 0;

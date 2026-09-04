@@ -45,8 +45,22 @@ export async function POST(req: NextRequest) {
       contents: [{ parts: [{ inline_data: { mime_type: "image/png", data: imageBase64 } }, { text: PROMPT }] }],
       generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
     };
-    const resp = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    if (!resp.ok) return NextResponse.json({ error: "render_failed", model, detail: await resp.text() }, { status: 502 });
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    let resp!: Response;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      resp = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      if (resp.ok) break;
+      if (resp.status === 429 && attempt < 2) { await sleep(2000 * (attempt + 1)); continue; }
+      break;
+    }
+    if (!resp.ok) {
+      const detail = await resp.text();
+      const quota = resp.status === 429;
+      return NextResponse.json(
+        { error: quota ? "quota" : "render_failed", model, detail, message: quota ? "Image-generation quota exceeded — image AI needs billing enabled (unlike text/vision). The free 3D + Download still work." : undefined },
+        { status: quota ? 429 : 502 }
+      );
+    }
     const data = await resp.json();
     const parts = data?.candidates?.[0]?.content?.parts || [];
     const imgPart = parts.find((p: any) => p.inline_data?.data || p.inlineData?.data);

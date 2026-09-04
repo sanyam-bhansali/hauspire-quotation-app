@@ -14,10 +14,11 @@
    "p": "Base Cabinets- Tandems",
    "wc": "NM-01",
    "kind": "unit",
-   "amt": 40000,
+   "amt": 10000,
    "details": "Premium tandem drawer systems (Bose / Hettich) with soft-close runners. Priced per set as per levels and configuration.",
    "def": true,
-   "det": "Tandems (Bose/Hettich), soft-close — Qty 4: 3 Horizontal + 1 Vertical (Bottle Pull-Out)."
+   "det": "Tandems (Bose/Hettich), soft-close — 3 Horizontal + 1 Vertical (Bottle Pull-Out).",
+   "qty": 4
   },
   {
    "p": "Wall Cabinets",
@@ -277,22 +278,6 @@
   }
  ],
  "Other Services": [
-  {
-   "p": "Minimal False Ceiling (Living/Foyer/Dining)",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 20000,
-   "details": "Minimal peripheral / cove false ceiling with panel lights. Priced by room area.",
-   "def": false
-  },
-  {
-   "p": "Minimal False Ceiling (per bedroom)",
-   "wc": "NM-01",
-   "kind": "perbed",
-   "amt": 20000,
-   "details": "Minimal peripheral / cove false ceiling with panel lights. Priced by room area.",
-   "def": false
-  },
   {
    "p": "Electricals",
    "wc": "NM-01",

@@ -1,7 +1,7 @@
 "use client";
 import { Fragment } from "react";
 import type { QuoteLine, WorkCode } from "@/lib/types";
-import { inr, areaAmount } from "@/lib/pricing";
+import { inr, areaAmount, sqftAmount } from "@/lib/pricing";
 
 /** Fully editable, room-grouped quotation table. Every field can be changed;
  *  editing Width/Height recomputes the amount for area lines (those with a rate). */
@@ -20,6 +20,14 @@ export default function QuoteTable({
     // If W/H changed and this is an area line (has a rate), recompute the amount.
     if (("width" in patch || "height" in patch) && l.rate && l.width && l.height) {
       l.amount = areaAmount(l.width, l.height, l.rate);
+    }
+    // If Units changed and this is a unit line (has a unit price), recompute.
+    if ("qty" in patch && l.unitPrice != null && l.qty != null) {
+      l.amount = Math.round(l.qty * l.unitPrice);
+    }
+    // If SqFt area changed on a per-sqft line (has a rate), recompute the amount.
+    if ("sqft" in patch && l.sqft != null && l.rate) {
+      l.amount = sqftAmount(l.sqft, l.rate);
     }
     next[idx] = l;
     onChange(next);
@@ -42,13 +50,14 @@ export default function QuoteTable({
           return (
             <Fragment key={room}>
               <tr className="bg-brand font-bold text-white">
-                <td colSpan={7} className="border border-brand-line px-2 py-1">{room}</td>
+                <td colSpan={8} className="border border-brand-line px-2 py-1">{room}</td>
               </tr>
               <tr className="bg-brand-light text-left text-white">
                 <th className="border border-brand-line px-2 py-1">#</th>
                 <th className="border border-brand-line px-2 py-1">Product</th>
                 <th className="border border-brand-line px-2 py-1">Code</th>
                 <th className="border border-brand-line px-2 py-1">Details</th>
+                <th className="border border-brand-line px-2 py-1 text-right">Units / SqFt</th>
                 <th className="border border-brand-line px-2 py-1 text-right">W</th>
                 <th className="border border-brand-line px-2 py-1 text-right">H</th>
                 <th className="border border-brand-line px-2 py-1 text-right">Amount</th>
@@ -68,6 +77,18 @@ export default function QuoteTable({
                     <textarea className="cell h-12 w-72 text-[11px]" value={x.l.details} onChange={(e) => setField(x.i, { details: e.target.value })} />
                   </td>
                   <td className="border border-brand-line px-1 py-1 text-right">
+                    {x.l.sqft != null ? (
+                      <span className="inline-flex items-center justify-end gap-1">
+                        <input type="number" className="cell w-16 text-right" value={x.l.sqft} onChange={(e) => setField(x.i, { sqft: Number(e.target.value) || 0 })} />
+                        <span className="text-[10px] text-neutral-400">sqft{x.l.rate ? ` @₹${x.l.rate}` : ""}</span>
+                      </span>
+                    ) : x.l.unitPrice != null ? (
+                      <input type="number" className="cell w-14 text-right" value={x.l.qty ?? 1} onChange={(e) => setField(x.i, { qty: Number(e.target.value) || 0 })} />
+                    ) : (
+                      <span className="text-neutral-300">—</span>
+                    )}
+                  </td>
+                  <td className="border border-brand-line px-1 py-1 text-right">
                     <input type="number" className="cell w-16 text-right" value={x.l.width ?? ""} onChange={(e) => setField(x.i, { width: numOrNull(e.target.value) })} />
                   </td>
                   <td className="border border-brand-line px-1 py-1 text-right">
@@ -82,7 +103,7 @@ export default function QuoteTable({
                 </tr>
               ))}
               <tr className="bg-brand-band font-bold">
-                <td colSpan={6} className="border border-brand-line px-2 py-1">
+                <td colSpan={7} className="border border-brand-line px-2 py-1">
                   {room} — Sub-total
                   <button onClick={() => addLine(room)} className="no-print ml-2 rounded border border-brand px-1.5 text-[11px] font-semibold text-brand">+ add item</button>
                 </td>

@@ -1,7 +1,10 @@
 // Turns the per-room template + project context into concrete quote lines.
 import template from "@/data/template.json";
 import type { Template, TemplateItem, QuoteLine } from "./types";
-import { BHK_ROOMS, lineAmount, areaAmount } from "./pricing";
+import { BHK_ROOMS, areaAmount, sqftAmount, MM_PER_SQFT } from "./pricing";
+
+// Default single-layer false-ceiling rate (₹/sqft). Editable per quote.
+export const DEFAULT_FC_RATE = 75;
 
 const TPL = template as unknown as Template;
 
@@ -29,6 +32,14 @@ export interface BuildContext {
   roomDims?: Record<string, { w: number; h: number }>; // room name → mm
   enabledOptional?: Record<string, boolean>; // key = `${room}||${product}`
   kingMaster?: boolean;
+  falseCeiling?: boolean; // add a room-wise false-ceiling line to each room
+  fcRate?: number; // false-ceiling ₹/sqft (defaults to DEFAULT_FC_RATE)
+}
+
+// sqft floor area of a room from its plan dimensions (mm × mm). 0 if unknown.
+function roomSqft(dim: { w: number; h: number } | undefined): number {
+  if (!dim || !dim.w || !dim.h) return 0;
+  return Math.round((dim.w * dim.h) / MM_PER_SQFT);
 }
 
 export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
@@ -60,31 +71,62 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
       let width: number | null = null;
       let height: number | null = null;
       let amount: number;
+      let qty: number | undefined;
+      let unitPrice: number | undefined;
+      let sqft: number | undefined;
 
-      // Bedroom wardrobe/loft sized to the plan wall (fixed-kind area items).
       const isWardrobeOrLoft =
         it.kind === "fixed" && (it.p.toLowerCase().includes("wardrobe") || it.p.startsWith("Loft"));
-      if (planWardrobe && isWardrobeOrLoft) {
-        width = planWardrobe;
-        height = it.H ?? 0;
-        amount = areaAmount(width, height, it.rate ?? 0);
-      } else {
-        amount = lineAmount(it, { kitchenRun: ctx.kitchenRun, bedrooms });
-        if (it.kind === "run") { width = ctx.kitchenRun; height = it.H ?? null; }
-        else if (it.kind === "fixed") { width = it.W ?? null; height = it.H ?? null; }
-      }
 
-      if (it.perBath) amount *= bathrooms; // one vanity per bathroom
+      if (planWardrobe && isWardrobeOrLoft) {
+        width = planWardrobe; height = it.H ?? 0; amount = areaAmount(width, height, it.rate ?? 0);
+      } else if (it.kind === "run") {
+        width = ctx.kitchenRun; height = it.H ?? 600; amount = areaAmount(width, height, it.rate ?? 0);
+      } else if (it.kind === "fixed") {
+        width = it.W ?? 0; height = it.H ?? 0; amount = areaAmount(width, height, it.rate ?? 0);
+      } else if (it.kind === "perbed") {
+        unitPrice = it.amt ?? 0; qty = bedrooms; amount = unitPrice * qty;
+      } else if (it.kind === "sqft") {
+        sqft = it.area ?? 0; amount = sqftAmount(sqft, it.rate ?? 0);
+      } else {
+        // unit — quantity × unit price (vanity multiplies by bathrooms)
+        unitPrice = it.amt ?? 0;
+        qty = it.perBath ? bathrooms : (it.qty ?? 1);
+        amount = unitPrice * qty;
+      }
 
       if (room === "Master Bedroom" && ctx.kingMaster && it.p.startsWith("Queen")) {
         product = "King size Bed- Hydraulic Storage";
-        amount = 64000;
+        unitPrice = 64000; qty = 1; amount = 64000;
       }
 
       const details = it.perBath && bathrooms > 1 ? `${it.details} (×${bathrooms} bathrooms)` : it.details;
-      const rate = it.kind === "run" || it.kind === "fixed" ? it.rate : undefined;
-      lines.push({ room, product, wc: it.wc, details, width, height, amount, rate });
+      const rate = it.kind === "run" || it.kind === "fixed" || it.kind === "sqft" ? it.rate : undefined;
+      lines.push({ room, product, wc: it.wc, details, width, height, amount, rate, qty, unitPrice, sqft });
     }
   }
+
+  // False ceiling — one room-wise line per physical room, priced by that room's
+  // floor area × ₹/sqft. Area auto-fills from the plan and stays editable.
+  if (ctx.falseCeiling) {
+    const fcRate = ctx.fcRate ?? DEFAULT_FC_RATE;
+    for (const room of rooms) {
+      if (room === "Other Services") continue;
+      const area = roomSqft(ctx.roomDims?.[room]);
+      lines.push({
+        room,
+        product: "False Ceiling",
+        wc: "NM-01",
+        details:
+          "Single-layer false ceiling with concealed wiring and panel lights (Saint-Gobain board, Gyproc framing, Polycab wiring). Priced by room area.",
+        width: null,
+        height: null,
+        amount: sqftAmount(area, fcRate),
+        rate: fcRate,
+        sqft: area,
+      });
+    }
+  }
+
   return lines;
 }

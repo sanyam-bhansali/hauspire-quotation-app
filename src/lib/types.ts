@@ -1,7 +1,9 @@
 // Shared types for the Hauspire quotation app.
 
 export type WorkCode = "MO-01" | "NM-01";
-export type PriceType = "Area" | "Unit";
+// Area = ₹/sqft × (Width×Height in mm). SqFt = ₹/sqft × a plain floor area you
+// type in square feet (painting, electricals, false ceiling by area). Unit = flat ₹ × qty.
+export type PriceType = "Area" | "Unit" | "SqFt";
 
 /** A row in the ProductMaster (the single source of truth for prices). */
 export interface Product {
@@ -15,7 +17,7 @@ export interface Product {
 }
 
 /** How a template line is sized. */
-export type SizeKind = "run" | "fixed" | "unit" | "perbed";
+export type SizeKind = "run" | "fixed" | "unit" | "perbed" | "sqft";
 
 /** A default line in the per-room template used by the First-Quote builder. */
 export interface TemplateItem {
@@ -28,6 +30,8 @@ export interface TemplateItem {
   W?: number; // fixed width (mm)
   H?: number; // height (mm)
   amt?: number; // Unit amount (from ProductMaster)
+  area?: number; // default floor area in sqft for a sqft line
+  qty?: number; // default units for a unit line (e.g. tandems = 4)
   perBath?: boolean; // multiply by number of bathrooms (e.g. Vanity)
   balcony?: boolean; // include only when the plan has a balcony
 }
@@ -43,7 +47,10 @@ export interface QuoteLine {
   width: number | null;
   height: number | null;
   amount: number;
-  rate?: number; // ₹/sqft for area lines — lets Width×Height recompute the amount
+  rate?: number; // ₹/sqft for area/sqft lines — lets area recompute the amount
+  qty?: number; // units for unit-priced lines
+  unitPrice?: number; // ₹ per unit — lets Units recompute the amount
+  sqft?: number; // floor area in sqft for SqFt-priced lines (amount = sqft × rate)
 }
 
 export interface Totals {

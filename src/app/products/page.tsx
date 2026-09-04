@@ -17,8 +17,9 @@ export default function ProductsPage() {
   function update(i: number, patch: Partial<Product>) {
     setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   }
-  function setType(i: number, type: "Area" | "Unit") {
-    update(i, type === "Area" ? { type, unit: null, rate: rows[i].rate ?? 2000 } : { type, rate: null, unit: rows[i].unit ?? 10000 });
+  function setType(i: number, type: "Area" | "Unit" | "SqFt") {
+    if (type === "Area" || type === "SqFt") update(i, { type, unit: null, rate: rows[i].rate ?? (type === "SqFt" ? 26 : 2000) });
+    else update(i, { type, rate: null, unit: rows[i].unit ?? 10000 });
   }
   function addRow() { setRows((r) => [{ ...BLANK }, ...r]); }
   function remove(i: number) { setRows((r) => r.filter((_, j) => j !== i)); }
@@ -43,8 +44,8 @@ export default function ProductsPage() {
         <span className="text-xs text-neutral-500">{status}</span>
       </div>
       <p className="mb-3 text-[11px] text-neutral-500">
-        Edit rates/units here to price with your own numbers. Area = ₹/sqft (needs Width×Height); Unit = flat ₹.
-        Saved changes apply in the Full Builder for everyone.
+        Edit rates/units here to price with your own numbers. Area = ₹/sqft (needs Width×Height); SqFt = ₹/sqft × a floor area you type in sq ft (painting, electricals, false ceiling); Unit = flat ₹.
+        Saved changes apply in both builders for everyone.
       </p>
 
       <div className="overflow-auto rounded border border-brand-line">
@@ -74,11 +75,11 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-1 py-1">
                     <select className="cell" value={r.type} onChange={(e) => setType(i, e.target.value as any)}>
-                      <option>Area</option><option>Unit</option>
+                      <option>Area</option><option>SqFt</option><option>Unit</option>
                     </select>
                   </td>
                   <td className="px-1 py-1 text-right">
-                    {r.type === "Area" ? <input type="number" className="cell w-24 text-right" value={r.rate ?? 0} onChange={(e) => update(i, { rate: Number(e.target.value) || 0 })} /> : <span className="text-neutral-300">—</span>}
+                    {r.type === "Area" || r.type === "SqFt" ? <input type="number" className="cell w-24 text-right" value={r.rate ?? 0} onChange={(e) => update(i, { rate: Number(e.target.value) || 0 })} /> : <span className="text-neutral-300">—</span>}
                   </td>
                   <td className="px-1 py-1 text-right">
                     {r.type === "Unit" ? <input type="number" className="cell w-28 text-right" value={r.unit ?? 0} onChange={(e) => update(i, { unit: Number(e.target.value) || 0 })} /> : <span className="text-neutral-300">—</span>}
