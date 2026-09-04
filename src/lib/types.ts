@@ -2,8 +2,9 @@
 
 export type WorkCode = "MO-01" | "NM-01";
 // Area = ₹/sqft × (Width×Height in mm). SqFt = ₹/sqft × a plain floor area you
-// type in square feet (painting, electricals, false ceiling by area). Unit = flat ₹ × qty.
-export type PriceType = "Area" | "Unit" | "SqFt";
+// type in square feet (painting, electricals, false ceiling by area).
+// RFT = ₹/running-foot × a length you type in running feet. Unit = flat ₹ × qty.
+export type PriceType = "Area" | "Unit" | "SqFt" | "RFT";
 
 /** A row in the ProductMaster (the single source of truth for prices). */
 export interface Product {
@@ -17,7 +18,7 @@ export interface Product {
 }
 
 /** How a template line is sized. */
-export type SizeKind = "run" | "fixed" | "unit" | "perbed" | "sqft";
+export type SizeKind = "run" | "fixed" | "unit" | "perbed" | "sqft" | "rft";
 
 /** A default line in the per-room template used by the First-Quote builder. */
 export interface TemplateItem {
@@ -31,6 +32,7 @@ export interface TemplateItem {
   H?: number; // height (mm)
   amt?: number; // Unit amount (from ProductMaster)
   area?: number; // default floor area in sqft for a sqft line
+  len?: number; // default length in running feet for an rft line
   qty?: number; // default units for a unit line (e.g. tandems = 4)
   perBath?: boolean; // multiply by number of bathrooms (e.g. Vanity)
   balcony?: boolean; // include only when the plan has a balcony
@@ -51,6 +53,7 @@ export interface QuoteLine {
   qty?: number; // units for unit-priced lines
   unitPrice?: number; // ₹ per unit — lets Units recompute the amount
   sqft?: number; // floor area in sqft for SqFt-priced lines (amount = sqft × rate)
+  rft?: number; // length in running feet for RFT-priced lines (amount = rft × rate)
 }
 
 export interface Totals {

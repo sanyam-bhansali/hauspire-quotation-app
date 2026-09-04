@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDesignerId } from "@/lib/useDesignerId";
 import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
-import { areaAmount, sqftAmount, computeTotals, inr } from "@/lib/pricing";
+import { areaAmount, sqftAmount, rftAmount, computeTotals, inr } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
@@ -34,6 +34,7 @@ export default function BuilderPage() {
   const [h, setH] = useState(2100);
   const [qty, setQty] = useState(1);
   const [sqft, setSqft] = useState(1000);
+  const [rft, setRft] = useState(10);
 
   // Load the configured Product Master (Supabase) so the picker uses your rates.
   useEffect(() => {
@@ -54,19 +55,22 @@ export default function BuilderPage() {
   const previewAmt =
     product.type === "Area" ? areaAmount(w, h, product.rate ?? 0)
     : product.type === "SqFt" ? sqftAmount(sqft, product.rate ?? 0)
+    : product.type === "RFT" ? rftAmount(rft, product.rate ?? 0)
     : (product.unit ?? 0) * qty;
 
   function addLine() {
     const isArea = product.type === "Area";
     const isSqft = product.type === "SqFt";
+    const isRft = product.type === "RFT";
     setLines([...lines, {
       room, product: product.product, wc: product.wc, details: product.details,
       width: isArea ? w : null, height: isArea ? h : null,
       amount: previewAmt,
-      rate: isArea || isSqft ? product.rate ?? undefined : undefined,
+      rate: isArea || isSqft || isRft ? product.rate ?? undefined : undefined,
       qty: product.type === "Unit" ? qty : undefined,
       unitPrice: product.type === "Unit" ? product.unit ?? undefined : undefined,
       sqft: isSqft ? sqft : undefined,
+      rft: isRft ? rft : undefined,
     }]);
   }
   async function save() {
@@ -96,7 +100,7 @@ export default function BuilderPage() {
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Add a line</h2>
         <select className="input" value={room} onChange={(e) => setRoom(e.target.value)}>{ROOMS.map((r) => <option key={r}>{r}</option>)}</select>
         <select className="input" value={productName} onChange={(e) => setProductName(e.target.value)}>{products.map((p) => <option key={p.product}>{p.product}</option>)}</select>
-        <p className="text-[11px] text-neutral-500">{product.wc} · {product.type} {product.type === "Area" || product.type === "SqFt" ? `· ₹${product.rate}/sqft` : `· ₹${product.unit}/unit`}</p>
+        <p className="text-[11px] text-neutral-500">{product.wc} · {product.type} {product.type === "Area" || product.type === "SqFt" ? `· ₹${product.rate}/sqft` : product.type === "RFT" ? `· ₹${product.rate}/rft` : `· ₹${product.unit}/unit`}</p>
         {product.type === "Area" ? (
           <div className="grid grid-cols-2 gap-2">
             <label className="text-xs">W (mm)<input className="input" type="number" value={w} onChange={(e) => setW(Number(e.target.value) || 0)} /></label>
@@ -104,6 +108,8 @@ export default function BuilderPage() {
           </div>
         ) : product.type === "SqFt" ? (
           <label className="text-xs">Area (sq ft)<input className="input" type="number" value={sqft} onChange={(e) => setSqft(Number(e.target.value) || 0)} /></label>
+        ) : product.type === "RFT" ? (
+          <label className="text-xs">Length (running ft)<input className="input" type="number" value={rft} onChange={(e) => setRft(Number(e.target.value) || 0)} /></label>
         ) : (
           <label className="text-xs">Quantity<input className="input" type="number" value={qty} onChange={(e) => setQty(Number(e.target.value) || 1)} /></label>
         )}

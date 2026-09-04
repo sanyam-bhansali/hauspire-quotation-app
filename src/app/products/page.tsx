@@ -17,8 +17,9 @@ export default function ProductsPage() {
   function update(i: number, patch: Partial<Product>) {
     setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   }
-  function setType(i: number, type: "Area" | "Unit" | "SqFt") {
-    if (type === "Area" || type === "SqFt") update(i, { type, unit: null, rate: rows[i].rate ?? (type === "SqFt" ? 26 : 2000) });
+  function setType(i: number, type: "Area" | "Unit" | "SqFt" | "RFT") {
+    if (type === "Area" || type === "SqFt" || type === "RFT")
+      update(i, { type, unit: null, rate: rows[i].rate ?? (type === "SqFt" ? 26 : type === "RFT" ? 1200 : 2000) });
     else update(i, { type, rate: null, unit: rows[i].unit ?? 10000 });
   }
   function addRow() { setRows((r) => [{ ...BLANK }, ...r]); }
@@ -44,7 +45,7 @@ export default function ProductsPage() {
         <span className="text-xs text-neutral-500">{status}</span>
       </div>
       <p className="mb-3 text-[11px] text-neutral-500">
-        Edit rates/units here to price with your own numbers. Area = ₹/sqft (needs Width×Height); SqFt = ₹/sqft × a floor area you type in sq ft (painting, electricals, false ceiling); Unit = flat ₹.
+        Edit rates/units here to price with your own numbers. Area = ₹/sqft (needs Width×Height); SqFt = ₹/sqft × a floor area you type in sq ft (painting, electricals, false ceiling); RFT = ₹/running-ft × a length you type in running feet; Unit = flat ₹.
         Saved changes apply in both builders for everyone.
       </p>
 
@@ -55,7 +56,7 @@ export default function ProductsPage() {
               <th className="px-2 py-2">Product</th>
               <th className="px-2 py-2">Code</th>
               <th className="px-2 py-2">Type</th>
-              <th className="px-2 py-2 text-right">Rate ₹/sqft</th>
+              <th className="px-2 py-2 text-right">Rate ₹/sqft·rft</th>
               <th className="px-2 py-2 text-right">Unit ₹</th>
               <th className="px-2 py-2">Rooms</th>
               <th className="px-2 py-2">Details</th>
@@ -75,11 +76,11 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-1 py-1">
                     <select className="cell" value={r.type} onChange={(e) => setType(i, e.target.value as any)}>
-                      <option>Area</option><option>SqFt</option><option>Unit</option>
+                      <option>Area</option><option>SqFt</option><option>RFT</option><option>Unit</option>
                     </select>
                   </td>
                   <td className="px-1 py-1 text-right">
-                    {r.type === "Area" || r.type === "SqFt" ? <input type="number" className="cell w-24 text-right" value={r.rate ?? 0} onChange={(e) => update(i, { rate: Number(e.target.value) || 0 })} /> : <span className="text-neutral-300">—</span>}
+                    {r.type === "Area" || r.type === "SqFt" || r.type === "RFT" ? <input type="number" className="cell w-24 text-right" value={r.rate ?? 0} onChange={(e) => update(i, { rate: Number(e.target.value) || 0 })} /> : <span className="text-neutral-300">—</span>}
                   </td>
                   <td className="px-1 py-1 text-right">
                     {r.type === "Unit" ? <input type="number" className="cell w-28 text-right" value={r.unit ?? 0} onChange={(e) => update(i, { unit: Number(e.target.value) || 0 })} /> : <span className="text-neutral-300">—</span>}

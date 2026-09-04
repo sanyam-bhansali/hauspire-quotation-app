@@ -1,7 +1,7 @@
 "use client";
 import { Fragment } from "react";
 import type { QuoteLine, WorkCode } from "@/lib/types";
-import { inr, areaAmount, sqftAmount } from "@/lib/pricing";
+import { inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
 
 /** Fully editable, room-grouped quotation table. Every field can be changed;
  *  editing Width/Height recomputes the amount for area lines (those with a rate). */
@@ -28,6 +28,10 @@ export default function QuoteTable({
     // If SqFt area changed on a per-sqft line (has a rate), recompute the amount.
     if ("sqft" in patch && l.sqft != null && l.rate) {
       l.amount = sqftAmount(l.sqft, l.rate);
+    }
+    // If running-feet length changed on a per-rft line (has a rate), recompute.
+    if ("rft" in patch && l.rft != null && l.rate) {
+      l.amount = rftAmount(l.rft, l.rate);
     }
     next[idx] = l;
     onChange(next);
@@ -57,7 +61,7 @@ export default function QuoteTable({
                 <th className="border border-brand-line px-2 py-1">Product</th>
                 <th className="border border-brand-line px-2 py-1">Code</th>
                 <th className="border border-brand-line px-2 py-1">Details</th>
-                <th className="border border-brand-line px-2 py-1 text-right">Units / SqFt</th>
+                <th className="border border-brand-line px-2 py-1 text-right">Units / SqFt / RFT</th>
                 <th className="border border-brand-line px-2 py-1 text-right">W</th>
                 <th className="border border-brand-line px-2 py-1 text-right">H</th>
                 <th className="border border-brand-line px-2 py-1 text-right">Amount</th>
@@ -81,6 +85,11 @@ export default function QuoteTable({
                       <span className="inline-flex items-center justify-end gap-1">
                         <input type="number" className="cell w-16 text-right" value={x.l.sqft} onChange={(e) => setField(x.i, { sqft: Number(e.target.value) || 0 })} />
                         <span className="text-[10px] text-neutral-400">sqft{x.l.rate ? ` @₹${x.l.rate}` : ""}</span>
+                      </span>
+                    ) : x.l.rft != null ? (
+                      <span className="inline-flex items-center justify-end gap-1">
+                        <input type="number" className="cell w-16 text-right" value={x.l.rft} onChange={(e) => setField(x.i, { rft: Number(e.target.value) || 0 })} />
+                        <span className="text-[10px] text-neutral-400">rft{x.l.rate ? ` @₹${x.l.rate}` : ""}</span>
                       </span>
                     ) : x.l.unitPrice != null ? (
                       <input type="number" className="cell w-14 text-right" value={x.l.qty ?? 1} onChange={(e) => setField(x.i, { qty: Number(e.target.value) || 0 })} />

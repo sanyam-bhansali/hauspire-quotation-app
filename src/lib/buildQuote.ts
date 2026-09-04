@@ -1,7 +1,7 @@
 // Turns the per-room template + project context into concrete quote lines.
 import template from "@/data/template.json";
 import type { Template, TemplateItem, QuoteLine } from "./types";
-import { BHK_ROOMS, areaAmount, sqftAmount, MM_PER_SQFT } from "./pricing";
+import { BHK_ROOMS, areaAmount, sqftAmount, rftAmount, MM_PER_SQFT } from "./pricing";
 
 // Default single-layer false-ceiling rate (₹/sqft). Editable per quote.
 export const DEFAULT_FC_RATE = 75;
@@ -74,6 +74,7 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
       let qty: number | undefined;
       let unitPrice: number | undefined;
       let sqft: number | undefined;
+      let rft: number | undefined;
 
       const isWardrobeOrLoft =
         it.kind === "fixed" && (it.p.toLowerCase().includes("wardrobe") || it.p.startsWith("Loft"));
@@ -88,6 +89,8 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
         unitPrice = it.amt ?? 0; qty = bedrooms; amount = unitPrice * qty;
       } else if (it.kind === "sqft") {
         sqft = it.area ?? 0; amount = sqftAmount(sqft, it.rate ?? 0);
+      } else if (it.kind === "rft") {
+        rft = it.len ?? 0; amount = rftAmount(rft, it.rate ?? 0);
       } else {
         // unit — quantity × unit price (vanity multiplies by bathrooms)
         unitPrice = it.amt ?? 0;
@@ -101,8 +104,8 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
       }
 
       const details = it.perBath && bathrooms > 1 ? `${it.details} (×${bathrooms} bathrooms)` : it.details;
-      const rate = it.kind === "run" || it.kind === "fixed" || it.kind === "sqft" ? it.rate : undefined;
-      lines.push({ room, product, wc: it.wc, details, width, height, amount, rate, qty, unitPrice, sqft });
+      const rate = it.kind === "run" || it.kind === "fixed" || it.kind === "sqft" || it.kind === "rft" ? it.rate : undefined;
+      lines.push({ room, product, wc: it.wc, details, width, height, amount, rate, qty, unitPrice, sqft, rft });
     }
   }
 

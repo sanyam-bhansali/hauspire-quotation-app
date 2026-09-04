@@ -5,7 +5,7 @@ import { useDesignerId } from "@/lib/useDesignerId";
 import template from "@/data/template.json";
 import type { Template, QuoteLine } from "@/lib/types";
 import { buildFirstQuote, DEFAULT_FC_RATE } from "@/lib/buildQuote";
-import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount } from "@/lib/pricing";
+import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
@@ -60,6 +60,7 @@ export default function FirstQuotePage() {
   const [addH, setAddH] = useState(2100);
   const [addQty, setAddQty] = useState(1);
   const [addSqft, setAddSqft] = useState(1000);
+  const [addRft, setAddRft] = useState(10);
 
   // Load the editable Product Master so rate/unit edits apply to the first quote.
   useEffect(() => {
@@ -77,8 +78,10 @@ export default function FirstQuotePage() {
     if (!addProduct) return;
     const isArea = addProduct.type === "Area";
     const isSqft = addProduct.type === "SqFt";
+    const isRft = addProduct.type === "RFT";
     const amount = isArea ? areaAmount(addW, addH, addProduct.rate ?? 0)
       : isSqft ? sqftAmount(addSqft, addProduct.rate ?? 0)
+      : isRft ? rftAmount(addRft, addProduct.rate ?? 0)
       : (addProduct.unit ?? 0) * addQty;
     setLines([
       ...lines,
@@ -90,10 +93,11 @@ export default function FirstQuotePage() {
         width: isArea ? addW : null,
         height: isArea ? addH : null,
         amount,
-        rate: isArea || isSqft ? addProduct.rate ?? undefined : undefined,
-        qty: isArea || isSqft ? undefined : addQty,
-        unitPrice: isArea || isSqft ? undefined : addProduct.unit ?? undefined,
+        rate: isArea || isSqft || isRft ? addProduct.rate ?? undefined : undefined,
+        qty: isArea || isSqft || isRft ? undefined : addQty,
+        unitPrice: isArea || isSqft || isRft ? undefined : addProduct.unit ?? undefined,
         sqft: isSqft ? addSqft : undefined,
+        rft: isRft ? addRft : undefined,
       },
     ]);
   }
@@ -114,7 +118,10 @@ export default function FirstQuotePage() {
       if (l.sqft != null && m.type === "SqFt" && m.rate) {
         return { ...l, rate: m.rate, amount: sqftAmount(l.sqft, m.rate) };
       }
-      if (!l.width && l.sqft == null && m.type === "Unit" && m.unit != null) {
+      if (l.rft != null && m.type === "RFT" && m.rate) {
+        return { ...l, rate: m.rate, amount: rftAmount(l.rft, m.rate) };
+      }
+      if (!l.width && l.sqft == null && l.rft == null && m.type === "Unit" && m.unit != null) {
         const q = l.qty ?? 1;
         return { ...l, unitPrice: m.unit, qty: q, amount: Math.round(q * (m.unit as number)) };
       }
@@ -327,7 +334,7 @@ export default function FirstQuotePage() {
           </select>
           {addProduct && (
             <p className="text-[11px] text-neutral-500">
-              {addProduct.wc} · {addProduct.type} {addProduct.type === "Area" || addProduct.type === "SqFt" ? `· ₹${addProduct.rate}/sqft` : `· ₹${addProduct.unit}/unit`}
+              {addProduct.wc} · {addProduct.type} {addProduct.type === "Area" || addProduct.type === "SqFt" ? `· ₹${addProduct.rate}/sqft` : addProduct.type === "RFT" ? `· ₹${addProduct.rate}/rft` : `· ₹${addProduct.unit}/unit`}
             </p>
           )}
           {addProduct?.type === "Area" ? (
@@ -337,6 +344,8 @@ export default function FirstQuotePage() {
             </div>
           ) : addProduct?.type === "SqFt" ? (
             <label className="text-xs">Area (sq ft)<input className="input" type="number" value={addSqft} onChange={(e) => setAddSqft(Number(e.target.value) || 0)} /></label>
+          ) : addProduct?.type === "RFT" ? (
+            <label className="text-xs">Length (running ft)<input className="input" type="number" value={addRft} onChange={(e) => setAddRft(Number(e.target.value) || 0)} /></label>
           ) : (
             <label className="text-xs">Quantity<input className="input" type="number" value={addQty} onChange={(e) => setAddQty(Number(e.target.value) || 1)} /></label>
           )}

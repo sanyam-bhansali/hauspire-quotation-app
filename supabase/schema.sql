@@ -44,3 +44,21 @@ create policy "product master access"
   on product_master for all
   to anon, authenticated
   using (true) with check (true);
+
+-- Also update the type comment: type is now Area / SqFt / RFT / Unit.
+
+-- ---- App settings (editable Terms & Conditions, etc.) ----
+-- Optional: run this so the Terms page syncs across devices. Without it,
+-- Terms still save in each browser via localStorage.
+create table if not exists app_settings (
+  key text primary key,
+  value text,
+  updated_at timestamptz default now()
+);
+
+alter table app_settings enable row level security;
+drop policy if exists "app settings access" on app_settings;
+create policy "app settings access"
+  on app_settings for all
+  to anon, authenticated
+  using (true) with check (true);

@@ -32,6 +32,11 @@ export function sqftAmount(sqft: number, ratePerSqft: number): number {
   return Math.round(sqft * ratePerSqft);
 }
 
+/** Price by length in running feet (e.g. cabinetry @ ₹/rft). */
+export function rftAmount(rft: number, ratePerRft: number): number {
+  return Math.round(rft * ratePerRft);
+}
+
 /** Compute the amount for one template item given the project context. */
 export function lineAmount(
   it: TemplateItem,
@@ -46,6 +51,8 @@ export function lineAmount(
       return (it.amt ?? 0) * ctx.bedrooms;
     case "sqft":
       return sqftAmount(it.area ?? 0, it.rate ?? 0);
+    case "rft":
+      return rftAmount(it.len ?? 0, it.rate ?? 0);
     case "unit":
     default:
       return it.amt ?? 0;

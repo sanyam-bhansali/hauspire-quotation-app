@@ -37,7 +37,7 @@ export async function saveProducts(list: Product[]): Promise<boolean> {
     product: p.product,
     wc: p.wc,
     type: p.type,
-    rate: p.type === "Area" || p.type === "SqFt" ? p.rate ?? null : null,
+    rate: p.type === "Area" || p.type === "SqFt" || p.type === "RFT" ? p.rate ?? null : null,
     unit: p.type === "Unit" ? p.unit ?? null : null,
     details: p.details ?? "",
     rooms: p.rooms ?? "",

@@ -1,6 +1,10 @@
 "use client";
+import { useEffect, useState } from "react";
 import type { QuoteLine } from "@/lib/types";
 import { computeTotals, inr } from "@/lib/pricing";
+import { loadTerms } from "@/lib/termsStore";
+import { DEFAULT_TERMS } from "@/data/termsDefault";
+import TermsView from "./TermsView";
 
 export interface QuoteMeta {
   client: string;
@@ -17,6 +21,9 @@ export interface QuoteMeta {
 // the Cover, About ("Why Choose Us") and Terms pages are the real branded
 // artwork; the quotation/summary/totals pages in between are generated.
 export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines: QuoteLine[] }) {
+  const [terms, setTerms] = useState<string>(DEFAULT_TERMS);
+  useEffect(() => { loadTerms().then(setTerms).catch(() => {}); }, []);
+
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
   const t = computeTotals(lines, { modularPct: meta.modularPct, onSpot: meta.onSpot });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
@@ -116,8 +123,14 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         </div>
       </section>
 
-      {/* Terms — exact branded page */}
-      <img src="/brand/terms.png" alt="Terms" className="brandpage block w-full brk-before" />
+      {/* Terms & Conditions — editable, branded page */}
+      <section className="brk-before px-2 pt-6">
+        <div className="mb-3 flex items-center justify-between border-b-2 border-brand pb-2">
+          <div className="text-2xl font-extrabold text-brand">HAUSPIRE</div>
+          <div className="text-[11px] uppercase tracking-wide text-brand-light">Terms &amp; Conditions</div>
+        </div>
+        <TermsView text={terms} />
+      </section>
     </div>
   );
 }

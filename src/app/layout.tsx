@@ -21,6 +21,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <Link href="/first-quote">First Quote</Link>
             <Link href="/builder">Full Builder</Link>
             <Link href="/products">Products</Link>
+            <Link href="/terms">Terms</Link>
           </nav>
           {clerkEnabled && (
             <div className="ml-auto">
