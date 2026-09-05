@@ -19,6 +19,17 @@ import Isometric3D, { RoomLayout } from "@/components/Isometric3D";
 
 const TPL = template as unknown as Template;
 
+// Normalise a product name for matching (ignore case, spacing and punctuation),
+// so "Base Cabinets- Tandems" and "Base Cabinets - Tandems" match the master.
+function normName(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/lust[eu]re?/g, "lustre") // fold Lustre / Luster / Lusture spellings
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const DEMOS: Record<string, { bhk: string; run: number }> = {
   "3BHK plan (Kitchen 10'×10'2\")": { bhk: "3 BHK", run: feetInchesToMm(10, 0) + feetInchesToMm(10, 2) - 900 },
   "2BHK Floor Plan C (7'10\"²)": { bhk: "2 BHK", run: estimateKitchenRun(feetInchesToMm(7, 10), feetInchesToMm(7, 10)) },
@@ -62,11 +73,11 @@ export default function FirstQuotePage() {
   const [addSqft, setAddSqft] = useState(1000);
   const [addRft, setAddRft] = useState(10);
 
-  // Load the editable Product Master so rate/unit edits apply to the first quote.
+  // Load the editable Product Master so rate/unit/details edits apply to the first quote.
   useEffect(() => {
     loadProducts().then((ps) => {
       const m: Record<string, Product> = {};
-      ps.forEach((p) => { m[p.product.trim().toLowerCase()] = p; });
+      ps.forEach((p) => { m[normName(p.product)] = p; });
       setMaster(m);
       setProductsArr(ps);
       if (ps[0]) setAddProductName(ps[0].product);
@@ -103,29 +114,46 @@ export default function FirstQuotePage() {
   }
 
   function masterFor(name: string): Product | undefined {
-    const key = name.trim().toLowerCase();
+    const key = normName(name);
     if (master[key]) return master[key];
-    if (key.includes("false ceiling")) return master["minimal false ceiling (per room)"];
+    if (key.includes("false ceiling")) {
+      const k = Object.keys(master).find((x) => x.includes("false ceiling"));
+      if (k) return master[k];
+    }
     return undefined;
   }
+  // The Product Master is the source of truth: overlay code + details, then
+  // re-price each line by the master's OWN type (Area/SqFt/RFT/Unit), keeping the
+  // line's dimensions/quantity where it has them. Lines with no master match are
+  // left untouched.
   function applyMaster(ls: QuoteLine[]): QuoteLine[] {
     return ls.map((l) => {
       const m = masterFor(l.product);
       if (!m) return l;
-      if (l.width && l.height && m.type === "Area" && m.rate) {
-        return { ...l, rate: m.rate, amount: areaAmount(l.width, l.height, m.rate) };
+      // Preserve a trailing "(×N bathrooms)" note if the built line had one.
+      const suffix = (l.details.match(/\s\(×\d+ bathrooms\)$/) || [""])[0];
+      const details = (m.details && m.details.trim() ? m.details : l.details) + suffix;
+      const base: QuoteLine = { ...l, wc: m.wc, details };
+
+      if (m.type === "Area" && m.rate != null) {
+        if (l.width && l.height) {
+          return { ...base, rate: m.rate, sqft: undefined, rft: undefined, qty: undefined, unitPrice: undefined, amount: areaAmount(l.width, l.height, m.rate) };
+        }
+        return { ...base, rate: m.rate };
       }
-      if (l.sqft != null && m.type === "SqFt" && m.rate) {
-        return { ...l, rate: m.rate, amount: sqftAmount(l.sqft, m.rate) };
+      if (m.type === "SqFt" && m.rate != null) {
+        const s = l.sqft ?? 0;
+        return { ...base, rate: m.rate, sqft: s, rft: undefined, qty: undefined, unitPrice: undefined, amount: s ? sqftAmount(s, m.rate) : l.amount };
       }
-      if (l.rft != null && m.type === "RFT" && m.rate) {
-        return { ...l, rate: m.rate, amount: rftAmount(l.rft, m.rate) };
+      if (m.type === "RFT" && m.rate != null) {
+        const r = l.rft ?? 0;
+        return { ...base, rate: m.rate, rft: r, sqft: undefined, qty: undefined, unitPrice: undefined, amount: r ? rftAmount(r, m.rate) : l.amount };
       }
-      if (!l.width && l.sqft == null && l.rft == null && m.type === "Unit" && m.unit != null) {
+      if (m.type === "Unit" && m.unit != null) {
         const q = l.qty ?? 1;
-        return { ...l, unitPrice: m.unit, qty: q, amount: Math.round(q * (m.unit as number)) };
+        return { ...base, unitPrice: m.unit, qty: q, rate: undefined, sqft: undefined, rft: undefined, width: null, height: null, amount: Math.round(q * m.unit) };
       }
-      return l;
+      return base;
     });
   }
 

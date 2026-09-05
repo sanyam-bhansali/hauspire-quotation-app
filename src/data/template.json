@@ -1,350 +1,61 @@
 {
  "Kitchen": [
-  {
-   "p": "Base Cabinets",
-   "wc": "MO-01",
-   "kind": "run",
-   "H": 750,
-   "rate": 2580,
-   "details": "Below-counter kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish, G-profile handles and soft-close hinges.",
-   "def": true,
-   "det": "Below-counter kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish, G-profile handles and soft-close hinges."
-  },
-  {
-   "p": "Base Cabinets- Tandems",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 10000,
-   "details": "Premium tandem drawer systems (Bose / Hettich) with soft-close runners. Priced per set as per levels and configuration.",
-   "def": true,
-   "det": "Tandems (Bose/Hettich), soft-close — 3 Horizontal + 1 Vertical (Bottle Pull-Out).",
-   "qty": 4
-  },
-  {
-   "p": "Wall Cabinets",
-   "wc": "MO-01",
-   "kind": "run",
-   "H": 600,
-   "rate": 2580,
-   "details": "Overhead kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish and soft-close hinges.",
-   "def": true,
-   "det": "Overhead kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish and soft-close hinges."
-  },
-  {
-   "p": "Wall Cabinets- Glass Profile Shutters",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 8000,
-   "details": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame. Priced per shutter.",
-   "def": true,
-   "det": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame. Priced per shutter."
-  },
-  {
-   "p": "Loft (Frame with Shutter)",
-   "wc": "MO-01",
-   "kind": "run",
-   "H": 600,
-   "rate": 2065,
-   "details": "Overhead loft storage with framed shutters and push-to-open or knob operation.",
-   "def": true,
-   "det": "Overhead loft storage with framed shutters and push-to-open or knob operation."
-  },
-  {
-   "p": "Dry Balcony- Overhead Storage",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1200,
-   "H": 600,
-   "rate": 2580,
-   "details": "Overhead utility storage for the dry balcony. BWP plywood with laminate finish.",
-   "def": false,
-   "balcony": true,
-   "det": "Overhead utility storage for the dry balcony. BWP plywood with laminate finish."
-  }
+  { "p": "Base Cabinets", "wc": "MO-01", "kind": "run", "H": 750, "rate": 2580, "def": true, "details": "Below-counter kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish, G-profile handles and soft-close hinges." },
+  { "p": "Base Cabinets- Tandems (Horizantal)", "wc": "NM-01", "kind": "unit", "amt": 10000, "qty": 3, "def": true, "details": "Tandems (Bose/Hettich), soft-close — Horizontal." },
+  { "p": "Base Cabinets-Tandems (Vertical)", "wc": "NM-01", "kind": "unit", "amt": 12000, "qty": 1, "def": true, "details": "Tandems (Bose/Hettich), soft-close — Vertical Pull-Out Unit." },
+  { "p": "Wall Cabinets", "wc": "MO-01", "kind": "run", "H": 600, "rate": 2580, "def": true, "details": "Overhead kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish and soft-close hinges." },
+  { "p": "Wall Cabinets- Glass Profile Shutters", "wc": "NM-01", "kind": "unit", "amt": 8000, "qty": 1, "def": true, "details": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame. 2 Glass Profile Shutters." },
+  { "p": "Loft (Frame with Shutter)", "wc": "MO-01", "kind": "run", "H": 600, "rate": 2000, "def": true, "details": "Overhead loft storage with framed shutters and push-to-open or knob operation and soft-close hinges." },
+  { "p": "Tall Pantry Unit", "wc": "MO-01", "kind": "fixed", "W": 600, "H": 2100, "rate": 2580, "def": false, "details": "Full-height pantry unit with internal adjustable shelves. BWP plywood carcass with laminate finish." },
+  { "p": "Crockery Unit", "wc": "MO-01", "kind": "fixed", "W": 900, "H": 2100, "rate": 2580, "def": false, "details": "Display and storage crockery unit with adjustable internal shelf, BWP ply and laminate finish." },
+  { "p": "Appliance Unit", "wc": "MO-01", "kind": "unit", "amt": 16000, "def": false, "details": "Built-in appliance housing with internal shelf, BWP ply and laminate finish." },
+  { "p": "Dry Balcony- Overhead Storage", "wc": "MO-01", "kind": "fixed", "W": 1200, "H": 600, "rate": 2580, "def": false, "balcony": true, "details": "Overhead utility storage for the dry balcony. BWP plywood with laminate finish." }
  ],
  "Master Bedroom": [
-  {
-   "p": "Premium Shutter wardrobe",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1800,
-   "H": 2100,
-   "rate": 2580,
-   "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish.",
-   "def": true,
-   "det": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish."
-  },
-  {
-   "p": "Loft (Frame with Shutter)",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1800,
-   "H": 600,
-   "rate": 2065,
-   "details": "Overhead loft storage with framed shutters and push-to-open or knob operation.",
-   "def": true,
-   "det": "Overhead loft storage with framed shutters and push-to-open or knob operation."
-  },
-  {
-   "p": "Dressing Unit- Base Storage",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 600,
-   "H": 450,
-   "rate": 2580,
-   "details": "Dressing-table base unit with a single drawer. BWP plywood with laminate finish.",
-   "def": true,
-   "det": "Dressing-table base unit with a single drawer. BWP plywood with laminate finish."
-  },
-  {
-   "p": "Dressing Unit- Mirror",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 8000,
-   "details": "5 mm edge-polished rectangular mirror, mounted on a plywood backing.",
-   "def": true,
-   "det": "5 mm edge-polished rectangular mirror, mounted on a plywood backing."
-  },
-  {
-   "p": "Queen size Bed Hydraulic Storage",
-   "wc": "MO-01",
-   "kind": "unit",
-   "amt": 54000,
-   "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings).",
-   "def": true,
-   "det": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings)."
-  },
-  {
-   "p": "Headboard",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 12000,
-   "details": "Upholstered cushioned headboard, approximately 2 ft high.",
-   "def": true,
-   "det": "Upholstered cushioned headboard, approximately 2 ft high."
-  },
-  {
-   "p": "Workstation",
-   "wc": "MO-01",
-   "kind": "unit",
-   "amt": 12000,
-   "details": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish.",
-   "def": false,
-   "det": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish."
-  }
+  { "p": "Premium Shutter wardrobe", "wc": "MO-01", "kind": "fixed", "W": 1800, "H": 2100, "rate": 2580, "def": true, "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish." },
+  { "p": "Loft (Frame with Shutter)", "wc": "MO-01", "kind": "fixed", "W": 1800, "H": 600, "rate": 2000, "def": true, "details": "Overhead loft storage with framed shutters and push-to-open or knob operation and soft-close hinges." },
+  { "p": "Dressing Unit- Base Storage", "wc": "MO-01", "kind": "unit", "amt": 7500, "def": true, "details": "Dressing-table base unit with a single drawer. BWP plywood with laminate finish." },
+  { "p": "Dressing Unit- Mirror", "wc": "NM-01", "kind": "unit", "amt": 8000, "def": true, "details": "5 mm edge-polished rectangular mirror, mounted on a plywood backing." },
+  { "p": "Queen size Bed Hydraulic Storage", "wc": "MO-01", "kind": "unit", "amt": 54000, "def": true, "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings)." },
+  { "p": "Queen Size - Headboard", "wc": "NM-01", "kind": "unit", "amt": 12000, "def": true, "details": "Upholstered cushioned headboard, approximately 2 ft high." },
+  { "p": "TV Unit", "wc": "NM-01", "kind": "fixed", "W": 1500, "H": 2100, "rate": 1200, "def": false, "details": "Television media unit with back panelling and base storage. BWP plywood with laminate finish." },
+  { "p": "Side Table", "wc": "MO-01", "kind": "unit", "amt": 7500, "qty": 2, "def": false, "details": "Bedside table with a single drawer, in laminate finish." },
+  { "p": "Workstation", "wc": "MO-01", "kind": "fixed", "W": 1200, "H": 750, "rate": 2000, "def": false, "details": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish." }
  ],
  "Kids Bedroom": [
-  {
-   "p": "Premium Shutter wardrobe",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1500,
-   "H": 2100,
-   "rate": 2580,
-   "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish.",
-   "def": true,
-   "det": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish."
-  },
-  {
-   "p": "Loft (Frame with Shutter)",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1500,
-   "H": 600,
-   "rate": 2065,
-   "details": "Overhead loft storage with framed shutters and push-to-open or knob operation.",
-   "def": true,
-   "det": "Overhead loft storage with framed shutters and push-to-open or knob operation."
-  },
-  {
-   "p": "Queen size Bed Hydraulic Storage",
-   "wc": "MO-01",
-   "kind": "unit",
-   "amt": 54000,
-   "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings).",
-   "def": true,
-   "det": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings)."
-  },
-  {
-   "p": "Headboard",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 12000,
-   "details": "Upholstered cushioned headboard, approximately 2 ft high.",
-   "def": true,
-   "det": "Upholstered cushioned headboard, approximately 2 ft high."
-  },
-  {
-   "p": "Workstation",
-   "wc": "MO-01",
-   "kind": "unit",
-   "amt": 12000,
-   "details": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish.",
-   "def": true,
-   "det": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish."
-  }
+  { "p": "Premium Shutter wardrobe", "wc": "MO-01", "kind": "fixed", "W": 1500, "H": 2100, "rate": 2580, "def": true, "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish." },
+  { "p": "Loft (Frame with Shutter)", "wc": "MO-01", "kind": "fixed", "W": 1500, "H": 600, "rate": 2000, "def": true, "details": "Overhead loft storage with framed shutters and push-to-open or knob operation and soft-close hinges." },
+  { "p": "Queen size Bed Hydraulic Storage", "wc": "MO-01", "kind": "unit", "amt": 54000, "def": true, "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings)." },
+  { "p": "Queen Size - Headboard", "wc": "NM-01", "kind": "unit", "amt": 12000, "def": true, "details": "Upholstered cushioned headboard, approximately 2 ft high." },
+  { "p": "Workstation", "wc": "MO-01", "kind": "fixed", "W": 1200, "H": 750, "rate": 2000, "def": true, "details": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish." }
  ],
  "Guest Bedroom": [
-  {
-   "p": "Premium Shutter wardrobe",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1500,
-   "H": 2100,
-   "rate": 2580,
-   "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish.",
-   "def": true,
-   "det": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish."
-  },
-  {
-   "p": "Loft (Frame with Shutter)",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1500,
-   "H": 600,
-   "rate": 2065,
-   "details": "Overhead loft storage with framed shutters and push-to-open or knob operation.",
-   "def": true,
-   "det": "Overhead loft storage with framed shutters and push-to-open or knob operation."
-  },
-  {
-   "p": "Queen size Bed Hydraulic Storage",
-   "wc": "MO-01",
-   "kind": "unit",
-   "amt": 54000,
-   "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings).",
-   "def": true,
-   "det": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings)."
-  },
-  {
-   "p": "Headboard",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 12000,
-   "details": "Upholstered cushioned headboard, approximately 2 ft high.",
-   "def": true,
-   "det": "Upholstered cushioned headboard, approximately 2 ft high."
-  },
-  {
-   "p": "Dressing Unit- Mirror",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 8000,
-   "details": "5 mm edge-polished rectangular mirror, mounted on a plywood backing.",
-   "def": true,
-   "det": "5 mm edge-polished rectangular mirror, mounted on a plywood backing."
-  }
+  { "p": "Premium Shutter wardrobe", "wc": "MO-01", "kind": "fixed", "W": 1500, "H": 2100, "rate": 2580, "def": true, "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish." },
+  { "p": "Loft (Frame with Shutter)", "wc": "MO-01", "kind": "fixed", "W": 1500, "H": 600, "rate": 2000, "def": true, "details": "Overhead loft storage with framed shutters and push-to-open or knob operation and soft-close hinges." },
+  { "p": "Queen size Bed Hydraulic Storage", "wc": "MO-01", "kind": "unit", "amt": 54000, "def": true, "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings)." },
+  { "p": "Queen Size - Headboard", "wc": "NM-01", "kind": "unit", "amt": 12000, "def": true, "details": "Upholstered cushioned headboard, approximately 2 ft high." },
+  { "p": "Dressing Unit- Mirror", "wc": "NM-01", "kind": "unit", "amt": 8000, "def": false, "details": "5 mm edge-polished rectangular mirror, mounted on a plywood backing." }
  ],
  "Living, Dining & Foyer": [
-  {
-   "p": "TV Unit",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 55000,
-   "details": "Television media unit with back panelling and base storage. BWP plywood with laminate finish.",
-   "def": true,
-   "det": "Television media unit with back panelling and base storage. BWP plywood with laminate finish."
-  },
-  {
-   "p": "Safety Door",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 42000,
-   "details": "Designer safety door with jali, handle and lock, made to design.",
-   "def": true,
-   "det": "Designer safety door with jali, handle and lock, made to design."
-  },
-  {
-   "p": "Console Unit/Shoe Rack",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1200,
-   "H": 900,
-   "rate": 1910,
-   "details": "Entryway console and shoe rack with internal shelf storage.",
-   "def": true,
-   "det": "Entryway console and shoe rack with internal shelf storage."
-  },
-  {
-   "p": "Mandir",
-   "wc": "NM-01",
-   "kind": "fixed",
-   "W": 600,
-   "H": 1800,
-   "rate": 2400,
-   "details": "Custom pooja mandir with structure, pull-out, drawer and base storage, made to design.",
-   "def": true,
-   "det": "Custom pooja mandir with structure, pull-out, drawer and base storage, made to design."
-  }
+  { "p": "TV Unit", "wc": "NM-01", "kind": "fixed", "W": 1500, "H": 2100, "rate": 1200, "def": true, "details": "Television media unit with back panelling and base storage. BWP plywood with laminate finish." },
+  { "p": "Safety Door", "wc": "NM-01", "kind": "unit", "amt": 42000, "def": true, "details": "Designer safety door with jali, handle and lock, made to design." },
+  { "p": "Console Unit/Shoe Rack", "wc": "MO-01", "kind": "fixed", "W": 1200, "H": 900, "rate": 1910, "def": true, "details": "Entryway console and shoe rack with internal shelf storage." },
+  { "p": "Mandir", "wc": "NM-01", "kind": "fixed", "W": 600, "H": 1800, "rate": 2400, "def": true, "details": "As per design — custom pooja mandir with structure, pull-out, drawer and base storage, made to design." },
+  { "p": "Foyer Unit", "wc": "MO-01", "kind": "fixed", "W": 900, "H": 2100, "rate": 2580, "def": false, "details": "Entryway foyer storage unit with internal shelf. BWP plywood with laminate finish." },
+  { "p": "Crockery Unit", "wc": "MO-01", "kind": "fixed", "W": 900, "H": 2100, "rate": 2580, "def": false, "details": "Display and storage crockery unit with adjustable internal shelf, BWP ply and laminate finish." }
  ],
  "Other Services": [
-  {
-   "p": "Electricals",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 65000,
-   "details": "Electrical wiring and fittings modifications, charged on actuals as per scope.",
-   "def": true,
-   "det": "Electrical wiring and fittings modifications, charged on actuals as per scope."
-  },
-  {
-   "p": "Vanity Unit",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 600,
-   "H": 600,
-   "rate": 2580,
-   "details": "Bathroom vanity in moisture-resistant WPC / plywood with laminate finish and internal storage.",
-   "def": true,
-   "perBath": true,
-   "det": "Bathroom vanity in moisture-resistant WPC / plywood with laminate finish and internal storage."
-  },
-  {
-   "p": "Painting",
-   "wc": "NM-01",
-   "kind": "unit",
-   "amt": 55000,
-   "details": "Complete home painting in Asian Paints. Priced by home size (3 / 4 / 5 BHK).",
-   "def": true,
-   "det": "Complete home painting in Asian Paints. Priced by home size (3 / 4 / 5 BHK)."
-  }
+  { "p": "Electricals", "bhkTemplate": "Electricals (#BHK)", "wc": "NM-01", "kind": "unit", "amt": 30000, "def": true, "details": "On actuals — electrical wiring and fittings modifications, charged on actuals as per scope." },
+  { "p": "Vanity Unit", "wc": "MO-01", "kind": "unit", "amt": 10000, "def": true, "perBath": true, "details": "Bathroom vanity in moisture-resistant WPC / plywood with laminate finish and internal storage." },
+  { "p": "Painting (Emulsion)", "bhkTemplate": "Painting - #BHK (Emulsion)", "wc": "NM-01", "kind": "unit", "amt": 55000, "def": true, "details": "On actuals — complete home painting in Asian Paints Emulsion." },
+  { "p": "Painting (Lustre)", "bhkTemplate": "Painting - #BHK (Lustre)", "wc": "NM-01", "kind": "unit", "amt": 65000, "def": false, "details": "On actuals — complete home painting in Asian Paints Lustre." },
+  { "p": "Windows Change", "wc": "NM-01", "kind": "unit", "amt": 30000, "def": false, "details": "On actuals — replacement Euro-profile windows with 5 mm glass." },
+  { "p": "Civil and Plumbing Changes", "wc": "NM-01", "kind": "unit", "amt": 100000, "def": false, "details": "On actuals — civil and plumbing modifications." }
  ],
  "Office / Study": [
-  {
-   "p": "Workstation",
-   "wc": "MO-01",
-   "kind": "unit",
-   "amt": 12000,
-   "det": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish.",
-   "def": true
-  },
-  {
-   "p": "Workstation- Overhead",
-   "wc": "MO-01",
-   "kind": "unit",
-   "amt": 15000,
-   "det": "Overhead storage shelves above the workstation. BWP plywood with laminate finish.",
-   "def": true
-  },
-  {
-   "p": "Loft (Frame with Shutter)",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1500,
-   "H": 600,
-   "rate": 2065,
-   "det": "Overhead loft storage with framed shutters and push-to-open or knob operation.",
-   "def": false
-  },
-  {
-   "p": "Premium Shutter wardrobe",
-   "wc": "MO-01",
-   "kind": "fixed",
-   "W": 1500,
-   "H": 2100,
-   "rate": 2580,
-   "det": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish.",
-   "def": false
-  }
+  { "p": "Workstation", "wc": "MO-01", "kind": "fixed", "W": 1200, "H": 750, "rate": 2000, "def": true, "details": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish." },
+  { "p": "Workstation- Overhead", "wc": "MO-01", "kind": "fixed", "W": 1200, "H": 600, "rate": 2580, "def": true, "details": "Overhead storage shelves above the workstation. BWP plywood with laminate finish." },
+  { "p": "Loft (Frame with Shutter)", "wc": "MO-01", "kind": "fixed", "W": 1500, "H": 600, "rate": 2000, "def": false, "details": "Overhead loft storage with framed shutters and push-to-open or knob operation and soft-close hinges." },
+  { "p": "Premium Shutter wardrobe", "wc": "MO-01", "kind": "fixed", "W": 1500, "H": 2100, "rate": 2580, "def": false, "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish." }
  ]
 }

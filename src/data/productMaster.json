@@ -1,353 +1,54 @@
 [
- {
-  "product": "Base Cabinets",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Below-counter kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish, G-profile handles and soft-close hinges.",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Base Cabinets- Tandems",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 10000,
-  "details": "Tandems (Bose/Hettich), soft-close — 3 Horizontal + 1 Vertical (Bottle Pull-Out).",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Wall Cabinets",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Overhead kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish and soft-close hinges.",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Wall Cabinets- Glass Profile Shutters",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 8000,
-  "details": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame. Priced per shutter.",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Loft (Frame with Shutter)",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2065,
-  "unit": null,
-  "details": "Overhead loft storage with framed shutters and push-to-open or knob operation.",
-  "rooms": "Kitchen,Bedroom,Study,Living"
- },
- {
-  "product": "Tall Pantry Unit",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Full-height pantry unit with internal adjustable shelves. BWP plywood carcass with laminate finish.",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Appliance Unit With Glass Profile Shutter",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 22000,
-  "details": "Built-in appliance housing with dedicated storage and a glass profile shutter.",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Crockery Unit",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2320,
-  "unit": null,
-  "details": "Display and storage crockery unit with glass profile shutters, in laminate finish.",
-  "rooms": "Kitchen,Living"
- },
- {
-  "product": "Breakfast Counter",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 25000,
-  "details": "Custom breakfast counter, designed and finished to complement the kitchen.",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Platform Creation",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 50000,
-  "details": "Quartz kitchen platform with associated plumbing. Base material and labour included; finishing materials on actuals.",
-  "rooms": "Kitchen,Other"
- },
- {
-  "product": "Dry Balcony- Base Storage",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2065,
-  "unit": null,
-  "details": "Below-counter utility storage for the dry balcony. BWP plywood with laminate finish.",
-  "rooms": "Kitchen,Utility"
- },
- {
-  "product": "Dry Balcony- Overhead Storage",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Overhead utility storage for the dry balcony. BWP plywood with laminate finish.",
-  "rooms": "Kitchen,Utility"
- },
- {
-  "product": "Premium Shutter wardrobe",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish.",
-  "rooms": "Bedroom,Study"
- },
- {
-  "product": "Walk In- Premium Shutter wardrobe",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Walk-in hinged shutter wardrobe with soft-close mechanism and standard handles. BWP plywood carcass, HDHMR shutters with laminate finish.",
-  "rooms": "Bedroom"
- },
- {
-  "product": "Dressing Unit- Base Storage",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Dressing-table base unit with a single drawer. BWP plywood with laminate finish.",
-  "rooms": "Bedroom"
- },
- {
-  "product": "Dressing Unit- Mirror",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 8000,
-  "details": "5 mm edge-polished rectangular mirror, mounted on a plywood backing.",
-  "rooms": "Bedroom"
- },
- {
-  "product": "King size Bed Hydraulic Storage",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 64000,
-  "details": "King-size bed with hydraulic lift-up storage (Bose / EBCO fittings).",
-  "rooms": "Bedroom"
- },
- {
-  "product": "Queen size Bed Hydraulic Storage",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 54000,
-  "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings).",
-  "rooms": "Bedroom"
- },
- {
-  "product": "Headboard",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 12000,
-  "details": "Upholstered cushioned headboard, approximately 2 ft high.",
-  "rooms": "Bedroom"
- },
- {
-  "product": "Side Table",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 7500,
-  "details": "Bedside table with a single drawer, in laminate finish.",
-  "rooms": "Bedroom"
- },
- {
-  "product": "Workstation",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 12000,
-  "details": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish.",
-  "rooms": "Bedroom,Study"
- },
- {
-  "product": "Workstation- Overhead",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 15000,
-  "details": "Overhead storage shelves above the workstation. BWP plywood with laminate finish.",
-  "rooms": "Bedroom,Study"
- },
- {
-  "product": "Bay Window",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 40000,
-  "details": "Bay-window seating with concealed storage, made to design.",
-  "rooms": "Bedroom,Living"
- },
- {
-  "product": "TV Unit",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 55000,
-  "details": "Television media unit with back panelling and base storage. BWP plywood with laminate finish.",
-  "rooms": "Living,Bedroom"
- },
- {
-  "product": "TV Unit- Base storage",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Base storage cabinet for the TV unit. BWP plywood with laminate finish.",
-  "rooms": "Living,Bedroom"
- },
- {
-  "product": "Foyer Unit",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Entryway foyer storage unit. BWP plywood with laminate finish.",
-  "rooms": "Living"
- },
- {
-  "product": "Console Unit/Shoe Rack",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 1910,
-  "unit": null,
-  "details": "Entryway console and shoe rack with internal shelf storage.",
-  "rooms": "Living"
- },
- {
-  "product": "Mandir",
-  "wc": "NM-01",
-  "type": "Area",
-  "rate": 2400,
-  "unit": null,
-  "details": "Custom pooja mandir with structure, pull-out, drawer and base storage, made to design.",
-  "rooms": "Living"
- },
- {
-  "product": "Safety Door",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 42000,
-  "details": "Designer safety door with jali, handle and lock, made to design.",
-  "rooms": "Living,Other"
- },
- {
-  "product": "Vanity Unit",
-  "wc": "MO-01",
-  "type": "Area",
-  "rate": 2580,
-  "unit": null,
-  "details": "Bathroom vanity in moisture-resistant WPC / plywood with laminate finish and internal storage.",
-  "rooms": "Other,Utility"
- },
- {
-  "product": "False Ceiling (per room)",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 30000,
-  "details": "Single-layer false ceiling with concealed wiring and panel lights. Saint-Gobain board, Gyproc framing, Polycab wiring, Polycab / Havells / Orient (or similar) lights. Priced by room area.",
-  "rooms": "Other"
- },
- {
-  "product": "Minimal False Ceiling (per room)",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 20000,
-  "details": "Minimal peripheral / cove false ceiling with panel lights. Priced by room area.",
-  "rooms": "Other"
- },
- {
-  "product": "Painting",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 55000,
-  "details": "Complete home painting in Asian Paints. Priced by home size (3 / 4 / 5 BHK).",
-  "rooms": "Other"
- },
- {
-  "product": "Electricals",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 65000,
-  "details": "Electrical wiring and fittings modifications, charged on actuals as per scope.",
-  "rooms": "Other"
- },
- {
-  "product": "Windows Change",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 120000,
-  "details": "Replacement Euro-profile windows with 5 mm glass. Charged on actuals.",
-  "rooms": "Other"
- },
- {
-  "product": "Civil and Plumbing Changes",
-  "wc": "NM-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 100000,
-  "details": "Civil and plumbing modifications, charged on actuals.",
-  "rooms": "Other"
- },
- {
-  "product": "Appliance Unit With Rolling Shutter",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 31000,
-  "details": "Built-in appliance housing with Internal Shelf And Rolling Shutter As Per Selection",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Appliance Unit",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 16000,
-  "details": "Built-in appliance housing with Internal Shelf",
-  "rooms": "Kitchen"
- },
- {
-  "product": "Rolling Shutter",
-  "wc": "MO-01",
-  "type": "Unit",
-  "rate": null,
-  "unit": 15000,
-  "details": "Rolling Shutter Mechanism As per Selection",
-  "rooms": "Kitchen"
- }
+ { "product": "Base Cabinets", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Below-counter kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish, G-profile handles and soft-close hinges.", "rooms": "Kitchen" },
+ { "product": "Base Cabinets- Tandems (Horizantal)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 10000, "details": "Tandems (Bose/Hettich), soft-close — Horizontal.", "rooms": "Kitchen" },
+ { "product": "Base Cabinets-Tandems (Vertical)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 12000, "details": "Tandems (Bose/Hettich), soft-close — Vertical Pull-Out Unit.", "rooms": "Kitchen" },
+ { "product": "Wall Cabinets", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Overhead kitchen cabinets. BWP plywood carcass, HDHMR shutters with laminate finish and soft-close hinges.", "rooms": "Kitchen" },
+ { "product": "Wall Cabinets- Glass Profile Shutters", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 8000, "details": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame. 2 Glass Profile Shutters.", "rooms": "Kitchen" },
+ { "product": "Loft (Frame with Shutter)", "wc": "MO-01", "type": "Area", "rate": 2000, "unit": null, "details": "Overhead loft storage with framed shutters and push-to-open or knob operation and soft-close hinges.", "rooms": "Kitchen,Bedroom,Study,Living" },
+ { "product": "Tall Pantry Unit", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Full-height pantry unit with internal adjustable shelves. BWP plywood carcass with laminate finish.", "rooms": "Kitchen" },
+ { "product": "Tall Pantry Carcass", "wc": "MO-01", "type": "Area", "rate": 2000, "unit": null, "details": "Full-height pantry unit carcass structure with BWP plywood and laminate finish.", "rooms": "Kitchen" },
+ { "product": "Tall Pantry Glass Profile Shutter", "wc": "NM-01", "type": "Area", "rate": 850, "unit": null, "details": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame.", "rooms": "Kitchen" },
+ { "product": "Crockery Unit", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Display and storage crockery unit with adjustable internal shelf, BWP ply and laminate finish.", "rooms": "Kitchen,Living" },
+ { "product": "Crockery Unit Glass Profile Shutter", "wc": "NM-01", "type": "Area", "rate": 850, "unit": null, "details": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame.", "rooms": "Kitchen" },
+ { "product": "Appliance Unit", "wc": "MO-01", "type": "Unit", "rate": null, "unit": 16000, "details": "Built-in appliance housing with internal shelf, BWP ply and laminate finish.", "rooms": "Kitchen" },
+ { "product": "Appliance Unit Glass Profile Shutter", "wc": "NM-01", "type": "Area", "rate": 850, "unit": null, "details": "Aluminium profile shutters with tinted (black/brown) glass and black powder-coated frame.", "rooms": "Kitchen" },
+ { "product": "Appliance Unit Rolling Shutter", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 15000, "details": "Rolling shutter mechanism as per selection.", "rooms": "Kitchen" },
+ { "product": "Breakfast Counter", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 25000, "details": "As per design — custom breakfast counter, designed and finished to complement the kitchen.", "rooms": "Kitchen" },
+ { "product": "Platform Creation", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 50000, "details": "On actuals — quartz kitchen platform with associated plumbing. Base material and labour included; finishing materials on actuals.", "rooms": "Kitchen,Other" },
+ { "product": "Premium Shutter wardrobe", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Hinged shutter wardrobe with soft-close mechanism, standard handles and one drawer per door. BWP plywood carcass, HDHMR shutters with laminate finish.", "rooms": "Bedroom,Study" },
+ { "product": "Walk In- Premium Shutter wardrobe", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Walk-in hinged shutter wardrobe with soft-close mechanism and standard handles. BWP plywood carcass, HDHMR shutters with laminate finish.", "rooms": "Bedroom" },
+ { "product": "Dressing Unit- Base Storage", "wc": "MO-01", "type": "Unit", "rate": null, "unit": 7500, "details": "Dressing-table base unit with a single drawer. BWP plywood with laminate finish.", "rooms": "Bedroom" },
+ { "product": "Dressing Unit- Mirror", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 8000, "details": "5 mm edge-polished rectangular mirror, mounted on a plywood backing.", "rooms": "Bedroom" },
+ { "product": "King size Bed Hydraulic Storage", "wc": "MO-01", "type": "Unit", "rate": null, "unit": 64000, "details": "King-size bed with hydraulic lift-up storage (Bose / EBCO fittings).", "rooms": "Bedroom" },
+ { "product": "Queen size Bed Hydraulic Storage", "wc": "MO-01", "type": "Unit", "rate": null, "unit": 54000, "details": "Queen-size bed with hydraulic lift-up storage (Bose / EBCO fittings).", "rooms": "Bedroom" },
+ { "product": "King Size - Headboard", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 14000, "details": "Upholstered cushioned headboard, approximately 2 ft high.", "rooms": "Bedroom" },
+ { "product": "Queen Size - Headboard", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 12000, "details": "Upholstered cushioned headboard, approximately 2 ft high.", "rooms": "Bedroom" },
+ { "product": "Side Table", "wc": "MO-01", "type": "Unit", "rate": null, "unit": 7500, "details": "Bedside table with a single drawer, in laminate finish.", "rooms": "Bedroom" },
+ { "product": "Workstation", "wc": "MO-01", "type": "Area", "rate": 2000, "unit": null, "details": "Wall-mounted study / work desk with drawer storage. BWP plywood with laminate finish.", "rooms": "Bedroom,Study" },
+ { "product": "Workstation- Overhead", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Overhead storage shelves above the workstation. BWP plywood with laminate finish.", "rooms": "Bedroom,Study" },
+ { "product": "Bay Window", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 40000, "details": "Bay-window seating with concealed storage, made to design.", "rooms": "Bedroom,Living" },
+ { "product": "TV Unit", "wc": "NM-01", "type": "Area", "rate": 1200, "unit": null, "details": "Television media unit with back panelling and base storage. BWP plywood with laminate finish.", "rooms": "Living,Bedroom" },
+ { "product": "TV Unit- Base storage", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Base storage cabinet for the TV unit. BWP plywood with laminate finish.", "rooms": "Living,Bedroom" },
+ { "product": "Foyer Unit", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Entryway foyer storage unit with internal shelf. BWP plywood with laminate finish.", "rooms": "Living" },
+ { "product": "Console Unit/Shoe Rack", "wc": "MO-01", "type": "Area", "rate": 1910, "unit": null, "details": "Entryway console and shoe rack with internal shelf storage.", "rooms": "Living" },
+ { "product": "Mandir", "wc": "NM-01", "type": "Area", "rate": 2400, "unit": null, "details": "As per design — custom pooja mandir with structure, pull-out, drawer and base storage, made to design.", "rooms": "Living" },
+ { "product": "Safety Door", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 42000, "details": "Designer safety door with jali, handle and lock, made to design.", "rooms": "Living,Other" },
+ { "product": "Vanity Unit", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Bathroom vanity in moisture-resistant WPC / plywood with laminate finish and internal storage.", "rooms": "Other,Utility" },
+ { "product": "Dry Balcony- Base Storage (Frame with Shutter)", "wc": "MO-01", "type": "Area", "rate": 2000, "unit": null, "details": "Below-counter utility storage for the dry balcony. BWP plywood with laminate finish.", "rooms": "Kitchen,Utility" },
+ { "product": "Dry Balcony- Overhead Storage", "wc": "MO-01", "type": "Area", "rate": 2580, "unit": null, "details": "Overhead utility storage for the dry balcony. BWP plywood with laminate finish.", "rooms": "Kitchen,Utility" },
+ { "product": "False Ceiling (per room)", "wc": "NM-01", "type": "Area", "rate": 2000, "unit": null, "details": "Single-layer false ceiling with concealed wiring and panel lights. Saint-Gobain board, Gyproc framing, Polycab wiring, Polycab / Havells / Orient (or similar) lights. Priced by room area.", "rooms": "Other" },
+ { "product": "Minimal False Ceiling (per room)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 20000, "details": "Minimal peripheral / cove false ceiling with panel lights. Priced by room area.", "rooms": "Other" },
+ { "product": "Painting - 1BHK (Emulsion)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 35000, "details": "On actuals — complete home painting in Asian Paints Emulsion.", "rooms": "Other" },
+ { "product": "Painting - 2BHK (Emulsion)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 45000, "details": "On actuals — complete home painting in Asian Paints Emulsion.", "rooms": "Other" },
+ { "product": "Painting - 3BHK (Emulsion)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 55000, "details": "On actuals — complete home painting in Asian Paints Emulsion.", "rooms": "Other" },
+ { "product": "Painting - 4BHK (Emulsion)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 65000, "details": "On actuals — complete home painting in Asian Paints Emulsion.", "rooms": "Other" },
+ { "product": "Painting - 1BHK (Lustre)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 45000, "details": "On actuals — complete home painting in Asian Paints Lustre.", "rooms": "Other" },
+ { "product": "Painting - 2BHK (Lustre)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 55000, "details": "On actuals — complete home painting in Asian Paints Lustre.", "rooms": "Other" },
+ { "product": "Painting - 3BHK (Lustre)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 65000, "details": "On actuals — complete home painting in Asian Paints Lustre.", "rooms": "Other" },
+ { "product": "Painting - 4BHK (Lustre)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 85000, "details": "On actuals — complete home painting in Asian Paints Lustre.", "rooms": "Other" },
+ { "product": "Electricals (2BHK)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 30000, "details": "On actuals — electrical wiring and fittings modifications, charged on actuals as per scope.", "rooms": "Other" },
+ { "product": "Electricals (3BHK)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 40000, "details": "On actuals — electrical wiring and fittings modifications, charged on actuals as per scope.", "rooms": "Other" },
+ { "product": "Electricals (4BHK)", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 50000, "details": "On actuals — electrical wiring and fittings modifications, charged on actuals as per scope.", "rooms": "Other" },
+ { "product": "Windows Change", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 30000, "details": "On actuals — replacement Euro-profile windows with 5 mm glass.", "rooms": "Other" },
+ { "product": "Civil and Plumbing Changes", "wc": "NM-01", "type": "Unit", "rate": null, "unit": 100000, "details": "On actuals — civil and plumbing modifications.", "rooms": "Other" }
 ]

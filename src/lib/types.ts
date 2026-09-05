@@ -36,6 +36,8 @@ export interface TemplateItem {
   qty?: number; // default units for a unit line (e.g. tandems = 4)
   perBath?: boolean; // multiply by number of bathrooms (e.g. Vanity)
   balcony?: boolean; // include only when the plan has a balcony
+  bhkTemplate?: string; // name pattern with "#BHK" placeholder → resolved to the
+  // BHK-specific product (e.g. "Painting - #BHK (Emulsion)" → "Painting - 3BHK (Emulsion)")
 }
 
 export type Template = Record<string, TemplateItem[]>;

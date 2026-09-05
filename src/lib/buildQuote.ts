@@ -46,6 +46,9 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
   const base = BHK_ROOMS[ctx.bhk] ?? BHK_ROOMS["3 BHK"];
   const bedrooms = base.filter((r) => r.includes("Bedroom")).length;
   const bathrooms = Math.max(1, ctx.bathrooms ?? 1);
+  // BHK label for variant products (Painting/Electricals): "3 BHK" → "3BHK",
+  // "Villa" → "4BHK" (no Villa-specific catalog entry).
+  const bhkLabel = /villa/i.test(ctx.bhk) ? "4BHK" : ctx.bhk.replace(/\s+/g, "");
 
   const rooms = [...base];
   if (ctx.hasStudy && !rooms.includes("Office / Study")) {
@@ -67,7 +70,7 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
         (it.balcony && ctx.hasBalcony);
       if (!on) continue;
 
-      let product = it.p;
+      let product = it.bhkTemplate ? it.bhkTemplate.replace("#BHK", bhkLabel) : it.p;
       let width: number | null = null;
       let height: number | null = null;
       let amount: number;
@@ -98,9 +101,16 @@ export function buildFirstQuote(ctx: BuildContext): QuoteLine[] {
         amount = unitPrice * qty;
       }
 
-      if (room === "Master Bedroom" && ctx.kingMaster && it.p.startsWith("Queen")) {
-        product = "King size Bed- Hydraulic Storage";
-        unitPrice = 64000; qty = 1; amount = 64000;
+      // Master bedroom "King bed" option: swap Queen bed/headboard for the King
+      // equivalents (matched by name to the Product Master, which sets the price).
+      if (room === "Master Bedroom" && ctx.kingMaster) {
+        if (it.p.startsWith("Queen size Bed")) {
+          product = "King size Bed Hydraulic Storage";
+          unitPrice = 64000; qty = 1; amount = 64000;
+        } else if (it.p.startsWith("Queen Size - Headboard")) {
+          product = "King Size - Headboard";
+          unitPrice = 14000; qty = 1; amount = 14000;
+        }
       }
 
       const details = it.perBath && bathrooms > 1 ? `${it.details} (×${bathrooms} bathrooms)` : it.details;
