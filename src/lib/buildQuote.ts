@@ -5,6 +5,7 @@
 // quote follows — there is no separate hard-coded template.
 import type { Product, QuoteLine } from "./types";
 import { BHK_ROOMS, areaAmount, sqftAmount, rftAmount, MM_PER_SQFT } from "./pricing";
+import { withStandardSelection } from "./firstQuoteDefaults";
 
 // Default single-layer false-ceiling rate (₹/sqft). Editable per quote.
 export const DEFAULT_FC_RATE = 75;
@@ -49,7 +50,10 @@ export interface BuildContext {
   fcRate?: number;
 }
 
-export function buildFirstQuote(products: Product[], ctx: BuildContext): QuoteLine[] {
+export function buildFirstQuote(rawProducts: Product[], ctx: BuildContext): QuoteLine[] {
+  // If nothing has been flagged for the first quote yet, apply the standard
+  // selection automatically so the quote still builds from the live catalog.
+  const products = withStandardSelection(rawProducts);
   const base = BHK_ROOMS[ctx.bhk] ?? BHK_ROOMS["3 BHK"];
   const bedrooms = base.filter((r) => r.includes("Bedroom")).length;
   const bathrooms = Math.max(1, ctx.bathrooms ?? 1);

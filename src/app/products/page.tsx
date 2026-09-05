@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import type { Product } from "@/lib/types";
 import { loadProducts, saveProducts, defaultProducts } from "@/lib/productStore";
+import { standardPatch } from "@/lib/firstQuoteDefaults";
 
 const BLANK: Product = { product: "", wc: "MO-01", type: "Area", rate: 2000, unit: null, details: "", rooms: "Kitchen", fq: false, w: 1500, h: 2100, qty: 1 };
 const BHK_TAGS = ["", "1BHK", "2BHK", "3BHK", "4BHK"];
@@ -33,6 +34,22 @@ export default function ProductsPage() {
   }
   function reset() { setRows(defaultProducts()); setStatus("Reset to bundled defaults (not saved yet)."); }
 
+  // One-click: tick the standard first-quote set across the CURRENT catalog by
+  // matching product names, and give each a sensible room + default size/qty.
+  function selectStandard() {
+    let n = 0;
+    setRows((rs) => rs.map((r) => {
+      const patch = standardPatch(r.product, r.type);
+      if (patch) { n++; return { ...r, ...patch }; }
+      return r;
+    }));
+    setStatus(`Selected the standard first-quote set (${n} products). Review, then Save.`);
+  }
+  function clearSelection() {
+    setRows((rs) => rs.map((r) => ({ ...r, fq: false })));
+    setStatus("Cleared all first-quote selections (not saved yet).");
+  }
+
   const shown = rows.filter((r) => r.product.toLowerCase().includes(q.toLowerCase()));
 
   return (
@@ -42,6 +59,8 @@ export default function ProductsPage() {
         <input className="input max-w-xs" placeholder="Search product…" value={q} onChange={(e) => setQ(e.target.value)} />
         <button onClick={addRow} className="rounded bg-brand px-3 py-1.5 text-sm font-bold text-white">+ Add material</button>
         <button onClick={save} className="rounded border border-brand px-3 py-1.5 text-sm font-bold text-brand">Save</button>
+        <button onClick={selectStandard} className="rounded border border-brand bg-brand-band px-3 py-1.5 text-sm font-semibold text-brand">Select standard 1st-quote set</button>
+        <button onClick={clearSelection} className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600">Clear 1st-quote</button>
         <button onClick={reset} className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600">Reset to defaults</button>
         <span className="text-xs text-neutral-500">{status}</span>
       </div>
