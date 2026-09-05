@@ -79,12 +79,12 @@ export function computeTotals(lines: QuoteLine[], opts: DiscountOpts = {}): Tota
   const tpv = subTotal - discount - onSpot;
   const after = tpv - BOOKING_ADVANCE;
   const stages = [
-    { label: "Booking Advance (Fully Refundable for 3 days)", amount: BOOKING_ADVANCE },
-    { label: "Design First Draft (5%)", amount: Math.round(after * 0.05) },
-    { label: "Design Closure (10%)", amount: Math.round(after * 0.1) },
-    { label: "Material Procurement (40%)", amount: Math.round(after * 0.4) },
-    { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4) },
-    { label: "Project Handover (5%)", amount: Math.round(after * 0.05) },
+    { label: "Booking Advance (Fully Refundable for 3 days)", amount: BOOKING_ADVANCE, desc: "Token to block your project slot and begin design. Fully refundable within 3 days." },
+    { label: "Design First Draft (5%)", amount: Math.round(after * 0.05), desc: "Due on sharing the first design draft — 2D layouts and design concepts." },
+    { label: "Design Closure (10%)", amount: Math.round(after * 0.1), desc: "Due on final design sign-off and closure of all working drawings." },
+    { label: "Material Procurement (40%)", amount: Math.round(after * 0.4), desc: "Due before material procurement and start of factory production." },
+    { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4), desc: "Due before dispatch of the manufactured material from factory to site." },
+    { label: "Project Handover (5%)", amount: Math.round(after * 0.05), desc: "Due prior to final handover of the site and resolution of the final snag list." },
   ];
   return { mo, nm, fee, subTotal, discount, onSpot, modularPct, tpv, stages };
 }

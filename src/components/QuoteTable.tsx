@@ -84,12 +84,12 @@ export default function QuoteTable({
                     {x.l.sqft != null ? (
                       <span className="inline-flex items-center justify-end gap-1">
                         <input type="number" className="cell w-16 text-right" value={x.l.sqft} onChange={(e) => setField(x.i, { sqft: Number(e.target.value) || 0 })} />
-                        <span className="text-[10px] text-neutral-400">sqft{x.l.rate ? ` @₹${x.l.rate}` : ""}</span>
+                        <span className="text-[10px] text-neutral-400">sqft</span>
                       </span>
                     ) : x.l.rft != null ? (
                       <span className="inline-flex items-center justify-end gap-1">
                         <input type="number" className="cell w-16 text-right" value={x.l.rft} onChange={(e) => setField(x.i, { rft: Number(e.target.value) || 0 })} />
-                        <span className="text-[10px] text-neutral-400">rft{x.l.rate ? ` @₹${x.l.rate}` : ""}</span>
+                        <span className="text-[10px] text-neutral-400">rft</span>
                       </span>
                     ) : x.l.unitPrice != null ? (
                       <input type="number" className="cell w-14 text-right" value={x.l.qty ?? 1} onChange={(e) => setField(x.i, { qty: Number(e.target.value) || 0 })} />

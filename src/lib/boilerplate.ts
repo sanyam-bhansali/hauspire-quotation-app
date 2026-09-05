@@ -8,12 +8,12 @@ Our experienced designers and architects will work closely with you to turn your
 
 export const MATERIAL_SPEC: [string, string, string][] = [
   ["Plywood", "CENTURY", "BWP (Boiling Water Proof) Grade"],
-  ["HDHMR", "GREEN PLY", "BWP Grade"],
+  ["HDHMR", "GREEN PLY", "BWP (Boiling Water Proof) Grade"],
   ["Laminates", "MERINO", "Wood, Gloss, Matt, Texture"],
-  ["Special Laminates", "ADVANCE / VOGUE / MERINO", "High Gloss, Special Texture"],
+  ["Special Laminates", "ADVANCE, VOUGE, MERINO", "High Gloss, Special Texture"],
   ["Hardware", "HETTICH", "Soft Close"],
-  ["False Ceiling", "SAINT GOBAIN", "Gypsum board & Gyproc Channels"],
-  ["Handles", "LETTO / NIMKRO", "Premium Aluminium Handles"],
+  ["False Ceiling", "SAINT GOBAIN", "Gypsum board and Gyproc Channels"],
+  ["Handles", "LETTO, NIMKRO", "Premium Aluminium Handles"],
   ["Wiring", "POLYCAB", "Standard Thickness"],
   ["Paint", "Asian Paints", "Putty, Primer and Paint"],
 ];

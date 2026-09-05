@@ -6,15 +6,30 @@ export type WorkCode = "MO-01" | "NM-01";
 // RFT = ₹/running-foot × a length you type in running feet. Unit = flat ₹ × qty.
 export type PriceType = "Area" | "Unit" | "SqFt" | "RFT";
 
-/** A row in the ProductMaster (the single source of truth for prices). */
+/** A row in the ProductMaster (the single source of truth for prices AND for
+ *  what the First-Quote builder includes). */
 export interface Product {
   product: string;
   wc: WorkCode;
   type: PriceType;
-  rate: number | null; // ₹/sqft for Area products
+  rate: number | null; // ₹/sqft for Area / SqFt / RFT products
   unit: number | null; // ₹ flat for Unit products
   details: string;
-  rooms: string; // comma-separated category tags
+  rooms: string; // comma-separated placement categories: Kitchen, Bedroom, Living, Study, Other, Utility
+
+  // ---- First-Quote selection & defaults (edited in the Product Master) ----
+  fq?: boolean;       // include this product in the auto-built first quote
+  w?: number;         // default width (mm) for Area lines
+  h?: number;         // default height (mm) for Area lines
+  qty?: number;       // default quantity for Unit lines
+  area?: number;      // default floor area (sqft) for SqFt lines
+  len?: number;       // default length (running ft) for RFT lines
+  perBath?: boolean;  // quantity = number of bathrooms (e.g. Vanity)
+  perBed?: boolean;   // quantity = number of bedrooms
+  useRun?: boolean;   // in the Kitchen, size width to the kitchen run
+  balcony?: boolean;  // include only when the plan has a dry balcony
+  bhk?: string;       // BHK tag ("1BHK".."4BHK"): include only when it matches the plan
+  sort?: number;
 }
 
 /** How a template line is sized. */
@@ -67,7 +82,7 @@ export interface Totals {
   onSpot: number;
   modularPct: number;
   tpv: number;
-  stages: { label: string; amount: number }[];
+  stages: { label: string; amount: number; desc?: string }[];
 }
 
 export interface Quote {

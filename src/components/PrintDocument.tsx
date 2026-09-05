@@ -4,6 +4,7 @@ import type { QuoteLine } from "@/lib/types";
 import { computeTotals, inr } from "@/lib/pricing";
 import { loadTerms } from "@/lib/termsStore";
 import { DEFAULT_TERMS } from "@/data/termsDefault";
+import { MATERIAL_SPEC } from "@/lib/boilerplate";
 import TermsView from "./TermsView";
 
 export interface QuoteMeta {
@@ -114,11 +115,45 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
           </table>
         </div>
 
-        {/* Payment stages */}
+        {/* Payment stages — with the deliverable due at each stage */}
         <div className="mt-6 avoid">
           <div className="bg-brand px-2 py-1 font-bold text-white">Payment Stages</div>
-          <table className="w-full max-w-lg border-collapse text-[11px]">
-            <tbody>{t.stages.map((s) => <Row key={s.label} k={s.label} v={fmt(s.amount)} />)}</tbody>
+          <table className="w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="bg-brand-light text-left text-white">
+                <Th>Stage</Th><Th>Deliverable</Th><Th right>Amount (₹)</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {t.stages.map((s) => (
+                <tr key={s.label} className="align-top">
+                  <Td><b>{s.label}</b></Td>
+                  <Td className="text-[10px] text-neutral-600">{s.desc ?? ""}</Td>
+                  <Td right>{fmt(s.amount)}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Material Specification */}
+        <div className="mt-6 avoid">
+          <div className="bg-brand px-2 py-1 font-bold text-white">Material Specification</div>
+          <table className="w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="bg-brand-light text-left text-white">
+                <Th>Material</Th><Th>Brand</Th><Th>Specification</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {MATERIAL_SPEC.map(([mat, brand, spec]) => (
+                <tr key={mat} className="align-top">
+                  <Td><b>{mat}</b></Td>
+                  <Td>{brand}</Td>
+                  <Td className="text-neutral-700">{spec}</Td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </section>

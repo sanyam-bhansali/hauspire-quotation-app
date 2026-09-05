@@ -1,34 +1,22 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDesignerId } from "@/lib/useDesignerId";
-import template from "@/data/template.json";
-import type { Template, QuoteLine } from "@/lib/types";
+import type { QuoteLine, Product } from "@/lib/types";
+import seed from "@/data/productMaster.json";
 import { buildFirstQuote, DEFAULT_FC_RATE } from "@/lib/buildQuote";
 import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
 import { saveQuote } from "@/lib/supabase";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
 import { loadProducts } from "@/lib/productStore";
-import type { Product } from "@/lib/types";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import Plan2D from "@/components/Plan2D";
 import PrintDocument from "@/components/PrintDocument";
 import Isometric3D, { RoomLayout } from "@/components/Isometric3D";
 
-const TPL = template as unknown as Template;
-
-// Normalise a product name for matching (ignore case, spacing and punctuation),
-// so "Base Cabinets- Tandems" and "Base Cabinets - Tandems" match the master.
-function normName(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/lust[eu]re?/g, "lustre") // fold Lustre / Luster / Lusture spellings
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+const SEED = seed as unknown as Product[];
 
 const DEMOS: Record<string, { bhk: string; run: number }> = {
   "3BHK plan (Kitchen 10'×10'2\")": { bhk: "3 BHK", run: feetInchesToMm(10, 0) + feetInchesToMm(10, 2) - 900 },
@@ -45,7 +33,6 @@ export default function FirstQuotePage() {
   const [location, setLocation] = useState("Pune");
   const [bhk, setBhk] = useState("3 BHK");
   const [run, setRun] = useState(3960);
-  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [king, setKing] = useState(false);
   const [bathrooms, setBathrooms] = useState(2);
   const [hasBalcony, setHasBalcony] = useState(false);
@@ -62,8 +49,7 @@ export default function FirstQuotePage() {
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
-  const [master, setMaster] = useState<Record<string, Product>>({});
-  const [productsArr, setProductsArr] = useState<Product[]>([]);
+  const [productsArr, setProductsArr] = useState<Product[]>(SEED);
   // Add-item picker
   const [addRoom, setAddRoom] = useState("Kitchen");
   const [addProductName, setAddProductName] = useState("");
@@ -73,14 +59,13 @@ export default function FirstQuotePage() {
   const [addSqft, setAddSqft] = useState(1000);
   const [addRft, setAddRft] = useState(10);
 
-  // Load the editable Product Master so rate/unit/details edits apply to the first quote.
+  // Load the editable Product Master — it drives the whole first quote.
   useEffect(() => {
     loadProducts().then((ps) => {
-      const m: Record<string, Product> = {};
-      ps.forEach((p) => { m[normName(p.product)] = p; });
-      setMaster(m);
-      setProductsArr(ps);
-      if (ps[0]) setAddProductName(ps[0].product);
+      if (ps && ps.length) {
+        setProductsArr(ps);
+        if (ps[0]) setAddProductName(ps[0].product);
+      }
     }).catch(() => {});
   }, []);
 
@@ -113,59 +98,9 @@ export default function FirstQuotePage() {
     ]);
   }
 
-  function masterFor(name: string): Product | undefined {
-    const key = normName(name);
-    if (master[key]) return master[key];
-    if (key.includes("false ceiling")) {
-      const k = Object.keys(master).find((x) => x.includes("false ceiling"));
-      if (k) return master[k];
-    }
-    return undefined;
-  }
-  // The Product Master is the source of truth: overlay code + details, then
-  // re-price each line by the master's OWN type (Area/SqFt/RFT/Unit), keeping the
-  // line's dimensions/quantity where it has them. Lines with no master match are
-  // left untouched.
-  function applyMaster(ls: QuoteLine[]): QuoteLine[] {
-    return ls.map((l) => {
-      const m = masterFor(l.product);
-      if (!m) return l;
-      // Preserve a trailing "(×N bathrooms)" note if the built line had one.
-      const suffix = (l.details.match(/\s\(×\d+ bathrooms\)$/) || [""])[0];
-      const details = (m.details && m.details.trim() ? m.details : l.details) + suffix;
-      const base: QuoteLine = { ...l, wc: m.wc, details };
-
-      if (m.type === "Area" && m.rate != null) {
-        if (l.width && l.height) {
-          return { ...base, rate: m.rate, sqft: undefined, rft: undefined, qty: undefined, unitPrice: undefined, amount: areaAmount(l.width, l.height, m.rate) };
-        }
-        return { ...base, rate: m.rate };
-      }
-      if (m.type === "SqFt" && m.rate != null) {
-        const s = l.sqft ?? 0;
-        return { ...base, rate: m.rate, sqft: s, rft: undefined, qty: undefined, unitPrice: undefined, amount: s ? sqftAmount(s, m.rate) : l.amount };
-      }
-      if (m.type === "RFT" && m.rate != null) {
-        const r = l.rft ?? 0;
-        return { ...base, rate: m.rate, rft: r, sqft: undefined, qty: undefined, unitPrice: undefined, amount: r ? rftAmount(r, m.rate) : l.amount };
-      }
-      if (m.type === "Unit" && m.unit != null) {
-        const q = l.qty ?? 1;
-        return { ...base, unitPrice: m.unit, qty: q, rate: undefined, sqft: undefined, rft: undefined, width: null, height: null, amount: Math.round(q * m.unit) };
-      }
-      return base;
-    });
-  }
-
-  const rooms = BHK_ROOMS[bhk] ?? [];
-  const optionals = useMemo(
-    () => rooms.flatMap((r) => (r === "Parents Bedroom" ? TPL["Guest Bedroom"] : TPL[r] ?? []).filter((it) => !it.def).map((it) => ({ room: r, p: it.p }))),
-    [bhk] // eslint-disable-line react-hooks/exhaustive-deps
-  );
-
   function build(o: { bhk?: string; run?: number; bathrooms?: number; hasBalcony?: boolean; hasStudy?: boolean } = {}) {
     setLines(
-      applyMaster(buildFirstQuote({
+      buildFirstQuote(productsArr.length ? productsArr : SEED, {
         bhk: o.bhk ?? bhk,
         kitchenRun: o.run ?? run,
         bathrooms: o.bathrooms ?? bathrooms,
@@ -173,11 +108,10 @@ export default function FirstQuotePage() {
         hasStudy: o.hasStudy ?? hasStudy,
         sizeToPlan,
         roomDims,
-        enabledOptional: enabled,
         kingMaster: king,
         falseCeiling,
         fcRate,
-      }))
+      })
     );
     setStatus("");
   }
@@ -312,18 +246,12 @@ export default function FirstQuotePage() {
           <p className="text-[11px] text-neutral-500">Kitchen run (mm) drives base+wall+loft width.</p>
         </Section>
         <Section title="3 · Options">
-          {optionals.map((o) => {
-            const id = `${o.room}||${o.p}`;
-            return (
-              <label key={id} className="flex items-center gap-2 text-[12.5px]">
-                <input type="checkbox" checked={!!enabled[id]} onChange={(e) => setEnabled({ ...enabled, [id]: e.target.checked })} />
-                {o.p} <span className="text-neutral-400">({o.room})</span>
-              </label>
-            );
-          })}
           <label className="flex items-center gap-2 text-[12.5px]">
             <input type="checkbox" checked={king} onChange={(e) => setKing(e.target.checked)} /> Master: King bed
           </label>
+          <p className="text-[11px] text-neutral-500">
+            What each room includes is now set in the <b>Product Master</b> (tick “1st Quote” there). Use “＋ Add item” below for one-off extras.
+          </p>
         </Section>
         <Section title="4 · Detected from plan — confirm">
           <label className="text-xs text-neutral-600">Bathrooms (→ vanities)</label>

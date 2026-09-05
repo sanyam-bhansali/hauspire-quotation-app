@@ -45,6 +45,10 @@ create policy "product master access"
   to anon, authenticated
   using (true) with check (true);
 
+-- First-quote settings (fq flag + default size/qty/rules) live in one jsonb column.
+-- Run this if you created product_master before this column existed:
+alter table product_master add column if not exists fq_config jsonb;
+
 -- Also update the type comment: type is now Area / SqFt / RFT / Unit.
 
 -- ---- App settings (editable Terms & Conditions, etc.) ----
