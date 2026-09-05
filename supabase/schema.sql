@@ -49,6 +49,24 @@ create policy "product master access"
 -- Run this if you created product_master before this column existed:
 alter table product_master add column if not exists fq_config jsonb;
 
+-- ---- New-product proposals (raised while quoting, approved into the master) ----
+create table if not exists product_proposals (
+  id uuid primary key default gen_random_uuid(),
+  product text not null,
+  wc text,
+  type text,
+  rate int,
+  unit int,
+  details text,
+  rooms text,
+  proposed_by text,
+  created_at timestamptz default now()
+);
+alter table product_proposals enable row level security;
+drop policy if exists "product proposals access" on product_proposals;
+create policy "product proposals access" on product_proposals for all
+  to anon, authenticated using (true) with check (true);
+
 -- Also update the type comment: type is now Area / SqFt / RFT / Unit.
 
 -- ---- App settings (editable Terms & Conditions, etc.) ----

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { Product } from "@/lib/types";
 import { loadProducts, saveProducts, defaultProducts } from "@/lib/productStore";
 import { standardPatch } from "@/lib/firstQuoteDefaults";
+import { loadProposals, deleteProposal, proposalToProduct, type Proposal } from "@/lib/proposalStore";
 
 const BLANK: Product = { product: "", wc: "MO-01", type: "Area", rate: 2000, unit: null, details: "", rooms: "Kitchen", fq: false, w: 1500, h: 2100, qty: 1 };
 const BHK_TAGS = ["", "1BHK", "2BHK", "3BHK", "4BHK"];
@@ -11,10 +12,24 @@ export default function ProductsPage() {
   const [rows, setRows] = useState<Product[]>([]);
   const [status, setStatus] = useState("Loading…");
   const [q, setQ] = useState("");
+  const [pending, setPending] = useState<Proposal[]>([]);
 
   useEffect(() => {
     loadProducts().then((p) => { setRows(p); setStatus(`${p.length} products loaded`); });
+    loadProposals().then(setPending).catch(() => {});
   }, []);
+
+  async function approve(p: Proposal) {
+    setRows((r) => [proposalToProduct(p), ...r]);
+    await deleteProposal(p.id);
+    setPending((ps) => ps.filter((x) => x.id !== p.id));
+    setStatus(`Approved “${p.product}” — added to the master. Click Save to persist.`);
+  }
+  async function reject(p: Proposal) {
+    await deleteProposal(p.id);
+    setPending((ps) => ps.filter((x) => x.id !== p.id));
+    setStatus(`Rejected “${p.product}”.`);
+  }
 
   function update(i: number, patch: Partial<Product>) {
     setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
@@ -69,6 +84,29 @@ export default function ProductsPage() {
         <b> Tick “1st Q”</b> to include a product in the auto-built first quotation, and set its default size / quantity there.
         <b> Rooms</b> are placement categories — use <code>Kitchen</code>, <code>Bedroom</code>, <code>Living</code>, <code>Study</code>, <code>Other</code> (comma-separated); a Bedroom item is placed in every bedroom. <b>BHK</b> limits a product to one home size (e.g. Painting/Electricals variants); <b>×bath</b> makes one line per bathroom; <b>balc</b> includes it only when a dry balcony is present; <b>run</b> sizes a kitchen item's width to the kitchen run. Saved changes apply everywhere.
       </p>
+
+      {pending.length > 0 && (
+        <div className="mb-4 rounded-lg border-2 border-amber-300 bg-amber-50 p-3">
+          <div className="mb-2 text-sm font-bold text-amber-800">
+            Pending approval — {pending.length} new product{pending.length > 1 ? "s" : ""} proposed while quoting
+          </div>
+          <div className="space-y-2">
+            {pending.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-2 rounded border border-amber-200 bg-white px-3 py-2 text-[12px]">
+                <b className="text-brand">{p.product}</b>
+                <span className="text-neutral-500">{p.wc} · {p.type} · {p.type === "Unit" ? `₹${p.unit}/unit` : `₹${p.rate}/sqft`} · {p.rooms || "—"}</span>
+                {p.proposed_by ? <span className="text-neutral-400">by {p.proposed_by}</span> : null}
+                {p.details ? <span className="w-full text-[11px] text-neutral-500">{p.details}</span> : null}
+                <div className="ml-auto flex gap-2">
+                  <button onClick={() => approve(p)} className="rounded bg-green-600 px-3 py-1 text-xs font-bold text-white">Approve</button>
+                  <button onClick={() => reject(p)} className="rounded border border-neutral-300 px-3 py-1 text-xs text-neutral-600">Reject</button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] text-amber-700">Approving adds the product to the master below — then click <b>Save</b> to persist it for everyone.</p>
+        </div>
+      )}
 
       <div className="overflow-auto rounded border border-brand-line">
         <table className="w-full border-collapse text-[12px]">

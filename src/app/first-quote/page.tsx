@@ -10,6 +10,7 @@ import { saveQuote } from "@/lib/supabase";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
 import { loadProducts } from "@/lib/productStore";
+import { addProposal } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import Plan2D from "@/components/Plan2D";
@@ -58,6 +59,24 @@ export default function FirstQuotePage() {
   const [addQty, setAddQty] = useState(1);
   const [addSqft, setAddSqft] = useState(1000);
   const [addRft, setAddRft] = useState(10);
+  // Propose-a-new-product form
+  const [npOpen, setNpOpen] = useState(false);
+  const [np, setNp] = useState({ product: "", wc: "NM-01", type: "Unit", value: 10000, details: "" });
+
+  async function proposeNew() {
+    if (!np.product.trim()) return;
+    const isUnit = np.type === "Unit";
+    const prod: Product = {
+      product: np.product.trim(), wc: np.wc as any, type: np.type as any,
+      rate: isUnit ? null : np.value, unit: isUnit ? np.value : null,
+      details: np.details, rooms: addRoom.includes("Bedroom") ? "Bedroom" : addRoom.includes("Kitchen") ? "Kitchen" : addRoom.includes("Living") ? "Living" : "Other",
+    };
+    await addProposal(prod, designerId);
+    setLines([...lines, { room: addRoom, product: prod.product, wc: prod.wc, details: np.details, width: null, height: null, amount: np.value, qty: 1, unitPrice: np.value }]);
+    setStatus(`Proposed “${np.product}” for approval and added it to this quote.`);
+    setNp({ product: "", wc: "NM-01", type: "Unit", value: 10000, details: "" });
+    setNpOpen(false);
+  }
 
   // Load the editable Product Master — it drives the whole first quote.
   useEffect(() => {
@@ -306,6 +325,25 @@ export default function FirstQuotePage() {
             <label className="text-xs">Quantity<input className="input" type="number" value={addQty} onChange={(e) => setAddQty(Number(e.target.value) || 1)} /></label>
           )}
           <button onClick={addItem} className="btn-sec">＋ Add to quotation</button>
+
+          <button onClick={() => setNpOpen((v) => !v)} className="mt-1 text-[11px] font-semibold text-brand underline">
+            {npOpen ? "− Cancel new product" : "＋ Propose a NEW product (not in master)"}
+          </button>
+          {npOpen && (
+            <div className="space-y-2 rounded border border-brand-line bg-orange-50/40 p-2">
+              <input className="input" placeholder="New product name" value={np.product} onChange={(e) => setNp({ ...np, product: e.target.value })} />
+              <div className="grid grid-cols-2 gap-2">
+                <select className="input" value={np.wc} onChange={(e) => setNp({ ...np, wc: e.target.value })}><option>MO-01</option><option>NM-01</option></select>
+                <select className="input" value={np.type} onChange={(e) => setNp({ ...np, type: e.target.value })}><option>Unit</option><option>Area</option><option>SqFt</option><option>RFT</option></select>
+              </div>
+              <label className="text-xs">{np.type === "Unit" ? "Amount (₹)" : "Rate (₹/sqft·rft)"}
+                <input className="input" type="number" value={np.value} onChange={(e) => setNp({ ...np, value: Number(e.target.value) || 0 })} />
+              </label>
+              <textarea className="input h-12 text-[11px]" placeholder="Details (client-facing)" value={np.details} onChange={(e) => setNp({ ...np, details: e.target.value })} />
+              <button onClick={proposeNew} className="btn-sec w-full">Propose &amp; add to quote</button>
+              <p className="text-[10.5px] text-neutral-500">Sent to the Products tab for approval. Once approved it becomes a standard line item.</p>
+            </div>
+          )}
         </Section>
       </aside>
 
