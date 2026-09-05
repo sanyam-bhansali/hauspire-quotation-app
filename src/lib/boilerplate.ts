@@ -16,6 +16,7 @@ export const MATERIAL_SPEC: [string, string, string][] = [
   ["Handles", "LETTO, NIMKRO", "Premium Aluminium Handles"],
   ["Wiring", "POLYCAB", "Standard Thickness"],
   ["Paint", "Asian Paints", "Putty, Primer and Paint"],
+  ["Adhesive", "FEVICOL", "Falco Fix Pro"],
 ];
 
 export const TERMS: string[] = [
