@@ -6,6 +6,7 @@ import { loadTerms } from "@/lib/termsStore";
 import { DEFAULT_TERMS } from "@/data/termsDefault";
 import { MATERIAL_SPEC } from "@/lib/boilerplate";
 import TermsView from "./TermsView";
+import RoomDonut from "./RoomDonut";
 
 export interface QuoteMeta {
   client: string;
@@ -53,7 +54,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
 
         {rooms.map((room) => (
           <div key={room} className="mb-4">
-            <div className="bg-brand px-2 py-1 text-[12px] font-bold text-white">{room}</div>
+            <div className="roomhdr bg-brand px-2 py-1 text-[12px] font-bold text-white">{room}</div>
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-brand-light text-left text-[11px] text-white">
@@ -83,17 +84,21 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
           </div>
         ))}
 
-        {/* Summary by room */}
+        {/* Summary by room — table + donut */}
         <div className="mt-6 avoid">
           <div className="bg-brand px-2 py-1 font-bold text-white">Summary By Room</div>
-          <table className="w-full max-w-md border-collapse">
-            <thead><tr className="bg-brand-light text-left text-white"><Th>S.No.</Th><Th>Rooms</Th><Th right>Amount (₹)</Th></tr></thead>
-            <tbody>
-              {rooms.map((r, i) => (
-                <tr key={r}><Td>{i + 1}</Td><Td>{r}</Td><Td right>{fmt(roomTotal(r))}</Td></tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="flex flex-wrap items-start justify-between gap-6 pt-2">
+            <table className="min-w-[240px] flex-1 border-collapse">
+              <thead><tr className="bg-brand-light text-left text-white"><Th>S.No.</Th><Th>Rooms</Th><Th right>Amount (₹)</Th></tr></thead>
+              <tbody>
+                {rooms.map((r, i) => (
+                  <tr key={r}><Td>{i + 1}</Td><Td>{r}</Td><Td right>{fmt(roomTotal(r))}</Td></tr>
+                ))}
+                <tr className="bg-brand-band font-bold"><Td colSpan={2}>Total</Td><Td right>{fmt(rooms.reduce((s, r) => s + roomTotal(r), 0))}</Td></tr>
+              </tbody>
+            </table>
+            <RoomDonut data={rooms.map((r) => ({ label: r, value: roomTotal(r) }))} />
+          </div>
         </div>
 
         {/* Totals */}
