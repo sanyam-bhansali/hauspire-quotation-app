@@ -65,7 +65,11 @@ export default function ProductsPage() {
     setStatus("Cleared all first-quote selections (not saved yet).");
   }
 
-  const shown = rows.filter((r) => r.product.toLowerCase().includes(q.toLowerCase()));
+  const ql = q.trim().toLowerCase();
+  const shown = ql
+    ? rows.filter((r) =>
+        [r.product, r.details, r.rooms, r.wc, r.type].some((f) => (f || "").toLowerCase().includes(ql)))
+    : rows;
 
   return (
     <div className="mx-auto max-w-6xl p-6">

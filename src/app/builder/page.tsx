@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDesignerId } from "@/lib/useDesignerId";
 import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
-import { areaAmount, sqftAmount, rftAmount, computeTotals, inr } from "@/lib/pricing";
+import { areaAmount, sqftAmount, rftAmount, computeTotals, inr, BHK_ROOMS } from "@/lib/pricing";
 import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
@@ -15,7 +15,7 @@ import FinalCompare from "@/components/FinalCompare";
 import PrintFinal from "@/components/PrintFinal";
 
 const SEED = productMaster as unknown as Product[];
-const ROOMS = ["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Parents Bedroom", "Living, Dining & Foyer", "Other Services"];
+const DEFAULT_ROOMS = ["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Living, Dining & Foyer", "Other Services"];
 
 export default function BuilderPage() {
   const designerId = useDesignerId();
@@ -32,9 +32,16 @@ export default function BuilderPage() {
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
 
+  // rooms
+  const [roomList, setRoomList] = useState<string[]>(DEFAULT_ROOMS);
+  const [hasStudy, setHasStudy] = useState(false);
+  const [renameFrom, setRenameFrom] = useState("");
+  const [renameTo, setRenameTo] = useState("");
+  const [newRoom, setNewRoom] = useState("");
+
   // add-line form
   const [products, setProducts] = useState<Product[]>(SEED);
-  const [room, setRoom] = useState(ROOMS[0]);
+  const [room, setRoom] = useState(DEFAULT_ROOMS[0]);
   const [productName, setProductName] = useState(SEED[0].product);
   const [w, setW] = useState(1800);
   const [h, setH] = useState(2100);
@@ -81,6 +88,30 @@ export default function BuilderPage() {
       );
     }
   }, []);
+
+  function applyConfig() {
+    const base = BHK_ROOMS[bhk] ?? (/villa/i.test(bhk) ? BHK_ROOMS["4 BHK"] : BHK_ROOMS["3 BHK"]);
+    const list = base.filter((r) => r !== "Other Services");
+    if (hasStudy || /villa/i.test(bhk)) list.push("Office / Study");
+    list.push("Other Services");
+    setRoomList(list);
+    if (!list.includes(room)) setRoom(list[0]);
+    setBanner(`${bhk} configuration applied — ${list.length} rooms.`);
+  }
+  function renameRoom() {
+    const from = renameFrom.trim(); const to = renameTo.trim();
+    if (!from || !to) return;
+    setRoomList((rl) => rl.map((r) => (r === from ? to : r)));
+    setLines((ls) => ls.map((l) => (l.room === from ? { ...l, room: to } : l)));
+    if (room === from) setRoom(to);
+    setRenameFrom(""); setRenameTo("");
+    setBanner(`Renamed “${from}” → “${to}”.`);
+  }
+  function addRoom() {
+    const n = newRoom.trim();
+    if (!n || roomList.includes(n)) { setNewRoom(""); return; }
+    setRoomList((rl) => [...rl, n]); setRoom(n); setNewRoom("");
+  }
 
   function newRevision() {
     if (!quoteNo) { setBanner("Save this quote once to get a quote number, then you can start revisions."); return; }
@@ -137,8 +168,26 @@ export default function BuilderPage() {
           {["1 BHK", "2 BHK", "3 BHK", "4 BHK", "Villa"].map((b) => <option key={b}>{b}</option>)}
         </select>
 
+        <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Rooms</h2>
+        <label className="flex items-center gap-2 text-[12.5px]">
+          <input type="checkbox" checked={hasStudy} onChange={(e) => setHasStudy(e.target.checked)} /> Include Study / Office
+        </label>
+        <button onClick={applyConfig} className="btn-sec w-full">Apply {bhk} configuration</button>
+        <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-1">
+          <select className="input" value={renameFrom} onChange={(e) => setRenameFrom(e.target.value)}>
+            <option value="">Rename room…</option>
+            {roomList.map((r) => <option key={r}>{r}</option>)}
+          </select>
+          <input className="input" placeholder="New name" value={renameTo} onChange={(e) => setRenameTo(e.target.value)} />
+          <button onClick={renameRoom} className="rounded border border-brand px-2 py-1 text-xs font-semibold text-brand">↺</button>
+        </div>
+        <div className="grid grid-cols-[1fr_auto] items-center gap-1">
+          <input className="input" placeholder="Add custom room" value={newRoom} onChange={(e) => setNewRoom(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addRoom(); }} />
+          <button onClick={addRoom} className="rounded border border-brand px-2 py-1 text-xs font-semibold text-brand">＋</button>
+        </div>
+
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Add a line</h2>
-        <select className="input" value={room} onChange={(e) => setRoom(e.target.value)}>{ROOMS.map((r) => <option key={r}>{r}</option>)}</select>
+        <select className="input" value={room} onChange={(e) => setRoom(e.target.value)}>{roomList.map((r) => <option key={r}>{r}</option>)}</select>
         <select className="input" value={productName} onChange={(e) => setProductName(e.target.value)}>{products.map((p) => <option key={p.product}>{p.product}</option>)}</select>
         <p className="text-[11px] text-neutral-500">{product.wc} · {product.type} {product.type === "Area" || product.type === "SqFt" ? `· ₹${product.rate}/sqft` : product.type === "RFT" ? `· ₹${product.rate}/rft` : `· ₹${product.unit}/unit`}</p>
         {product.type === "Area" ? (
