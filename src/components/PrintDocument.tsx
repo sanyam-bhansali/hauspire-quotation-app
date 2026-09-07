@@ -29,7 +29,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
   const t = computeTotals(lines, { modularPct: meta.modularPct, onSpot: meta.onSpot });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
   const date = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  const quoteNo = meta.quoteNo || "HI/2026/001";
+  const quoteNo = meta.quoteNo || "Draft";
   const rev = meta.revision ?? 0;
 
   return (

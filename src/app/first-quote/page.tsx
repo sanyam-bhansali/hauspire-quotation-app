@@ -7,6 +7,7 @@ import seed from "@/data/productMaster.json";
 import { buildFirstQuote, DEFAULT_FC_RATE } from "@/lib/buildQuote";
 import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
 import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
+import { printWithFilename, quoteFilename } from "@/lib/printDoc";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
 import { loadProducts } from "@/lib/productStore";
@@ -355,7 +356,7 @@ export default function FirstQuotePage() {
           <Tab on={tab === "3d"} onClick={() => setTab("3d")}>3D view</Tab>
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
-            <button onClick={() => { setTab("pdf"); setTimeout(() => window.print(), 350); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
+            <button onClick={() => { setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, "")), 350); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
               ⬇ Save as PDF
             </button>
           )}

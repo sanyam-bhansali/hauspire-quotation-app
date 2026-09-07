@@ -5,6 +5,7 @@ import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
 import { areaAmount, sqftAmount, rftAmount, computeTotals, inr, BHK_ROOMS } from "@/lib/pricing";
 import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
+import { printWithFilename, quoteFilename } from "@/lib/printDoc";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
 import { addProposal } from "@/lib/proposalStore";
@@ -243,8 +244,8 @@ export default function BuilderPage() {
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
             <div className="ml-auto flex gap-2">
-              <button onClick={() => { setTab("pdf"); setTimeout(() => window.print(), 350); }} className="rounded bg-brand px-3 py-1 text-sm font-bold text-white">⬇ Quotation PDF</button>
-              <button onClick={() => { setTab("finalpdf"); setTimeout(() => window.print(), 350); }} className="rounded border border-brand px-3 py-1 text-sm font-bold text-brand" title="Original vs Final comparison PDF">⬇ Final PDF</button>
+              <button onClick={() => { setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, quoteNo)), 350); }} className="rounded bg-brand px-3 py-1 text-sm font-bold text-white">⬇ Quotation PDF</button>
+              <button onClick={() => { setTab("finalpdf"); setTimeout(() => printWithFilename(quoteFilename(client, quoteNo, true)), 350); }} className="rounded border border-brand px-3 py-1 text-sm font-bold text-brand" title="Original vs Final comparison PDF">⬇ Final PDF</button>
             </div>
           )}
         </div>

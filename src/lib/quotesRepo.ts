@@ -13,20 +13,26 @@ function lsGet(): Quote[] {
 }
 function lsSet(a: Quote[]) { try { localStorage.setItem(LS_KEY, JSON.stringify(a)); } catch { /* ignore */ } }
 
-/** Human-readable next quote number, e.g. "HI/2026/007". */
+// Quote numbers are a plain running series starting at this number.
+export const QUOTE_START = 2300;
+
+/** Next quote number: max existing (>= QUOTE_START-1) + 1, so the series begins at 2300. */
 export async function nextQuoteNo(): Promise<string> {
-  const year = new Date().getFullYear();
-  let count = 0;
+  let list: (string | undefined)[] = [];
   if (supabase) {
     try {
       const { data } = await supabase.from("quotes").select("quote_no");
-      const nos = new Set((data ?? []).map((r: any) => r.quote_no).filter(Boolean));
-      count = nos.size;
-    } catch { /* fall back */ }
+      list = (data ?? []).map((r: any) => r.quote_no);
+    } catch { list = lsGet().map((q) => q.quote_no); }
   } else {
-    count = new Set(lsGet().map((q) => q.quote_no).filter(Boolean)).size;
+    list = lsGet().map((q) => q.quote_no);
   }
-  return `HI/${year}/${String(count + 1).padStart(3, "0")}`;
+  const nums = list
+    .map((s) => parseInt(String(s ?? "").replace(/\D/g, ""), 10))
+    // Only plain numbers in the running range — ignores any legacy "HI/2026/007" ids.
+    .filter((n) => !isNaN(n) && n >= QUOTE_START && n < 100000);
+  const maxN = Math.max(QUOTE_START - 1, ...nums);
+  return String(maxN + 1);
 }
 
 /** Insert a new revision row. Returns the saved quote (with id). */
