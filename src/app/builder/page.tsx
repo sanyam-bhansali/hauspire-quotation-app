@@ -12,6 +12,7 @@ import { addProposal } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import PrintDocument from "@/components/PrintDocument";
+import ProductCombo from "@/components/ProductCombo";
 import FinalCompare from "@/components/FinalCompare";
 import PrintFinal from "@/components/PrintFinal";
 
@@ -189,7 +190,7 @@ export default function BuilderPage() {
 
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Add a line</h2>
         <select className="input" value={room} onChange={(e) => setRoom(e.target.value)}>{roomList.map((r) => <option key={r}>{r}</option>)}</select>
-        <select className="input" value={productName} onChange={(e) => setProductName(e.target.value)}>{products.map((p) => <option key={p.product}>{p.product}</option>)}</select>
+        <ProductCombo products={products} value={productName} onChange={setProductName} />
         <p className="text-[11px] text-neutral-500">{product.wc} · {product.type} {product.type === "Area" || product.type === "SqFt" ? `· ₹${product.rate}/sqft` : product.type === "RFT" ? `· ₹${product.rate}/rft` : `· ₹${product.unit}/unit`}</p>
         {product.type === "Area" ? (
           <div className="grid grid-cols-2 gap-2">

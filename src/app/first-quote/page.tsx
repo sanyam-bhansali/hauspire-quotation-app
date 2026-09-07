@@ -14,6 +14,7 @@ import { loadProducts } from "@/lib/productStore";
 import { addProposal } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
+import ProductCombo from "@/components/ProductCombo";
 import Plan2D from "@/components/Plan2D";
 import PrintDocument from "@/components/PrintDocument";
 import Isometric3D, { RoomLayout } from "@/components/Isometric3D";
@@ -306,9 +307,7 @@ export default function FirstQuotePage() {
           <select className="input" value={addRoom} onChange={(e) => setAddRoom(e.target.value)}>
             {["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Parents Bedroom", "Office / Study", "Living, Dining & Foyer", "Other Services"].map((r) => <option key={r}>{r}</option>)}
           </select>
-          <select className="input" value={addProductName} onChange={(e) => setAddProductName(e.target.value)}>
-            {productsArr.map((p) => <option key={p.product}>{p.product}</option>)}
-          </select>
+          <ProductCombo products={productsArr} value={addProductName} onChange={setAddProductName} />
           {addProduct && (
             <p className="text-[11px] text-neutral-500">
               {addProduct.wc} · {addProduct.type} {addProduct.type === "Area" || addProduct.type === "SqFt" ? `· ₹${addProduct.rate}/sqft` : addProduct.type === "RFT" ? `· ₹${addProduct.rate}/rft` : `· ₹${addProduct.unit}/unit`}
