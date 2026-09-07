@@ -5,12 +5,14 @@ import type { Product } from "@/lib/types";
 /** Excel-style searchable product picker: type to filter, arrow keys + Enter,
  *  or click. Matches product name, details and rooms. */
 export default function ProductCombo({
-  products, value, onChange, placeholder = "Search product…",
-}: { products: Product[]; value: string; onChange: (name: string) => void; placeholder?: string }) {
+  products, value, onChange, placeholder = "Search product…", allowCustom = false, className = "",
+}: { products: Product[]; value: string; onChange: (name: string) => void; placeholder?: string; allowCustom?: boolean; className?: string }) {
   const [q, setQ] = useState(value);
   const [open, setOpen] = useState(false);
   const [hi, setHi] = useState(0);
   const boxRef = useRef<HTMLDivElement>(null);
+  const qRef = useRef(value);
+  qRef.current = q;
 
   useEffect(() => { setQ(value); }, [value]);
   useEffect(() => {
@@ -33,13 +35,19 @@ export default function ProductCombo({
   return (
     <div className="relative" ref={boxRef}>
       <input
-        className="input w-full" value={q} placeholder={placeholder}
+        className={className || "input w-full"} value={q} placeholder={placeholder}
         onChange={(e) => { setQ(e.target.value); setOpen(true); setHi(0); }}
         onFocus={() => { setOpen(true); setHi(0); }}
+        onBlur={() => {
+          if (allowCustom) setTimeout(() => { const t = qRef.current.trim(); if (t && t !== value) onChange(t); }, 150);
+        }}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setHi((h) => Math.min(h + 1, matches.length - 1)); }
           else if (e.key === "ArrowUp") { e.preventDefault(); setHi((h) => Math.max(h - 1, 0)); }
-          else if (e.key === "Enter") { if (open && matches[hi]) { e.preventDefault(); pick(matches[hi]); } }
+          else if (e.key === "Enter") {
+            if (open && matches[hi]) { e.preventDefault(); pick(matches[hi]); }
+            else if (allowCustom) { e.preventDefault(); setOpen(false); const t = q.trim(); if (t && t !== value) onChange(t); }
+          }
           else if (e.key === "Escape") { setOpen(false); }
         }}
       />

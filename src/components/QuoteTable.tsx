@@ -1,18 +1,48 @@
 "use client";
 import { Fragment } from "react";
-import type { QuoteLine, WorkCode } from "@/lib/types";
+import type { QuoteLine, WorkCode, Product } from "@/lib/types";
 import { inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
+import ProductCombo from "./ProductCombo";
 
 /** Fully editable, room-grouped quotation table. Every field can be changed;
  *  editing Width/Height recomputes the amount for area lines (those with a rate). */
 export default function QuoteTable({
   lines,
   onChange,
+  products = [],
 }: {
   lines: QuoteLine[];
   onChange: (lines: QuoteLine[]) => void;
+  products?: Product[];
 }) {
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
+
+  // Pick a product from the master into a row: set its code/details and re-price
+  // by the product's own type, keeping the row's dimensions/qty where sensible.
+  function setProduct(idx: number, name: string) {
+    const next = lines.slice();
+    const l: QuoteLine = { ...next[idx], product: name };
+    const p = products.find((x) => x.product === name);
+    if (p) {
+      l.wc = p.wc; if (p.details) l.details = p.details;
+      if (p.type === "Area") {
+        l.rate = p.rate ?? undefined; l.unitPrice = undefined; l.qty = undefined; l.sqft = undefined; l.rft = undefined;
+        if (!l.width) l.width = 1000; if (!l.height) l.height = 1000;
+        l.amount = areaAmount(l.width, l.height, p.rate ?? 0);
+      } else if (p.type === "SqFt") {
+        l.rate = p.rate ?? undefined; l.sqft = l.sqft ?? 0; l.unitPrice = undefined; l.qty = undefined; l.rft = undefined; l.width = null; l.height = null;
+        l.amount = sqftAmount(l.sqft, p.rate ?? 0);
+      } else if (p.type === "RFT") {
+        l.rate = p.rate ?? undefined; l.rft = l.rft ?? 0; l.unitPrice = undefined; l.qty = undefined; l.sqft = undefined; l.width = null; l.height = null;
+        l.amount = rftAmount(l.rft, p.rate ?? 0);
+      } else {
+        l.unitPrice = p.unit ?? 0; l.qty = l.qty ?? 1; l.rate = undefined; l.sqft = undefined; l.rft = undefined; l.width = null; l.height = null;
+        l.amount = Math.round((l.qty ?? 1) * (l.unitPrice ?? 0));
+      }
+    }
+    next[idx] = l;
+    onChange(next);
+  }
 
   function setField(idx: number, patch: Partial<QuoteLine>) {
     const next = lines.slice();
@@ -70,7 +100,11 @@ export default function QuoteTable({
                 <tr key={x.i} className="align-top">
                   <td className="border border-brand-line px-1 py-1 text-center">{n + 1}</td>
                   <td className="border border-brand-line px-1 py-1">
-                    <input className="cell w-44" value={x.l.product} onChange={(e) => setField(x.i, { product: e.target.value })} />
+                    {products.length ? (
+                      <ProductCombo products={products} value={x.l.product} onChange={(name) => setProduct(x.i, name)} allowCustom className="w-44 rounded border border-[#e0cdd3] bg-[#fffef8] px-1 py-0.5 text-[12px]" placeholder="Search product…" />
+                    ) : (
+                      <input className="cell w-44" value={x.l.product} onChange={(e) => setField(x.i, { product: e.target.value })} />
+                    )}
                   </td>
                   <td className="border border-brand-line px-1 py-1">
                     <select className="cell" value={x.l.wc} onChange={(e) => setField(x.i, { wc: e.target.value as WorkCode })}>

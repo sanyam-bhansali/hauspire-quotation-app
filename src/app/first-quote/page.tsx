@@ -368,7 +368,7 @@ export default function FirstQuotePage() {
               <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">First-draft quotation · {inr(computeTotals(lines, { modularPct, onSpot }).tpv)}</div></div>
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
-            <QuoteTable lines={lines} onChange={setLines} />
+            <QuoteTable lines={lines} onChange={setLines} products={productsArr} />
             <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onModularPct={setModularPct} onOnSpot={setOnSpot} />
           </>
         ) : tab === "plan" ? (
