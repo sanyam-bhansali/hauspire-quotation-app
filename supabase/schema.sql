@@ -14,7 +14,12 @@ create table if not exists quotes (
   created_at timestamptz default now()
 );
 
+-- Revision tracking (added later; run these if quotes predates them):
+alter table quotes add column if not exists quote_no text;
+alter table quotes add column if not exists revision int default 0;
+
 create index if not exists quotes_designer_idx on quotes (designer_id, created_at desc);
+create index if not exists quotes_quoteno_idx on quotes (quote_no, revision desc);
 
 -- Row Level Security: each designer sees only their own quotes.
 -- (Uses the Clerk user id passed from the app; enable + adapt to your setup.)

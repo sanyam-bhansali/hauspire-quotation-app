@@ -6,7 +6,7 @@ import type { QuoteLine, Product } from "@/lib/types";
 import seed from "@/data/productMaster.json";
 import { buildFirstQuote, DEFAULT_FC_RATE } from "@/lib/buildQuote";
 import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
-import { saveQuote } from "@/lib/supabase";
+import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
 import { loadProducts } from "@/lib/productStore";
@@ -218,9 +218,10 @@ export default function FirstQuotePage() {
     if (!lines.length) return;
     const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
-      await saveQuote({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv });
-      setStatus("Saved ✓");
-    } catch { setStatus("Save failed — configure Supabase."); }
+      const no = await nextQuoteNo();
+      await saveRevision({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, revision: 0 });
+      setStatus(`Saved ✓  ${no} · Rev 0`);
+    } catch { setStatus("Save failed — configure Supabase (or saved locally)."); }
   }
 
   function reviseInBuilder() {

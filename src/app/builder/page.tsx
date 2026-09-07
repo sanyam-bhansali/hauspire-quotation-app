@@ -4,7 +4,7 @@ import { useDesignerId } from "@/lib/useDesignerId";
 import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
 import { areaAmount, sqftAmount, rftAmount, computeTotals, inr } from "@/lib/pricing";
-import { saveQuote } from "@/lib/supabase";
+import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
 import { addProposal } from "@/lib/proposalStore";
@@ -23,6 +23,8 @@ export default function BuilderPage() {
   const [bhk, setBhk] = useState("3 BHK");
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [banner, setBanner] = useState("");
+  const [quoteNo, setQuoteNo] = useState<string>("");
+  const [revision, setRevision] = useState(0);
   const [tab, setTab] = useState<"quote" | "pdf">("quote");
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
@@ -60,15 +62,28 @@ export default function BuilderPage() {
     loadProducts().then(setProducts).catch(() => {});
   }, []);
 
-  // Receive a first quote handed off from the First-Quote page.
+  // Receive a quote handed off from the First-Quote page or the Quotations list.
   useEffect(() => {
     const p = takePendingQuote();
     if (p) {
       setClient(p.client); setMobile(p.mobile); setLocation(p.location);
       setBhk(p.bhk); setLines(p.lines);
-      setBanner(`Revising first quote for ${p.client || "client"} — edit lines, add products, then Save as revision.`);
+      if (p.quoteNo) setQuoteNo(p.quoteNo);
+      const rev = p.newRevision ? (p.revision ?? 0) + 1 : (p.revision ?? 0);
+      setRevision(rev);
+      setBanner(
+        p.quoteNo
+          ? `Editing ${p.quoteNo} — Revision ${rev}${p.newRevision ? " (new)" : ""}. Make changes, then Save.`
+          : `Revising first quote for ${p.client || "client"} — edit lines, then Save.`
+      );
     }
   }, []);
+
+  function newRevision() {
+    if (!quoteNo) { setBanner("Save this quote once to get a quote number, then you can start revisions."); return; }
+    setRevision((r) => r + 1);
+    setBanner(`Now working on Revision ${revision + 1} of ${quoteNo}. Make changes, then Save.`);
+  }
 
   const product = useMemo(() => products.find((p) => p.product === productName) ?? products[0], [products, productName]);
   const previewAmt =
@@ -94,14 +109,17 @@ export default function BuilderPage() {
   }
   async function save() {
     if (!lines.length) return;
+    if (!client.trim()) { setBanner("Enter a Client name before saving."); return; }
     const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
-      await saveQuote({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: 0, lines, tpv });
-      setBanner("Saved ✓");
-    } catch { setBanner("Save failed — configure Supabase."); }
+      const no = quoteNo || (await nextQuoteNo());
+      if (!quoteNo) setQuoteNo(no);
+      await saveRevision({ designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, revision });
+      setBanner(`Saved ✓  ${no} · Revision ${revision}`);
+    } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); }
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot, quoteNo, revision };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr]">
@@ -154,7 +172,15 @@ export default function BuilderPage() {
           </div>
         )}
 
-        <button onClick={save} className="btn-sec">Save quotation</button>
+        {quoteNo && (
+          <p className="rounded bg-brand-band px-2 py-1 text-center text-[11px] font-semibold text-brand">
+            {quoteNo} · Revision {revision}
+          </p>
+        )}
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={save} className="btn-sec">Save {quoteNo ? `Rev ${revision}` : "quotation"}</button>
+          <button onClick={newRevision} className="btn-sec" disabled={!quoteNo} title={quoteNo ? "Start the next revision" : "Save once to get a quote number"}>New Revision</button>
+        </div>
       </aside>
 
       <section className="p-5">

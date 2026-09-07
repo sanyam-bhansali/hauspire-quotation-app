@@ -95,5 +95,7 @@ export interface Quote {
   kitchen_run: number;
   lines: QuoteLine[];
   tpv: number;
+  quote_no?: string;   // stable id shared across revisions, e.g. "HI/2026/007"
+  revision?: number;   // 0, 1, 2 … within a quote_no
   created_at?: string;
 }
