@@ -11,6 +11,8 @@ import { addProposal } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import PrintDocument from "@/components/PrintDocument";
+import FinalCompare from "@/components/FinalCompare";
+import PrintFinal from "@/components/PrintFinal";
 
 const SEED = productMaster as unknown as Product[];
 const ROOMS = ["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Parents Bedroom", "Living, Dining & Foyer", "Other Services"];
@@ -25,7 +27,8 @@ export default function BuilderPage() {
   const [banner, setBanner] = useState("");
   const [quoteNo, setQuoteNo] = useState<string>("");
   const [revision, setRevision] = useState(0);
-  const [tab, setTab] = useState<"quote" | "pdf">("quote");
+  const [baseLines, setBaseLines] = useState<QuoteLine[]>([]); // "Original" for the Final comparison
+  const [tab, setTab] = useState<"quote" | "final" | "pdf" | "finalpdf">("quote");
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
 
@@ -67,7 +70,7 @@ export default function BuilderPage() {
     const p = takePendingQuote();
     if (p) {
       setClient(p.client); setMobile(p.mobile); setLocation(p.location);
-      setBhk(p.bhk); setLines(p.lines);
+      setBhk(p.bhk); setLines(p.lines); setBaseLines(p.lines); // opened state = the "Original"
       if (p.quoteNo) setQuoteNo(p.quoteNo);
       const rev = p.newRevision ? (p.revision ?? 0) + 1 : (p.revision ?? 0);
       setRevision(rev);
@@ -185,13 +188,15 @@ export default function BuilderPage() {
 
       <section className="p-5">
         {banner && <div className="no-print mb-3 rounded bg-brand-band px-3 py-2 text-[12px] text-neutral-700">{banner}</div>}
-        <div className="no-print mb-3 flex gap-2">
+        <div className="no-print mb-3 flex flex-wrap gap-2">
           <Tab on={tab === "quote"} onClick={() => setTab("quote")}>Quotation</Tab>
+          <Tab on={tab === "final"} onClick={() => setTab("final")}>Final (Original vs Revised)</Tab>
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
-            <button onClick={() => { setTab("pdf"); setTimeout(() => window.print(), 350); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
-              ⬇ Save as PDF
-            </button>
+            <div className="ml-auto flex gap-2">
+              <button onClick={() => { setTab("pdf"); setTimeout(() => window.print(), 350); }} className="rounded bg-brand px-3 py-1 text-sm font-bold text-white">⬇ Quotation PDF</button>
+              <button onClick={() => { setTab("finalpdf"); setTimeout(() => window.print(), 350); }} className="rounded border border-brand px-3 py-1 text-sm font-bold text-brand" title="Original vs Final comparison PDF">⬇ Final PDF</button>
+            </div>
           )}
         </div>
         {lines.length === 0 ? (
@@ -205,6 +210,16 @@ export default function BuilderPage() {
             <QuoteTable lines={lines} onChange={setLines} />
             <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onModularPct={setModularPct} onOnSpot={setOnSpot} />
           </>
+        ) : tab === "final" ? (
+          <>
+            <div className="no-print mb-3 flex items-center gap-2">
+              <button onClick={() => setBaseLines(lines.map((l) => ({ ...l })))} className="rounded border border-brand px-2 py-1 text-[11px] font-semibold text-brand">Snapshot current as “Original”</button>
+              <span className="text-[11px] text-neutral-500">Original = {baseLines.length} line(s). Open a saved quote or snapshot here, then edit lines and compare.</span>
+            </div>
+            <FinalCompare original={baseLines} current={lines} modularPct={modularPct} onSpot={onSpot} />
+          </>
+        ) : tab === "finalpdf" ? (
+          <PrintFinal meta={meta} original={baseLines} current={lines} />
         ) : (
           <PrintDocument meta={meta} lines={lines} />
         )}
