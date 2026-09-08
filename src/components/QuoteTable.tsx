@@ -144,11 +144,11 @@ export default function QuoteTable({
                     <input type="number" className="cell w-16 text-right" value={x.l.height ?? ""} onChange={(e) => setField(x.i, { height: numOrNull(e.target.value) })} />
                   </td>
                   <td className="border border-brand-line px-1 py-1 text-right">
-                    <input type="number" className="cell w-24 text-right" value={x.l.amount} onChange={(e) => setField(x.i, { amount: Number(e.target.value) || 0 })} />
+                    <input type="number" className={`cell w-24 text-right ${x.l.wc === "MO-01" ? "text-neutral-400 line-through" : ""}`} value={x.l.amount} onChange={(e) => setField(x.i, { amount: Number(e.target.value) || 0 })} />
                   </td>
                   <td className="border border-brand-line px-1 py-1 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <span className={x.l.wc === "MO-01" ? "font-medium text-brand" : "text-neutral-500"}>{inr(discountedOf(x.l))}</span>
+                      <span className={x.l.wc === "MO-01" ? "font-semibold text-green-600" : "text-neutral-500"}>{inr(discountedOf(x.l))}</span>
                       <button onClick={() => remove(x.i)} className="no-print text-red-500" title="Remove line">✕</button>
                     </div>
                   </td>

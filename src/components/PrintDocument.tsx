@@ -75,8 +75,8 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
                     <Td right>{l.unitPrice != null ? (l.qty ?? 1) : ""}</Td>
                     <Td right>{l.width ?? ""}</Td>
                     <Td right>{l.height ?? ""}</Td>
-                    <Td right>{fmt(l.amount)}</Td>
-                    <Td right className={l.wc === "MO-01" ? "text-brand" : "text-neutral-600"}>{fmt(discOf(l))}</Td>
+                    <Td right className={l.wc === "MO-01" ? "text-neutral-400 line-through" : ""}>{fmt(l.amount)}</Td>
+                    <Td right className={l.wc === "MO-01" ? "font-semibold text-green-700" : "text-neutral-600"}>{fmt(discOf(l))}</Td>
                   </tr>
                 ))}
                 <tr className="bg-brand-band font-bold">
