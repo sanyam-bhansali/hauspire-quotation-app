@@ -11,7 +11,7 @@ import { printWithFilename, quoteFilename } from "@/lib/printDoc";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
 import { loadProducts } from "@/lib/productStore";
-import { addProposal } from "@/lib/proposalStore";
+import { addProposal, autoProposeNewProducts } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import ProductCombo from "@/components/ProductCombo";
@@ -222,7 +222,8 @@ export default function FirstQuotePage() {
     try {
       const no = await nextQuoteNo();
       await saveRevision({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, revision: 0 });
-      setStatus(`Saved ✓  ${no} · Rev 0`);
+      const newOnes = await autoProposeNewProducts(lines, productsArr, designerId);
+      setStatus(`Saved ✓  ${no} · Rev 0` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent for approval` : ""));
     } catch { setStatus("Save failed — configure Supabase (or saved locally)."); }
   }
 

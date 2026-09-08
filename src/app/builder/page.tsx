@@ -8,7 +8,7 @@ import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
 import { printWithFilename, quoteFilename } from "@/lib/printDoc";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
-import { addProposal } from "@/lib/proposalStore";
+import { addProposal, autoProposeNewProducts } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import PrintDocument from "@/components/PrintDocument";
@@ -151,7 +151,9 @@ export default function BuilderPage() {
       const no = quoteNo || (await nextQuoteNo());
       if (!quoteNo) setQuoteNo(no);
       await saveRevision({ designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, revision });
-      setBanner(`Saved ✓  ${no} · Revision ${revision}`);
+      // Auto-collect any line whose product isn't in the master → pending approval.
+      const newOnes = await autoProposeNewProducts(lines, products, designerId);
+      setBanner(`Saved ✓  ${no} · Revision ${revision}` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent to Products for approval` : ""));
     } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); }
   }
 
