@@ -84,11 +84,11 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
           </div>
         ))}
 
-        {/* Summary by room — table + donut */}
-        <div className="mt-6 avoid">
+        {/* Summary by room — table + donut, side by side */}
+        <div className="mt-4 avoid">
           <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Summary By Room</div>
-          <div className="flex flex-wrap items-center gap-10 px-1 pt-3">
-            <table className="w-[300px] border-collapse">
+          <div className="grid grid-cols-[minmax(260px,1fr)_auto] items-center gap-8 px-2 py-3">
+            <table className="w-full border-collapse">
               <thead><tr className="bg-brand-light text-left text-white"><Th>S.No.</Th><Th>Rooms</Th><Th right>Amount (₹)</Th></tr></thead>
               <tbody>
                 {rooms.map((r, i) => (
@@ -97,12 +97,12 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
                 <tr className="bg-brand-band font-bold"><Td colSpan={2}>Total</Td><Td right>{fmt(rooms.reduce((s, r) => s + roomTotal(r), 0))}</Td></tr>
               </tbody>
             </table>
-            <div className="shrink-0"><RoomDonut data={rooms.map((r) => ({ label: r, value: roomTotal(r) }))} /></div>
+            <RoomDonut data={rooms.map((r) => ({ label: r, value: roomTotal(r) }))} />
           </div>
         </div>
 
         {/* Totals */}
-        <div className="mt-5 avoid">
+        <div className="mt-4 avoid">
           <table className="w-full max-w-md border-collapse text-[11px]">
             <tbody>
               <Row k="Sum-Total (MO-01)  ·  Modular" v={fmt(t.mo)} />
@@ -121,8 +121,8 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         </div>
 
         {/* Payment stages — with the deliverable due at each stage */}
-        <div className="mt-6 avoid">
-          <div className="bg-brand px-2 py-1 font-bold text-white">Payment Stages</div>
+        <div className="mt-5">
+          <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Payment Stages</div>
           <table className="w-full border-collapse text-[11px]">
             <thead>
               <tr className="bg-brand-light text-left text-white">
@@ -142,8 +142,8 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         </div>
 
         {/* Material Specification */}
-        <div className="mt-6 avoid">
-          <div className="bg-brand px-2 py-1 font-bold text-white">Material Specification</div>
+        <div className="mt-5">
+          <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Material Specification</div>
           <table className="w-full border-collapse text-[11px]">
             <thead>
               <tr className="bg-brand-light text-left text-white">
