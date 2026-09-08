@@ -291,14 +291,9 @@ export default function FirstQuotePage() {
           </label>
           <p className="text-[10.5px] text-neutral-400">Off = standard sizes (1800/1500). On = suggested from each bedroom’s wall; rebuild to apply.</p>
           <label className="flex items-center gap-2 text-[12.5px]">
-            <input type="checkbox" checked={falseCeiling} onChange={(e) => setFalseCeiling(e.target.checked)} /> False ceiling (room-wise, by sqft)
+            <input type="checkbox" checked={falseCeiling} onChange={(e) => setFalseCeiling(e.target.checked)} /> False ceiling (room-wise)
           </label>
-          {falseCeiling && (
-            <label className="text-xs text-neutral-600">False-ceiling rate (₹/sqft)
-              <input className="input" type="number" value={fcRate} onChange={(e) => setFcRate(Number(e.target.value) || 0)} />
-            </label>
-          )}
-          <p className="text-[10.5px] text-neutral-400">Adds one False Ceiling line per room = room area × ₹/sqft. Area auto-fills from the plan and stays editable; rebuild to apply.</p>
+          <p className="text-[10.5px] text-neutral-400">Adds each room’s “False Ceiling (Room)” product from the Product Master (its rate + default sqft). Area auto-fills from the plan and stays editable; rebuild to apply.</p>
         </Section>
         <button onClick={() => build()} className="btn">Build first quotation ▸</button>
         <button onClick={save} className="btn-sec">Save</button>
