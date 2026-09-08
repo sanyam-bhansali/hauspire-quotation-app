@@ -31,11 +31,14 @@ export default function QuotationsPage() {
       (m.get(c) ?? m.set(c, []).get(c)!).push(r);
     }
     return Array.from(m.entries())
-      .map(([client, list]) => ({
-        client, list: list.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")),
-        total: list.reduce((s, x) => s + (x.tpv || 0), 0),
-        latest: list.reduce((d, x) => (x.created_at || "") > d ? (x.created_at || "") : d, ""),
-      }))
+      .map(([client, listRaw]) => {
+        const list = listRaw.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+        return {
+          client, list,
+          latestTpv: list[0]?.tpv || 0,     // amount of the most recent quotation
+          latest: list[0]?.created_at || "",
+        };
+      })
       .sort((a, b) => b.latest.localeCompare(a.latest));
   }, [rows]);
 
@@ -84,7 +87,7 @@ export default function QuotationsPage() {
                   <span className="text-base">📁</span>
                   <span className="font-bold text-brand">{f.client}</span>
                   <span className="text-[11px] text-neutral-500">{f.list.length} quotation{f.list.length > 1 ? "s" : ""}</span>
-                  <span className="ml-auto text-[12px] font-semibold text-neutral-700">{inr(f.total)}</span>
+                  <span className="ml-auto text-[12px] font-semibold text-neutral-700" title="Latest quotation amount">{inr(f.latestTpv)}</span>
                 </button>
                 {open && (
                   <table className="w-full border-collapse text-[12px]">
