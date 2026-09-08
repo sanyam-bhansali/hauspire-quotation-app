@@ -40,9 +40,21 @@ export async function saveRevision(q: Quote): Promise<Quote> {
   const row: Quote = { ...q, revision: q.revision ?? 0 };
   if (supabase) {
     try {
-      const { data, error } = await supabase.from("quotes").insert(row).select().single();
-      if (!error && data) return data as Quote;
-    } catch { /* fall back */ }
+      let res = await supabase.from("quotes").insert(row).select().single();
+      // If the quote_no/revision columns don't exist yet, retry without them so
+      // the quote still saves to Supabase (revision then lives only in localStorage).
+      if (res.error && /quote_no|revision|column/i.test(res.error.message || "")) {
+        const { quote_no, revision, ...bare } = row;
+        res = await supabase.from("quotes").insert(bare).select().single();
+      }
+      if (!res.error && res.data) {
+        // Mirror to localStorage too so the revision number survives even when the
+        // columns are missing server-side, and so browsing works offline.
+        const rec = { ...row, ...(res.data as Quote) } as Quote;
+        const all = lsGet().filter((x) => x.id !== rec.id); all.push(rec); lsSet(all);
+        return rec;
+      }
+    } catch { /* fall back to localStorage */ }
   }
   const rec = { ...row, id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())), created_at: new Date().toISOString() };
   const all = lsGet(); all.push(rec); lsSet(all);

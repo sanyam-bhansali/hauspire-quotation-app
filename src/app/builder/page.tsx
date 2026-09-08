@@ -143,9 +143,9 @@ export default function BuilderPage() {
       rft: isRft ? rft : undefined,
     }]);
   }
-  async function save() {
-    if (!lines.length) return;
-    if (!client.trim()) { setBanner("Enter a Client name before saving."); return; }
+  async function save(): Promise<string> {
+    if (!lines.length) return "";
+    if (!client.trim()) { setBanner("Enter a Client name before saving."); return ""; }
     const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
       const no = quoteNo || (await nextQuoteNo());
@@ -154,7 +154,8 @@ export default function BuilderPage() {
       // Auto-collect any line whose product isn't in the master → pending approval.
       const newOnes = await autoProposeNewProducts(lines, products, designerId);
       setBanner(`Saved ✓  ${no} · Revision ${revision}` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent to Products for approval` : ""));
-    } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); }
+      return no;
+    } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); return quoteNo; }
   }
 
   const meta = { client, mobile, location, bhk, modularPct, onSpot, quoteNo, revision };
@@ -247,8 +248,8 @@ export default function BuilderPage() {
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
             <div className="ml-auto flex gap-2">
-              <button onClick={() => { setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, quoteNo)), 350); }} className="rounded bg-brand px-3 py-1 text-sm font-bold text-white">⬇ Quotation PDF</button>
-              <button onClick={() => { setTab("finalpdf"); setTimeout(() => printWithFilename(quoteFilename(client, quoteNo, true)), 350); }} className="rounded border border-brand px-3 py-1 text-sm font-bold text-brand" title="Original vs Final comparison PDF">⬇ Final PDF</button>
+              <button onClick={async () => { const no = await save(); setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, no || quoteNo)), 400); }} className="rounded bg-brand px-3 py-1 text-sm font-bold text-white" title="Saves this revision, then exports the PDF">⬇ Save &amp; Quotation PDF</button>
+              <button onClick={async () => { const no = await save(); setTab("finalpdf"); setTimeout(() => printWithFilename(quoteFilename(client, no || quoteNo, true)), 400); }} className="rounded border border-brand px-3 py-1 text-sm font-bold text-brand" title="Saves this revision, then exports the Original vs Final PDF">⬇ Save &amp; Final PDF</button>
             </div>
           )}
         </div>

@@ -15,9 +15,11 @@ export function printWithFilename(name: string) {
   setTimeout(restore, 2000);
 }
 
-/** e.g. "Ravi Sharma Hauspire Quotation 2300" */
+/** e.g. "Ravi Sharma Hauspire Quotation 2300 08-09-2026" */
 export function quoteFilename(client: string, quoteNo: string, final = false): string {
   const c = (client || "Client").trim();
   const no = (quoteNo || "").trim();
-  return `${c} Hauspire ${final ? "Final " : ""}Quotation${no ? " " + no : ""}`;
+  const d = new Date();
+  const date = `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
+  return `${c} Hauspire ${final ? "Final " : ""}Quotation${no ? " " + no : ""} ${date}`;
 }

@@ -216,15 +216,16 @@ export default function FirstQuotePage() {
     setTimeout(() => build({ bhk: d.bhk, run: d.run }), 0);
   }
 
-  async function save() {
-    if (!lines.length) return;
+  async function save(): Promise<string> {
+    if (!lines.length) return "";
     const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
       const no = await nextQuoteNo();
       await saveRevision({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, revision: 0 });
       const newOnes = await autoProposeNewProducts(lines, productsArr, designerId);
       setStatus(`Saved ✓  ${no} · Rev 0` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent for approval` : ""));
-    } catch { setStatus("Save failed — configure Supabase (or saved locally)."); }
+      return no;
+    } catch { setStatus("Save failed — configure Supabase (or saved locally)."); return ""; }
   }
 
   function reviseInBuilder() {
@@ -356,7 +357,7 @@ export default function FirstQuotePage() {
           <Tab on={tab === "3d"} onClick={() => setTab("3d")}>3D view</Tab>
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
-            <button onClick={() => { setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, "")), 350); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
+            <button onClick={async () => { const no = await save(); setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, no)), 400); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
               ⬇ Save as PDF
             </button>
           )}
