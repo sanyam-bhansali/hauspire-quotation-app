@@ -10,12 +10,16 @@ export default function QuoteTable({
   lines,
   onChange,
   products = [],
+  modularPct = 0.15,
 }: {
   lines: QuoteLine[];
   onChange: (lines: QuoteLine[]) => void;
   products?: Product[];
+  modularPct?: number;
 }) {
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
+  // Amount after the modular discount: MO-01 lines get the discount, NM-01 don't.
+  const discountedOf = (l: QuoteLine) => (l.wc === "MO-01" ? Math.round(l.amount * (1 - modularPct)) : l.amount);
 
   // Pick a product from the master into a row: set its code/details and re-price
   // by the product's own type, keeping the row's dimensions/qty where sensible.
@@ -81,10 +85,11 @@ export default function QuoteTable({
         {rooms.map((room) => {
           const items = lines.map((l, i) => ({ l, i })).filter((x) => x.l.room === room);
           const sub = items.reduce((s, x) => s + x.l.amount, 0);
+          const subDisc = items.reduce((s, x) => s + discountedOf(x.l), 0);
           return (
             <Fragment key={room}>
               <tr className="bg-brand font-bold text-white">
-                <td colSpan={8} className="border border-brand-line px-2 py-1">{room}</td>
+                <td colSpan={9} className="border border-brand-line px-2 py-1">{room}</td>
               </tr>
               <tr className="bg-brand-light text-left text-white">
                 <th className="border border-brand-line px-2 py-1">#</th>
@@ -95,6 +100,7 @@ export default function QuoteTable({
                 <th className="border border-brand-line px-2 py-1 text-right">W</th>
                 <th className="border border-brand-line px-2 py-1 text-right">H</th>
                 <th className="border border-brand-line px-2 py-1 text-right">Amount</th>
+                <th className="border border-brand-line px-2 py-1 text-right">Discounted</th>
               </tr>
               {items.map((x, n) => (
                 <tr key={x.i} className="align-top">
@@ -138,8 +144,11 @@ export default function QuoteTable({
                     <input type="number" className="cell w-16 text-right" value={x.l.height ?? ""} onChange={(e) => setField(x.i, { height: numOrNull(e.target.value) })} />
                   </td>
                   <td className="border border-brand-line px-1 py-1 text-right">
+                    <input type="number" className="cell w-24 text-right" value={x.l.amount} onChange={(e) => setField(x.i, { amount: Number(e.target.value) || 0 })} />
+                  </td>
+                  <td className="border border-brand-line px-1 py-1 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <input type="number" className="cell w-24 text-right" value={x.l.amount} onChange={(e) => setField(x.i, { amount: Number(e.target.value) || 0 })} />
+                      <span className={x.l.wc === "MO-01" ? "font-medium text-brand" : "text-neutral-500"}>{inr(discountedOf(x.l))}</span>
                       <button onClick={() => remove(x.i)} className="no-print text-red-500" title="Remove line">✕</button>
                     </div>
                   </td>
@@ -151,6 +160,7 @@ export default function QuoteTable({
                   <button onClick={() => addLine(room)} className="no-print ml-2 rounded border border-brand px-1.5 text-[11px] font-semibold text-brand">+ add item</button>
                 </td>
                 <td className="border border-brand-line px-2 py-1 text-right">{inr(sub)}</td>
+                <td className="border border-brand-line px-2 py-1 text-right">{inr(subDisc)}</td>
               </tr>
             </Fragment>
           );

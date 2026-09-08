@@ -126,25 +126,38 @@ export function buildFirstQuote(rawProducts: Product[], ctx: BuildContext): Quot
     }
   }
 
-  // False ceiling — one room-wise line per physical room, priced by that room's
-  // floor area × ₹/sqft. Area auto-fills from the plan and stays editable.
+  // False ceiling — one room-wise line per physical room. Prefer the room-specific
+  // "False Ceiling (<Room>)" product from the master (its rate + default sqft); the
+  // area auto-fills from the plan when available and stays editable.
   if (ctx.falseCeiling) {
-    const fcRate = ctx.fcRate ?? DEFAULT_FC_RATE;
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+    const fcProducts = products.filter((p) => /false ceiling/i.test(p.product));
+
+    // Room → its matching FC product (skip Balcony/Bathroom/Utility variants).
+    const fcFor = (room: string): Product | null => {
+      const key = room === "Office / Study" ? "study" : room.startsWith("Living") ? "living" : norm(room);
+      const cands = fcProducts.filter((p) => {
+        const inner = norm(p.product).replace(/^false ceiling/, "").trim();
+        return inner.includes(key) && !/balcony|bathroom|toilet|utility/.test(inner);
+      });
+      if (!cands.length) return null;
+      // Prefer the plainest match (shortest name) e.g. "(Master Bedroom)" over "(Master Bedroom Balcony)".
+      return cands.sort((a, b) => a.product.length - b.product.length)[0];
+    };
+
     for (const room of rooms) {
       if (room === "Other Services") continue;
-      const area = roomSqft(ctx.roomDims?.[room]);
-      lines.push({
-        room,
-        product: "False Ceiling",
-        wc: "NM-01",
-        details:
-          "Single-layer false ceiling with concealed wiring and panel lights (Saint-Gobain board, Gyproc framing, Polycab wiring). Priced by room area.",
-        width: null,
-        height: null,
-        amount: sqftAmount(area, fcRate),
-        rate: fcRate,
-        sqft: area,
-      });
+      const planArea = roomSqft(ctx.roomDims?.[room]);
+      const p = fcProducts.length ? fcFor(room) : null;
+      if (p) {
+        const rate = p.rate ?? DEFAULT_FC_RATE;
+        const area = planArea || p.area || 0;
+        lines.push({ room, product: p.product, wc: p.wc, details: p.details, width: null, height: null, amount: sqftAmount(area, rate), rate, sqft: area });
+      } else if (!fcProducts.length) {
+        // No FC products configured — fall back to a generic per-room line.
+        const fcRate = ctx.fcRate ?? DEFAULT_FC_RATE;
+        lines.push({ room, product: "False Ceiling", wc: "NM-01", details: "Single-layer false ceiling with concealed wiring and panel lights. Priced by room area.", width: null, height: null, amount: sqftAmount(planArea, fcRate), rate: fcRate, sqft: planArea });
+      }
     }
   }
 

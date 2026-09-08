@@ -29,6 +29,9 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
   const t = computeTotals(lines, { modularPct: meta.modularPct, onSpot: meta.onSpot });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
+  // Amount after the modular discount (MO-01 lines only).
+  const discOf = (l: QuoteLine) => (l.wc === "MO-01" ? Math.round(l.amount * (1 - t.modularPct)) : l.amount);
+  const roomDisc = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + discOf(l), 0);
   const date = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const quoteNo = meta.quoteNo || "Draft";
   const rev = meta.revision ?? 0;
@@ -59,7 +62,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
               <thead>
                 <tr className="bg-brand-light text-left text-[11px] text-white">
                   <Th>S.No.</Th><Th>Product</Th><Th>Work Code</Th><Th>Details</Th>
-                  <Th right>Units</Th><Th right>Width(mm)</Th><Th right>Height(mm)</Th><Th right>Amount (₹)</Th>
+                  <Th right>Units</Th><Th right>Width(mm)</Th><Th right>Height(mm)</Th><Th right>Amount (₹)</Th><Th right>Discounted (₹)</Th>
                 </tr>
               </thead>
               <tbody>
@@ -73,11 +76,13 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
                     <Td right>{l.width ?? ""}</Td>
                     <Td right>{l.height ?? ""}</Td>
                     <Td right>{fmt(l.amount)}</Td>
+                    <Td right className={l.wc === "MO-01" ? "text-brand" : "text-neutral-600"}>{fmt(discOf(l))}</Td>
                   </tr>
                 ))}
                 <tr className="bg-brand-band font-bold">
                   <Td colSpan={7}>{room} (Sub-total)</Td>
                   <Td right>{fmt(roomTotal(room))}</Td>
+                  <Td right>{fmt(roomDisc(room))}</Td>
                 </tr>
               </tbody>
             </table>
