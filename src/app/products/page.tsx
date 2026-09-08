@@ -4,11 +4,16 @@ import type { Product } from "@/lib/types";
 import { loadProducts, saveProducts, defaultProducts } from "@/lib/productStore";
 import { standardPatch } from "@/lib/firstQuoteDefaults";
 import { loadProposals, deleteProposal, proposalToProduct, type Proposal } from "@/lib/proposalStore";
+import AdminGate from "@/components/AdminGate";
 
 const BLANK: Product = { product: "", wc: "MO-01", type: "Area", rate: 2000, unit: null, details: "", rooms: "Kitchen", fq: false, w: 1500, h: 2100, qty: 1 };
 const BHK_TAGS = ["", "1BHK", "2BHK", "3BHK", "4BHK"];
 
 export default function ProductsPage() {
+  return <AdminGate label="Product Master"><ProductsInner /></AdminGate>;
+}
+
+function ProductsInner() {
   const [rows, setRows] = useState<Product[]>([]);
   const [status, setStatus] = useState("Loading…");
   const [q, setQ] = useState("");

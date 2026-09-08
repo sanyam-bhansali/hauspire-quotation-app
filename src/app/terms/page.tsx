@@ -2,8 +2,13 @@
 import { useEffect, useState } from "react";
 import { loadTerms, saveTerms, defaultTerms } from "@/lib/termsStore";
 import TermsView from "@/components/TermsView";
+import AdminGate from "@/components/AdminGate";
 
 export default function TermsPage() {
+  return <AdminGate label="Terms & Conditions"><TermsInner /></AdminGate>;
+}
+
+function TermsInner() {
   const [text, setText] = useState("");
   const [status, setStatus] = useState("Loading…");
 
