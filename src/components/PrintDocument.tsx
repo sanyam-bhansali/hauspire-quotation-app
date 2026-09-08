@@ -86,9 +86,9 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
 
         {/* Summary by room — table + donut */}
         <div className="mt-6 avoid">
-          <div className="bg-brand px-2 py-1 font-bold text-white">Summary By Room</div>
-          <div className="flex flex-wrap items-start justify-between gap-6 pt-2">
-            <table className="min-w-[240px] flex-1 border-collapse">
+          <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Summary By Room</div>
+          <div className="flex flex-wrap items-center gap-10 px-1 pt-3">
+            <table className="w-[300px] border-collapse">
               <thead><tr className="bg-brand-light text-left text-white"><Th>S.No.</Th><Th>Rooms</Th><Th right>Amount (₹)</Th></tr></thead>
               <tbody>
                 {rooms.map((r, i) => (
@@ -97,7 +97,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
                 <tr className="bg-brand-band font-bold"><Td colSpan={2}>Total</Td><Td right>{fmt(rooms.reduce((s, r) => s + roomTotal(r), 0))}</Td></tr>
               </tbody>
             </table>
-            <RoomDonut data={rooms.map((r) => ({ label: r, value: roomTotal(r) }))} />
+            <div className="shrink-0"><RoomDonut data={rooms.map((r) => ({ label: r, value: roomTotal(r) }))} /></div>
           </div>
         </div>
 

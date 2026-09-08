@@ -8,8 +8,8 @@ export default function RoomDonut({ data }: { data: { label: string; value: numb
   let acc = 0;
 
   return (
-    <div className="flex items-center gap-5">
-      <svg viewBox="0 0 140 140" width="150" height="150" className="shrink-0">
+    <div className="flex items-center gap-6">
+      <svg viewBox="0 0 140 140" width="140" height="140" className="shrink-0">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#efe7e0" strokeWidth={sw} />
         {items.map((d, i) => {
           const len = (d.value / total) * C;
@@ -29,15 +29,18 @@ export default function RoomDonut({ data }: { data: { label: string; value: numb
           ₹{Math.round(total).toLocaleString("en-IN")}
         </text>
       </svg>
-      <div className="grid grid-cols-1 gap-0.5 text-[10px]">
-        {items.map((d, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <span style={{ background: COLORS[i % COLORS.length] }} className="inline-block h-2.5 w-2.5 rounded-sm" />
-            <span className="text-neutral-800">{d.label}</span>
-            <span className="text-neutral-400">— ₹{Math.round(d.value).toLocaleString("en-IN")} ({Math.round((d.value / total) * 100)}%)</span>
-          </div>
-        ))}
-      </div>
+      <table className="border-separate text-[10px]" style={{ borderSpacing: "0 3px" }}>
+        <tbody>
+          {items.map((d, i) => (
+            <tr key={i}>
+              <td className="pr-2 align-middle"><span style={{ background: COLORS[i % COLORS.length] }} className="inline-block h-2.5 w-2.5 rounded-sm" /></td>
+              <td className="pr-4 align-middle text-neutral-800 whitespace-nowrap">{d.label}</td>
+              <td className="pr-2 text-right align-middle font-medium text-neutral-700 whitespace-nowrap">₹{Math.round(d.value).toLocaleString("en-IN")}</td>
+              <td className="text-right align-middle text-neutral-400 whitespace-nowrap">{Math.round((d.value / total) * 100)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
