@@ -6,7 +6,7 @@ import type { QuoteLine, Product } from "@/lib/types";
 import seed from "@/data/productMaster.json";
 import { buildFirstQuote, DEFAULT_FC_RATE } from "@/lib/buildQuote";
 import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
-import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
+import { saveStage, nextQuoteNo } from "@/lib/quotesRepo";
 import { printWithFilename, quoteFilename } from "@/lib/printDoc";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
@@ -221,9 +221,9 @@ export default function FirstQuotePage() {
     const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
       const no = await nextQuoteNo();
-      await saveRevision({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, revision: 0 });
+      await saveStage({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, stage: "sales" });
       const newOnes = await autoProposeNewProducts(lines, productsArr, designerId);
-      setStatus(`Saved ✓  ${no} · Rev 0` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent for approval` : ""));
+      setStatus(`Saved ✓  ${no} · Sales Final` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent for approval` : ""));
       return no;
     } catch { setStatus("Save failed — configure Supabase (or saved locally)."); return ""; }
   }

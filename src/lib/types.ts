@@ -95,7 +95,8 @@ export interface Quote {
   kitchen_run: number;
   lines: QuoteLine[];
   tpv: number;
-  quote_no?: string;   // stable id shared across revisions, e.g. "HI/2026/007"
-  revision?: number;   // 0, 1, 2 … within a quote_no
+  quote_no?: string;   // stable id for the project, e.g. "2300"
+  revision?: number;   // legacy — no longer accumulated
+  stage?: "sales" | "design"; // the two saved quotations per project; save overrides
   created_at?: string;
 }

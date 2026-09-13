@@ -105,14 +105,16 @@ export function buildFirstQuote(rawProducts: Product[], ctx: BuildContext): Quot
       }
 
       // King option: in the Master Bedroom, swap Queen bed/headboard for the King
-      // equivalents from the master (which set the price).
+      // equivalents from the master (which set the price, code AND description).
+      let lineWc = p.wc;
+      let lineDetails = p.details;
       if (room === "Master Bedroom" && ctx.kingMaster) {
         if (/^queen size bed/i.test(p.product)) {
           const k = byName("King size Bed Hydraulic Storage");
-          if (k) { product = k.product; unitPrice = k.unit ?? unitPrice; qty = qty ?? 1; amount = (unitPrice ?? 0) * qty; }
+          if (k) { product = k.product; unitPrice = k.unit ?? unitPrice; qty = qty ?? 1; amount = (unitPrice ?? 0) * qty; lineWc = k.wc; lineDetails = k.details; }
         } else if (/^queen size - headboard/i.test(p.product)) {
           const k = byName("King Size - Headboard");
-          if (k) { product = k.product; unitPrice = k.unit ?? unitPrice; qty = qty ?? 1; amount = (unitPrice ?? 0) * qty; }
+          if (k) { product = k.product; unitPrice = k.unit ?? unitPrice; qty = qty ?? 1; amount = (unitPrice ?? 0) * qty; lineWc = k.wc; lineDetails = k.details; }
         }
       }
 
@@ -120,8 +122,8 @@ export function buildFirstQuote(rawProducts: Product[], ctx: BuildContext): Quot
       // Per-bathroom products (e.g. Vanity) get one line per bathroom, each editable.
       const reps = p.perBath ? Math.max(1, bathrooms) : 1;
       for (let k = 0; k < reps; k++) {
-        const details = reps > 1 ? `${p.details} (Bathroom ${k + 1})` : p.details;
-        lines.push({ room, product, wc: p.wc, details, width, height, amount, rate: rateOut, qty, unitPrice, sqft, rft });
+        const details = reps > 1 ? `${lineDetails} (Bathroom ${k + 1})` : lineDetails;
+        lines.push({ room, product, wc: lineWc, details, width, height, amount, rate: rateOut, qty, unitPrice, sqft, rft });
       }
     }
   }

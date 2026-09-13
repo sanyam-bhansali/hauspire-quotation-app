@@ -4,9 +4,8 @@ import type { QuoteLine } from "@/lib/types";
 import { computeTotals, inr } from "@/lib/pricing";
 import { loadTerms } from "@/lib/termsStore";
 import { DEFAULT_TERMS } from "@/data/termsDefault";
-import { MATERIAL_SPEC } from "@/lib/boilerplate";
 import TermsView from "./TermsView";
-import RoomDonut from "./RoomDonut";
+import QuoteSummary from "./QuoteSummary";
 
 export interface QuoteMeta {
   client: string;
@@ -15,9 +14,11 @@ export interface QuoteMeta {
   bhk: string;
   quoteNo?: string;
   revision?: number;
+  stage?: "sales" | "design";
   modularPct?: number;
   onSpot?: number;
 }
+export const stageLabel = (s?: "sales" | "design") => (s === "design" ? "Design Final" : "Sales Final");
 
 // Branded quotation document that matches Hauspire's PDF exactly:
 // the Cover, About ("Why Choose Us") and Terms pages are the real branded
@@ -34,7 +35,6 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
   const roomDisc = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + discOf(l), 0);
   const date = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const quoteNo = meta.quoteNo || "Draft";
-  const rev = meta.revision ?? 0;
 
   return (
     <div className="mx-auto max-w-4xl text-[12px] text-neutral-900 print:max-w-none print:mx-0">
@@ -50,7 +50,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
           <Field k="Client Mobile" v={meta.mobile} />
           <Field k="Date" v={date} />
           <Field k="Flat No" v="" />
-          <Field k="Revision" v={String(rev)} />
+          <Field k="Stage" v={stageLabel(meta.stage)} />
           <Field k="Location" v={meta.location} />
           <Field k="Configuration" v={meta.bhk} />
         </div>
@@ -89,83 +89,8 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
           </div>
         ))}
 
-        {/* Summary by room — table + donut, side by side */}
-        <div className="mt-4 avoid">
-          <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Summary By Room</div>
-          <div className="grid grid-cols-[minmax(260px,1fr)_auto] items-center gap-8 px-2 py-3">
-            <table className="w-full border-collapse">
-              <thead><tr className="bg-brand-light text-left text-white"><Th>S.No.</Th><Th>Rooms</Th><Th right>Amount (₹)</Th></tr></thead>
-              <tbody>
-                {rooms.map((r, i) => (
-                  <tr key={r}><Td>{i + 1}</Td><Td>{r}</Td><Td right>{fmt(roomTotal(r))}</Td></tr>
-                ))}
-                <tr className="bg-brand-band font-bold"><Td colSpan={2}>Total</Td><Td right>{fmt(rooms.reduce((s, r) => s + roomTotal(r), 0))}</Td></tr>
-              </tbody>
-            </table>
-            <RoomDonut data={rooms.map((r) => ({ label: r, value: roomTotal(r) }))} />
-          </div>
-        </div>
-
-        {/* Totals */}
-        <div className="mt-4 avoid">
-          <table className="w-full max-w-md border-collapse text-[11px]">
-            <tbody>
-              <Row k="Sum-Total (MO-01)  ·  Modular" v={fmt(t.mo)} />
-              <Row k="Sum-Total (NM-01)  ·  Non-Modular" v={fmt(t.nm)} />
-              <Row k="Professional fees (7%)" v={fmt(t.fee)} />
-              <Row k="Sub-Total" v={fmt(t.subTotal)} bold />
-              <Row k={`Discount on Modular (${Math.round(t.modularPct * 100)}%)`} v={`${Math.round(t.modularPct * 100)}%`} />
-              <Row k="Discounted Value" v={fmt(t.discount)} />
-              <Row k="On-Spot Discount (₹)" v={fmt(t.onSpot)} />
-              <tr className="bg-brand font-extrabold text-white">
-                <td className="border border-brand-line px-2 py-1">Total Project Value</td>
-                <td className="border border-brand-line px-2 py-1 text-right">₹{fmt(t.tpv)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Payment stages — with the deliverable due at each stage */}
-        <div className="mt-5">
-          <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Payment Stages</div>
-          <table className="w-full border-collapse text-[11px]">
-            <thead>
-              <tr className="bg-brand-light text-left text-white">
-                <Th>Stage</Th><Th>Deliverable</Th><Th right>Amount (₹)</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {t.stages.map((s) => (
-                <tr key={s.label} className="align-top">
-                  <Td><b>{s.label}</b></Td>
-                  <Td className="text-[10px] text-neutral-600">{s.desc ?? ""}</Td>
-                  <Td right>{fmt(s.amount)}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Material Specification */}
-        <div className="mt-5">
-          <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Material Specification</div>
-          <table className="w-full border-collapse text-[11px]">
-            <thead>
-              <tr className="bg-brand-light text-left text-white">
-                <Th>Material</Th><Th>Brand</Th><Th>Specification</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {MATERIAL_SPEC.map(([mat, brand, spec]) => (
-                <tr key={mat} className="align-top">
-                  <Td><b>{mat}</b></Td>
-                  <Td>{brand}</Td>
-                  <Td className="text-neutral-700">{spec}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {/* Summary by room, totals, payment stages, material spec */}
+        <QuoteSummary lines={lines} modularPct={meta.modularPct} onSpot={meta.onSpot} />
       </section>
 
       {/* Terms & Conditions — editable, branded page */}
@@ -189,12 +114,4 @@ function Th({ children, right }: { children: React.ReactNode; right?: boolean })
 }
 function Td({ children, right, colSpan, className = "" }: { children: React.ReactNode; right?: boolean; colSpan?: number; className?: string }) {
   return <td colSpan={colSpan} className={`border border-brand-line px-2 py-1 ${right ? "text-right" : ""} ${className}`}>{children}</td>;
-}
-function Row({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
-  return (
-    <tr className={bold ? "font-bold" : ""}>
-      <td className="border border-brand-line px-2 py-1">{k}</td>
-      <td className="border border-brand-line px-2 py-1 text-right">{v}</td>
-    </tr>
-  );
 }

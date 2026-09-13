@@ -73,6 +73,18 @@ export default function QuoteTable({
   function remove(idx: number) {
     onChange(lines.filter((_, i) => i !== idx));
   }
+  // Reorder a line up/down within its room.
+  function move(idx: number, dir: -1 | 1) {
+    const room = lines[idx].room;
+    const idxs = lines.map((_, i) => i).filter((i) => lines[i].room === room);
+    const pos = idxs.indexOf(idx);
+    const swap = pos + dir;
+    if (swap < 0 || swap >= idxs.length) return;
+    const j = idxs[swap];
+    const next = lines.slice();
+    [next[idx], next[j]] = [next[j], next[idx]];
+    onChange(next);
+  }
   function addLine(room: string) {
     onChange([...lines, { room, product: "New item", wc: "MO-01", details: "", width: null, height: null, amount: 0 }]);
   }
@@ -104,7 +116,15 @@ export default function QuoteTable({
               </tr>
               {items.map((x, n) => (
                 <tr key={x.i} className="align-top">
-                  <td className="border border-brand-line px-1 py-1 text-center">{n + 1}</td>
+                  <td className="border border-brand-line px-1 py-1 text-center">
+                    <div className="flex flex-col items-center leading-none">
+                      <span>{n + 1}</span>
+                      <span className="no-print mt-0.5 flex gap-1 text-[10px] text-brand">
+                        <button onClick={() => move(x.i, -1)} disabled={n === 0} title="Move up" className="disabled:opacity-20">▲</button>
+                        <button onClick={() => move(x.i, 1)} disabled={n === items.length - 1} title="Move down" className="disabled:opacity-20">▼</button>
+                      </span>
+                    </div>
+                  </td>
                   <td className="border border-brand-line px-1 py-1">
                     {products.length ? (
                       <ProductCombo products={products} value={x.l.product} onChange={(name) => setProduct(x.i, name)} allowCustom className="w-44 rounded border border-[#e0cdd3] bg-[#fffef8] px-1 py-0.5 text-[12px]" placeholder="Search product…" />

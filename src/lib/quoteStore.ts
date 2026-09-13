@@ -9,10 +9,9 @@ export interface PendingQuote {
   bhk: string;
   kitchenRun: number;
   lines: QuoteLine[];
-  fromId?: string;    // if revising an existing saved quote
-  quoteNo?: string;   // carried across revisions
-  revision?: number;  // revision being edited
-  newRevision?: boolean; // opened via "New Revision" → bump on save
+  fromId?: string;    // if editing an existing saved quote
+  quoteNo?: string;   // the project's quote number
+  stage?: "sales" | "design"; // which of the two quotations is being edited
 }
 
 const KEY = "hauspire_pending_quote";

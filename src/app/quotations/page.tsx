@@ -1,8 +1,8 @@
 "use client";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Quote } from "@/lib/types";
-import { listLatest, listRevisions } from "@/lib/quotesRepo";
+import { listLatest, STAGE_LABEL } from "@/lib/quotesRepo";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { inr } from "@/lib/pricing";
 
@@ -12,8 +12,6 @@ export default function QuotationsPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("Loading…");
   const [openClient, setOpenClient] = useState<string | null>(null);
-  const [openRevs, setOpenRevs] = useState<string | null>(null);
-  const [revs, setRevs] = useState<Quote[]>([]);
 
   async function refresh(search = q) {
     setStatus("Loading…");
@@ -42,19 +40,13 @@ export default function QuotationsPage() {
       .sort((a, b) => b.latest.localeCompare(a.latest));
   }, [rows]);
 
-  function openInBuilder(quote: Quote, asNewRevision: boolean) {
+  function openInBuilder(quote: Quote) {
     setPendingQuote({
       client: quote.client_name, mobile: quote.mobile, location: quote.location,
       bhk: quote.bhk, kitchenRun: quote.kitchen_run || 0, lines: quote.lines || [],
-      fromId: quote.id, quoteNo: quote.quote_no, revision: quote.revision ?? 0, newRevision: asNewRevision,
+      fromId: quote.id, quoteNo: quote.quote_no, stage: (quote.stage as "sales" | "design") ?? "sales",
     });
     router.push("/builder");
-  }
-  async function toggleRevs(quoteNo?: string) {
-    if (!quoteNo) return;
-    if (openRevs === quoteNo) { setOpenRevs(null); return; }
-    setOpenRevs(quoteNo);
-    setRevs(await listRevisions(quoteNo));
   }
 
   return (
@@ -93,42 +85,26 @@ export default function QuotationsPage() {
                   <table className="w-full border-collapse text-[12px]">
                     <thead>
                       <tr className="bg-brand-light text-left text-white">
-                        <th className="px-3 py-1.5">Quote No</th><th className="px-3 py-1.5">Config</th>
-                        <th className="px-3 py-1.5">Location</th><th className="px-3 py-1.5 text-center">Rev</th>
+                        <th className="px-3 py-1.5">Quote No</th><th className="px-3 py-1.5">Stage</th><th className="px-3 py-1.5">Config</th>
+                        <th className="px-3 py-1.5">Location</th>
                         <th className="px-3 py-1.5 text-right">Value</th><th className="px-3 py-1.5">Date</th><th className="px-3 py-1.5"></th>
                       </tr>
                     </thead>
                     <tbody>
                       {f.list.map((r) => (
-                        <Fragment key={r.id}>
-                          <tr className="border-t border-brand-line">
-                            <td className="px-3 py-1.5 font-mono">{r.quote_no || "—"}</td>
-                            <td className="px-3 py-1.5">{r.bhk}</td>
-                            <td className="px-3 py-1.5">{r.location}</td>
-                            <td className="px-3 py-1.5 text-center">{r.revision ?? 0}</td>
-                            <td className="px-3 py-1.5 text-right">{inr(r.tpv || 0)}</td>
-                            <td className="px-3 py-1.5 text-neutral-500">{(r.created_at || "").slice(0, 10)}</td>
-                            <td className="px-3 py-1.5">
-                              <div className="flex justify-end gap-1.5">
-                                <button onClick={() => openInBuilder(r, false)} className="rounded border border-brand px-2 py-1 text-[11px] font-semibold text-brand">Open</button>
-                                <button onClick={() => openInBuilder(r, true)} className="rounded bg-brand px-2 py-1 text-[11px] font-bold text-white">New Rev</button>
-                                <button onClick={() => toggleRevs(r.quote_no)} className="rounded border border-neutral-300 px-2 py-1 text-[11px] text-neutral-600">{openRevs === r.quote_no ? "Hide" : "History"}</button>
-                              </div>
-                            </td>
-                          </tr>
-                          {openRevs === r.quote_no && (
-                            <tr className="bg-brand-band/40">
-                              <td colSpan={7} className="px-3 py-2 text-[11px] text-neutral-600">
-                                {revs.map((rv) => (
-                                  <span key={rv.id} className="mr-3 inline-block">
-                                    <b>Rev {rv.revision ?? 0}</b> · {inr(rv.tpv || 0)} · {(rv.created_at || "").slice(0, 10)}
-                                    <button onClick={() => openInBuilder(rv, false)} className="ml-1 text-brand underline">open</button>
-                                  </span>
-                                ))}
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
+                        <tr key={r.id} className="border-t border-brand-line">
+                          <td className="px-3 py-1.5 font-mono">{r.quote_no || "—"}</td>
+                          <td className="px-3 py-1.5">
+                            <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold text-white ${r.stage === "design" ? "bg-brand-light" : "bg-brand"}`}>{STAGE_LABEL[(r.stage as "sales" | "design") ?? "sales"]}</span>
+                          </td>
+                          <td className="px-3 py-1.5">{r.bhk}</td>
+                          <td className="px-3 py-1.5">{r.location}</td>
+                          <td className="px-3 py-1.5 text-right">{inr(r.tpv || 0)}</td>
+                          <td className="px-3 py-1.5 text-neutral-500">{(r.created_at || "").slice(0, 10)}</td>
+                          <td className="px-3 py-1.5 text-right">
+                            <button onClick={() => openInBuilder(r)} className="rounded border border-brand px-2 py-1 text-[11px] font-semibold text-brand">Open &amp; edit</button>
+                          </td>
+                        </tr>
                       ))}
                     </tbody>
                   </table>

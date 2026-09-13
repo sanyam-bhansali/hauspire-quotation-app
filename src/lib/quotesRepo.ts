@@ -35,33 +35,58 @@ export async function nextQuoteNo(): Promise<string> {
   return String(maxN + 1);
 }
 
-/** Insert a new revision row. Returns the saved quote (with id). */
-export async function saveRevision(q: Quote): Promise<Quote> {
-  const row: Quote = { ...q, revision: q.revision ?? 0 };
+export type Stage = "sales" | "design";
+export const STAGE_LABEL: Record<Stage, string> = { sales: "Sales Final", design: "Design Final" };
+
+const bareCols = (row: Quote) => { const { quote_no, revision, stage, ...bare } = row; return bare; };
+const colErr = (m?: string) => /stage|quote_no|revision|column|schema/i.test(m || "");
+
+/** Save the given quotation stage, OVERRIDING any existing quotation for the same
+ *  (quote_no, stage). Only two rows per project ever exist: Sales Final + Design Final. */
+export async function saveStage(q: Quote): Promise<Quote> {
+  const stage: Stage = (q.stage as Stage) ?? "sales";
+  const row: Quote = { ...q, stage, created_at: new Date().toISOString() };
+
   if (supabase) {
     try {
-      let res = await supabase.from("quotes").insert(row).select().single();
-      // If the quote_no/revision columns don't exist yet, retry without them so
-      // the quote still saves to Supabase (revision then lives only in localStorage).
-      if (res.error && /quote_no|revision|column/i.test(res.error.message || "")) {
-        const { quote_no, revision, ...bare } = row;
-        res = await supabase.from("quotes").insert(bare).select().single();
+      let existingId: string | undefined;
+      if (q.quote_no) {
+        try {
+          const { data } = await supabase.from("quotes").select("id").eq("quote_no", q.quote_no).eq("stage", stage).maybeSingle();
+          existingId = (data as any)?.id;
+        } catch { /* stage/quote_no column may be missing */ }
+      }
+      let res;
+      if (existingId) {
+        res = await supabase.from("quotes").update(row).eq("id", existingId).select().single();
+        if (res.error && colErr(res.error.message)) res = await supabase.from("quotes").update(bareCols(row)).eq("id", existingId).select().single();
+      } else {
+        res = await supabase.from("quotes").insert(row).select().single();
+        if (res.error && colErr(res.error.message)) res = await supabase.from("quotes").insert(bareCols(row)).select().single();
       }
       if (!res.error && res.data) {
-        // Mirror to localStorage too so the revision number survives even when the
-        // columns are missing server-side, and so browsing works offline.
         const rec = { ...row, ...(res.data as Quote) } as Quote;
-        const all = lsGet().filter((x) => x.id !== rec.id); all.push(rec); lsSet(all);
+        upsertLs(rec, stage);
         return rec;
       }
     } catch { /* fall back to localStorage */ }
   }
-  const rec = { ...row, id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())), created_at: new Date().toISOString() };
-  const all = lsGet(); all.push(rec); lsSet(all);
+  const rec: Quote = { ...row, id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) };
+  upsertLs(rec, stage);
   return rec;
 }
 
-/** Latest revision of each quote_no, newest first; optional text filter. */
+function upsertLs(rec: Quote, stage: Stage) {
+  const all = lsGet();
+  const i = all.findIndex((x) => x.quote_no && x.quote_no === rec.quote_no && ((x.stage as Stage) ?? "sales") === stage);
+  if (i >= 0) all[i] = { ...rec, id: all[i].id }; else all.push(rec);
+  lsSet(all);
+}
+
+/** Back-compat: older callers used saveRevision — now a plain stage save. */
+export const saveRevision = saveStage;
+
+/** Latest saved record per (quote_no, stage), newest first; optional text filter. */
 export async function listLatest(search = ""): Promise<Quote[]> {
   let rows: Quote[] = [];
   if (supabase) {
@@ -72,12 +97,12 @@ export async function listLatest(search = ""): Promise<Quote[]> {
   } else {
     rows = lsGet().slice().reverse();
   }
-  // Keep the highest revision per quote_no (fall back to id when no quote_no).
+  // One row per (quote_no, stage) — keep the newest.
   const best = new Map<string, Quote>();
   for (const q of rows) {
-    const key = q.quote_no || q.id || Math.random().toString();
+    const key = (q.quote_no || q.id || Math.random().toString()) + "|" + (q.stage || "");
     const cur = best.get(key);
-    if (!cur || (q.revision ?? 0) > (cur.revision ?? 0)) best.set(key, q);
+    if (!cur || (q.created_at || "") > (cur.created_at || "")) best.set(key, q);
   }
   let out = Array.from(best.values());
   const s = search.trim().toLowerCase();

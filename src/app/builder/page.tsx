@@ -4,7 +4,7 @@ import { useDesignerId } from "@/lib/useDesignerId";
 import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
 import { areaAmount, sqftAmount, rftAmount, computeTotals, inr, BHK_ROOMS } from "@/lib/pricing";
-import { saveRevision, nextQuoteNo } from "@/lib/quotesRepo";
+import { saveStage, nextQuoteNo, STAGE_LABEL, type Stage } from "@/lib/quotesRepo";
 import { printWithFilename, quoteFilename } from "@/lib/printDoc";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
@@ -28,7 +28,7 @@ export default function BuilderPage() {
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [banner, setBanner] = useState("");
   const [quoteNo, setQuoteNo] = useState<string>("");
-  const [revision, setRevision] = useState(0);
+  const [stage, setStage] = useState<Stage>("sales");
   const [baseLines, setBaseLines] = useState<QuoteLine[]>([]); // "Original" for the Final comparison
   const [tab, setTab] = useState<"quote" | "final" | "pdf" | "finalpdf">("quote");
   const [modularPct, setModularPct] = useState(0.15);
@@ -81,11 +81,10 @@ export default function BuilderPage() {
       setClient(p.client); setMobile(p.mobile); setLocation(p.location);
       setBhk(p.bhk); setLines(p.lines); setBaseLines(p.lines); // opened state = the "Original"
       if (p.quoteNo) setQuoteNo(p.quoteNo);
-      const rev = p.newRevision ? (p.revision ?? 0) + 1 : (p.revision ?? 0);
-      setRevision(rev);
+      if (p.stage) setStage(p.stage as Stage);
       setBanner(
         p.quoteNo
-          ? `Editing ${p.quoteNo} — Revision ${rev}${p.newRevision ? " (new)" : ""}. Make changes, then Save.`
+          ? `Editing ${p.quoteNo} — ${STAGE_LABEL[(p.stage as Stage) ?? "sales"]}. Saving overrides this quotation.`
           : `Revising first quote for ${p.client || "client"} — edit lines, then Save.`
       );
     }
@@ -115,12 +114,6 @@ export default function BuilderPage() {
     setRoomList((rl) => [...rl, n]); setRoom(n); setNewRoom("");
   }
 
-  function newRevision() {
-    if (!quoteNo) { setBanner("Save this quote once to get a quote number, then you can start revisions."); return; }
-    setRevision((r) => r + 1);
-    setBanner(`Now working on Revision ${revision + 1} of ${quoteNo}. Make changes, then Save.`);
-  }
-
   const product = useMemo(() => products.find((p) => p.product === productName) ?? products[0], [products, productName]);
   const previewAmt =
     product.type === "Area" ? areaAmount(w, h, product.rate ?? 0)
@@ -143,22 +136,23 @@ export default function BuilderPage() {
       rft: isRft ? rft : undefined,
     }]);
   }
-  async function save(): Promise<string> {
+  async function save(saveStageArg: Stage = stage): Promise<string> {
     if (!lines.length) return "";
     if (!client.trim()) { setBanner("Enter a Client name before saving."); return ""; }
+    setStage(saveStageArg);
     const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
       const no = quoteNo || (await nextQuoteNo());
       if (!quoteNo) setQuoteNo(no);
-      await saveRevision({ designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, revision });
+      await saveStage({ designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, stage: saveStageArg });
       // Auto-collect any line whose product isn't in the master → pending approval.
       const newOnes = await autoProposeNewProducts(lines, products, designerId);
-      setBanner(`Saved ✓  ${no} · Revision ${revision}` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent to Products for approval` : ""));
+      setBanner(`Saved ✓  ${no} · ${STAGE_LABEL[saveStageArg]} (overrides previous)` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent to Products for approval` : ""));
       return no;
     } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); return quoteNo; }
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot, quoteNo, revision };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot, quoteNo, stage };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr]">
@@ -231,13 +225,14 @@ export default function BuilderPage() {
 
         {quoteNo && (
           <p className="rounded bg-brand-band px-2 py-1 text-center text-[11px] font-semibold text-brand">
-            {quoteNo} · Revision {revision}
+            {quoteNo} · editing {STAGE_LABEL[stage]}
           </p>
         )}
         <div className="grid grid-cols-2 gap-2">
-          <button onClick={save} className="btn-sec">Save {quoteNo ? `Rev ${revision}` : "quotation"}</button>
-          <button onClick={newRevision} className="btn-sec" disabled={!quoteNo} title={quoteNo ? "Start the next revision" : "Save once to get a quote number"}>New Revision</button>
+          <button onClick={() => save("sales")} className="btn-sec" title="Save/override the Sales-Final quotation (used until the client is booked)">Save Sales Final</button>
+          <button onClick={() => save("design")} className="btn-sec" title="Save/override the Design-Final quotation (used until design is finalized)">Save Design Final</button>
         </div>
+        <p className="text-[10.5px] text-neutral-400">Only two quotations are kept per project — <b>Sales Final</b> and <b>Design Final</b>. Each save overrides the previous one.</p>
       </aside>
 
       <section className="p-5">

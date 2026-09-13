@@ -7,6 +7,7 @@ import { computeTotals, inr } from "@/lib/pricing";
 import { loadTerms } from "@/lib/termsStore";
 import { DEFAULT_TERMS } from "@/data/termsDefault";
 import TermsView from "./TermsView";
+import QuoteSummary from "./QuoteSummary";
 
 const ROW_BG: Record<ChangeStatus, string> = { added: "#eafaef", removed: "#fdeaea", changed: "#fdf4e3", same: "transparent" };
 const TAG: Record<ChangeStatus, { t: string; c: string } | null> = {
@@ -38,7 +39,7 @@ export default function PrintFinal({ meta, original, current }: { meta: QuoteMet
           <Field k="Client Mobile" v={meta.mobile} />
           <Field k="Date" v={date} />
           <Field k="Location" v={meta.location} />
-          <Field k="Revision (Final)" v={String(meta.revision ?? 0)} />
+          <Field k="Stage" v={meta.stage === "design" ? "Design Final" : "Sales Final"} />
         </div>
 
         <div className="roomhdr mb-2 flex items-center justify-between bg-brand px-2 py-1 text-white">
@@ -95,6 +96,9 @@ export default function PrintFinal({ meta, original, current }: { meta: QuoteMet
             </tr>
           </tbody>
         </table>
+
+        {/* Full final summary: room split + donut, totals, payment stages, materials */}
+        <QuoteSummary lines={current} modularPct={meta.modularPct} onSpot={meta.onSpot} />
       </section>
 
       <section className="brk-before px-2 pt-6">
