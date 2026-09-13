@@ -39,7 +39,6 @@ export default function PrintFinal({ meta, original, current }: { meta: QuoteMet
           <Field k="Client Mobile" v={meta.mobile} />
           <Field k="Date" v={date} />
           <Field k="Location" v={meta.location} />
-          <Field k="Stage" v={meta.stage === "design" ? "Design Final" : "Sales Final"} />
         </div>
 
         <div className="roomhdr mb-2 flex items-center justify-between bg-brand px-2 py-1 text-white">

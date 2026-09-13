@@ -50,7 +50,6 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
           <Field k="Client Mobile" v={meta.mobile} />
           <Field k="Date" v={date} />
           <Field k="Flat No" v="" />
-          <Field k="Stage" v={stageLabel(meta.stage)} />
           <Field k="Location" v={meta.location} />
           <Field k="Configuration" v={meta.bhk} />
         </div>
