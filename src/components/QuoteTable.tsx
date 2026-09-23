@@ -1,5 +1,5 @@
 "use client";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import type { QuoteLine, WorkCode, Product } from "@/lib/types";
 import { inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
 import ProductCombo from "./ProductCombo";
@@ -18,8 +18,22 @@ export default function QuoteTable({
   modularPct?: number;
 }) {
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
   // Amount after the modular discount: MO-01 lines get the discount, NM-01 don't.
   const discountedOf = (l: QuoteLine) => (l.wc === "MO-01" ? Math.round(l.amount * (1 - modularPct)) : l.amount);
+
+  // Drag-and-drop reorder within the same room.
+  function drop(target: number) {
+    const from = dragIdx;
+    setDragIdx(null); setOverIdx(null);
+    if (from == null || from === target) return;
+    if (lines[from].room !== lines[target].room) return; // only within the room
+    const next = lines.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(from < target ? target - 1 : target, 0, moved);
+    onChange(next);
+  }
 
   // Pick a product from the master into a row: set its code/details and re-price
   // by the product's own type, keeping the row's dimensions/qty where sensible.
@@ -115,9 +129,21 @@ export default function QuoteTable({
                 <th className="border border-brand-line px-2 py-1 text-right">Discounted</th>
               </tr>
               {items.map((x, n) => (
-                <tr key={x.i} className="align-top">
+                <tr
+                  key={x.i}
+                  className={`align-top ${dragIdx === x.i ? "opacity-40" : ""} ${overIdx === x.i && dragIdx !== x.i ? "border-t-2 border-t-brand" : ""}`}
+                  onDragOver={(e) => { if (dragIdx != null && lines[dragIdx].room === x.l.room) { e.preventDefault(); setOverIdx(x.i); } }}
+                  onDrop={() => drop(x.i)}
+                >
                   <td className="border border-brand-line px-1 py-1 text-center">
                     <div className="flex flex-col items-center leading-none">
+                      <span
+                        className="no-print mb-0.5 cursor-grab select-none text-[11px] text-neutral-400 active:cursor-grabbing"
+                        draggable
+                        onDragStart={() => setDragIdx(x.i)}
+                        onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
+                        title="Drag to reorder within this room"
+                      >⠿</span>
                       <span>{n + 1}</span>
                       <span className="no-print mt-0.5 flex gap-1 text-[10px] text-brand">
                         <button onClick={() => move(x.i, -1)} disabled={n === 0} title="Move up" className="disabled:opacity-20">▲</button>

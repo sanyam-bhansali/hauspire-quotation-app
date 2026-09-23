@@ -28,6 +28,56 @@ function normName(s: string): string {
   return s.toLowerCase().replace(/lust[eu]re?/g, "lustre").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+// Canonical within-room ordering, derived from Hauspire's real quotations, so the
+// auto-built quote lists items in the sequence designers actually use — regardless
+// of the order products happen to sit in the catalog. Lower rank = higher up.
+const ITEM_ORDER: ((s: string) => boolean)[] = [
+  // Kitchen
+  (s) => /base cabinet/.test(s) && !/tandem/.test(s),
+  (s) => /tandem/.test(s) && /horiz/.test(s),
+  (s) => /tandem/.test(s) && /(vertical|bottle)/.test(s),
+  (s) => /tandem/.test(s),
+  (s) => /wall cabinet/.test(s) && !/glass|profile shutter/.test(s),
+  (s) => /wall cabinet/.test(s) && /(glass|profile shutter)/.test(s),
+  (s) => /\bloft\b/.test(s),
+  (s) => /tall pantry/.test(s),
+  (s) => /appliance/.test(s),
+  (s) => /crockery/.test(s),
+  (s) => /breakfast/.test(s),
+  (s) => /platform/.test(s),
+  (s) => /dry balcony/.test(s),
+  // Bedroom
+  (s) => /wardrobe/.test(s) && !/walk/.test(s),
+  (s) => /walk.?in/.test(s) && /wardrobe/.test(s),
+  (s) => /dressing/.test(s) && /(base|back)\s*storage/.test(s),
+  (s) => /dressing/.test(s) && /mirror/.test(s),
+  (s) => /bed/.test(s) && /(hydraulic|storage)/.test(s),
+  (s) => /headboard/.test(s),
+  (s) => /side table/.test(s),
+  (s) => /workstation/.test(s) && !/overhead/.test(s),
+  (s) => /workstation/.test(s) && /overhead/.test(s),
+  (s) => /bay window/.test(s),
+  // Living
+  (s) => /tv unit/.test(s) && !/base/.test(s),
+  (s) => /tv unit/.test(s),
+  (s) => /(console|shoe rack)/.test(s),
+  (s) => /safety door/.test(s),
+  (s) => /mandir/.test(s),
+  (s) => /foyer/.test(s),
+  // Other services
+  (s) => /vanity/.test(s),
+  (s) => /painting/.test(s),
+  (s) => /electrical/.test(s),
+  (s) => /windows/.test(s),
+  (s) => /civil|plumbing/.test(s),
+  (s) => /false ceiling/.test(s),
+];
+function itemRank(name: string): number {
+  const s = name.toLowerCase();
+  const i = ITEM_ORDER.findIndex((t) => t(s));
+  return i < 0 ? 999 : i;
+}
+
 // Map a concrete first-quote room to the placement category used in Product.rooms.
 function roomCategory(room: string): string {
   if (room === "Kitchen") return "Kitchen";
@@ -74,12 +124,18 @@ export function buildFirstQuote(rawProducts: Product[], ctx: BuildContext): Quot
     const isBedroom = cat === "Bedroom";
     const planW = ctx.sizeToPlan && isBedroom ? wardrobeWidth(ctx.roomDims?.[room], 1500) : null;
 
-    for (const p of fq) {
-      const cats = (p.rooms || "").split(",").map((s) => s.trim()).filter(Boolean);
-      if (!cats.includes(cat)) continue;
-      if (p.balcony && !ctx.hasBalcony) continue;
-      if (p.bhk && p.bhk.replace(/\s+/g, "").toUpperCase() !== bhkLabel) continue;
+    // Products for this room, ordered the way the real quotes arrange them.
+    const roomProducts = fq
+      .filter((p) => {
+        const cats = (p.rooms || "").split(",").map((s) => s.trim()).filter(Boolean);
+        if (!cats.includes(cat)) return false;
+        if (p.balcony && !ctx.hasBalcony) return false;
+        if (p.bhk && p.bhk.replace(/\s+/g, "").toUpperCase() !== bhkLabel) return false;
+        return true;
+      })
+      .sort((a, b) => itemRank(a.product) - itemRank(b.product));
 
+    for (const p of roomProducts) {
       let product = p.product;
       let width: number | null = null;
       let height: number | null = null;
