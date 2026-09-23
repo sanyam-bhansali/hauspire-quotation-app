@@ -5,7 +5,7 @@ import { computeTotals, inr } from "@/lib/pricing";
 import { MATERIAL_SPEC } from "@/lib/boilerplate";
 import RoomDonut from "./RoomDonut";
 
-export default function QuoteSummary({ lines, modularPct, onSpot }: { lines: QuoteLine[]; modularPct?: number; onSpot?: number }) {
+export default function QuoteSummary({ lines, modularPct, onSpot, onSpotLabel }: { lines: QuoteLine[]; modularPct?: number; onSpot?: number; onSpotLabel?: string }) {
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
   const t = computeTotals(lines, { modularPct, onSpot });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
@@ -37,7 +37,7 @@ export default function QuoteSummary({ lines, modularPct, onSpot }: { lines: Quo
             <Row k="Professional fees (7%)" v={fmt(t.fee)} />
             <Row k="Sub-Total" v={fmt(t.subTotal)} bold />
             <Row k={`Discount on Modular (${Math.round(t.modularPct * 100)}%)`} v={fmt(t.discount)} />
-            {t.onSpot ? <Row k="On-Spot Discount (₹)" v={fmt(t.onSpot)} /> : null}
+            {t.onSpot ? <Row k={`${onSpotLabel || "On-Spot Discount"} (₹)`} v={fmt(t.onSpot)} /> : null}
             <tr className="bg-brand font-extrabold text-white">
               <td className="border border-brand-line px-2 py-1">Total Project Value</td>
               <td className="border border-brand-line px-2 py-1 text-right">₹{fmt(t.tpv)}</td>

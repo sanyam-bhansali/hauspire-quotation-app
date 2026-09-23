@@ -17,6 +17,7 @@ export interface QuoteMeta {
   stage?: "sales" | "design";
   modularPct?: number;
   onSpot?: number;
+  onSpotLabel?: string;
 }
 export const stageLabel = (s?: "sales" | "design") => (s === "design" ? "Design Final" : "Sales Final");
 
@@ -89,7 +90,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         ))}
 
         {/* Summary by room, totals, payment stages, material spec */}
-        <QuoteSummary lines={lines} modularPct={meta.modularPct} onSpot={meta.onSpot} />
+        <QuoteSummary lines={lines} modularPct={meta.modularPct} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} />
       </section>
 
       {/* Terms & Conditions — editable, branded page */}

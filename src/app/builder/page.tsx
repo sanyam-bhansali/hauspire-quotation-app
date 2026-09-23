@@ -13,6 +13,7 @@ import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import PrintDocument from "@/components/PrintDocument";
 import ProductCombo from "@/components/ProductCombo";
+import DiscountPicker from "@/components/DiscountPicker";
 import FinalCompare from "@/components/FinalCompare";
 import PrintFinal from "@/components/PrintFinal";
 
@@ -33,6 +34,7 @@ export default function BuilderPage() {
   const [tab, setTab] = useState<"quote" | "final" | "pdf" | "finalpdf">("quote");
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
+  const [onSpotLabel, setOnSpotLabel] = useState("On-Spot Discount");
 
   // rooms
   const [roomList, setRoomList] = useState<string[]>(DEFAULT_ROOMS);
@@ -152,7 +154,7 @@ export default function BuilderPage() {
     } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); return quoteNo; }
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot, quoteNo, stage };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, quoteNo, stage };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr]">
@@ -223,6 +225,9 @@ export default function BuilderPage() {
           </div>
         )}
 
+        <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Discount</h2>
+        <DiscountPicker label={onSpotLabel} amount={onSpot} onLabel={setOnSpotLabel} onAmount={setOnSpot} />
+
         {quoteNo && (
           <p className="rounded bg-brand-band px-2 py-1 text-center text-[11px] font-semibold text-brand">
             {quoteNo} · editing {STAGE_LABEL[stage]}
@@ -257,7 +262,7 @@ export default function BuilderPage() {
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
             <QuoteTable lines={lines} onChange={setLines} products={products} modularPct={modularPct} />
-            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onModularPct={setModularPct} onOnSpot={setOnSpot} />
+            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} />
           </>
         ) : tab === "final" ? (
           <>

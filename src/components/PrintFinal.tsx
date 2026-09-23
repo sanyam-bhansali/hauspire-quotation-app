@@ -97,7 +97,7 @@ export default function PrintFinal({ meta, original, current }: { meta: QuoteMet
         </table>
 
         {/* Full final summary: room split + donut, totals, payment stages, materials */}
-        <QuoteSummary lines={current} modularPct={meta.modularPct} onSpot={meta.onSpot} />
+        <QuoteSummary lines={current} modularPct={meta.modularPct} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} />
       </section>
 
       <section className="brk-before px-2 pt-6">

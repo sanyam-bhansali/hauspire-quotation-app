@@ -15,6 +15,7 @@ import { addProposal, autoProposeNewProducts } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
 import ProductCombo from "@/components/ProductCombo";
+import DiscountPicker from "@/components/DiscountPicker";
 import Plan2D from "@/components/Plan2D";
 import PrintDocument from "@/components/PrintDocument";
 import Isometric3D, { RoomLayout } from "@/components/Isometric3D";
@@ -46,6 +47,7 @@ export default function FirstQuotePage() {
   const [roomDims, setRoomDims] = useState<Record<string, { w: number; h: number }>>({});
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
+  const [onSpotLabel, setOnSpotLabel] = useState("On-Spot Discount");
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [roomLayout, setRoomLayout] = useState<RoomLayout[]>([]);
   const [tab, setTab] = useState<"quote" | "plan" | "3d" | "pdf">("quote");
@@ -234,7 +236,7 @@ export default function FirstQuotePage() {
     router.push("/builder");
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[330px_1fr]">
@@ -294,6 +296,9 @@ export default function FirstQuotePage() {
             <input type="checkbox" checked={falseCeiling} onChange={(e) => setFalseCeiling(e.target.checked)} /> False ceiling (room-wise)
           </label>
           <p className="text-[10.5px] text-neutral-400">Adds each room’s “False Ceiling (Room)” product from the Product Master (its rate + default sqft). Area auto-fills from the plan and stays editable; rebuild to apply.</p>
+        </Section>
+        <Section title="5 · Discount (optional)">
+          <DiscountPicker label={onSpotLabel} amount={onSpot} onLabel={setOnSpotLabel} onAmount={setOnSpot} />
         </Section>
         <button onClick={() => build()} className="btn">Build first quotation ▸</button>
         <button onClick={save} className="btn-sec">Save</button>
@@ -366,7 +371,7 @@ export default function FirstQuotePage() {
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
             <QuoteTable lines={lines} onChange={setLines} products={productsArr} modularPct={modularPct} />
-            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onModularPct={setModularPct} onOnSpot={setOnSpot} />
+            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} />
           </>
         ) : tab === "plan" ? (
           <Plan2D lines={lines} />
