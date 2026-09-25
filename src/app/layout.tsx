@@ -21,7 +21,9 @@ function Shell({ children }: { children: React.ReactNode }) {
             <Link href="/first-quote">First Quote</Link>
             <Link href="/builder">Full Builder</Link>
             <Link href="/quotations">My Quotations</Link>
+            <Link href="/electrical">Electrical</Link>
             <Link href="/products">Products</Link>
+            <Link href="/electrical-rates">Elec Rates</Link>
             <Link href="/terms">Terms</Link>
           </nav>
           {clerkEnabled && (

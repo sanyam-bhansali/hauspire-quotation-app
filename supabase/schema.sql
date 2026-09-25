@@ -73,6 +73,32 @@ drop policy if exists "product proposals access" on product_proposals;
 create policy "product proposals access" on product_proposals for all
   to anon, authenticated using (true) with check (true);
 
+-- ---- Electrical rate master + saved electrical bills ----
+create table if not exists electrical_rates (
+  id uuid primary key default gen_random_uuid(),
+  item text not null, rate int, unit text, sort int default 0
+);
+alter table electrical_rates enable row level security;
+drop policy if exists "electrical rates access" on electrical_rates;
+create policy "electrical rates access" on electrical_rates for all
+  to anon, authenticated using (true) with check (true);
+
+create table if not exists electrical_bills (
+  id uuid primary key default gen_random_uuid(),
+  quote_no text,
+  client_name text, mobile text, location text, designer text,
+  lines jsonb not null,
+  "discountPct" real default 0.15,
+  materials jsonb,
+  note text,
+  total int, net int,
+  created_at timestamptz default now()
+);
+alter table electrical_bills enable row level security;
+drop policy if exists "electrical bills access" on electrical_bills;
+create policy "electrical bills access" on electrical_bills for all
+  to anon, authenticated using (true) with check (true);
+
 -- Also update the type comment: type is now Area / SqFt / RFT / Unit.
 
 -- ---- App settings (editable Terms & Conditions, etc.) ----

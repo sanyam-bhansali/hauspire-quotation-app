@@ -85,6 +85,35 @@ export interface Totals {
   stages: { label: string; amount: number; desc?: string }[];
 }
 
+// ---- Electrical bill ----
+export interface ElectricalItem {
+  item: string;      // e.g. "6 A plug point"
+  rate: number;      // default ₹/unit
+  unit?: string;     // "point" | "RFT" | "no." — display only
+  sort?: number;
+}
+export interface ElectricalLine {
+  item: string;
+  rate: number;
+  qty: number;
+  description: string; // room-wise breakdown
+}
+export interface ElectricalBill {
+  id?: string;
+  quote_no?: string;
+  client_name: string;
+  mobile: string;
+  location: string;
+  designer: string;
+  lines: ElectricalLine[];
+  discountPct: number;  // fraction, e.g. 0.15
+  materials: { label: string; brand: string }[];
+  note: string;
+  total: number;  // gross
+  net: number;    // after discount
+  created_at?: string;
+}
+
 export interface Quote {
   id?: string;
   designer_id: string;
