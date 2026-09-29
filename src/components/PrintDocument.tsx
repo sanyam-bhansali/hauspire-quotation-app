@@ -18,6 +18,8 @@ export interface QuoteMeta {
   modularPct?: number;
   onSpot?: number;
   onSpotLabel?: string;
+  feeOn?: boolean;
+  gstOn?: boolean;
 }
 export const stageLabel = (s?: "sales" | "design") => (s === "design" ? "Design Final" : "Sales Final");
 
@@ -29,7 +31,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
   useEffect(() => { loadTerms().then(setTerms).catch(() => {}); }, []);
 
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
-  const t = computeTotals(lines, { modularPct: meta.modularPct, onSpot: meta.onSpot });
+  const t = computeTotals(lines, { modularPct: meta.modularPct, onSpot: meta.onSpot, feeOn: meta.feeOn, gstOn: meta.gstOn });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
   // Amount after the modular discount (MO-01 lines only).
   const discOf = (l: QuoteLine) => (l.wc === "MO-01" ? Math.round(l.amount * (1 - t.modularPct)) : l.amount);
@@ -90,7 +92,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         ))}
 
         {/* Summary by room, totals, payment stages, material spec */}
-        <QuoteSummary lines={lines} modularPct={meta.modularPct} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} />
+        <QuoteSummary lines={lines} modularPct={meta.modularPct} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} feeOn={meta.feeOn} gstOn={meta.gstOn} />
       </section>
 
       {/* Terms & Conditions — editable, branded page */}

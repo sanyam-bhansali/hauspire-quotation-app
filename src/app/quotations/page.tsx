@@ -45,6 +45,7 @@ export default function QuotationsPage() {
       client: quote.client_name, mobile: quote.mobile, location: quote.location,
       bhk: quote.bhk, kitchenRun: quote.kitchen_run || 0, lines: quote.lines || [],
       fromId: quote.id, quoteNo: quote.quote_no, stage: (quote.stage as "sales" | "design") ?? "sales",
+      settings: quote.settings ?? undefined,
     });
     router.push("/builder");
   }

@@ -40,12 +40,17 @@ export const STAGE_LABEL: Record<Stage, string> = { sales: "Sales Final", design
 
 const bareCols = (row: Quote) => { const { quote_no, revision, stage, ...bare } = row; return bare; };
 const colErr = (m?: string) => /stage|quote_no|revision|column|schema/i.test(m || "");
+// `settings` (discounts / fee / GST) lives in the quotes.settings jsonb column.
+// Until that column exists, save without it rather than failing — the quote
+// still saves, it just reopens with default pricing choices.
+const noSettings = (row: Quote) => { const { settings, ...rest } = row; return rest as Quote; };
 
 /** Save the given quotation stage, OVERRIDING any existing quotation for the same
  *  (quote_no, stage). Only two rows per project ever exist: Sales Final + Design Final. */
 export async function saveStage(q: Quote): Promise<Quote> {
   const stage: Stage = (q.stage as Stage) ?? "sales";
-  const row: Quote = { ...q, stage, created_at: new Date().toISOString() };
+  const full: Quote = { ...q, stage, created_at: new Date().toISOString() };
+  let row: Quote = full;
 
   if (supabase) {
     try {
@@ -56,6 +61,10 @@ export async function saveStage(q: Quote): Promise<Quote> {
           existingId = (data as any)?.id;
         } catch { /* stage/quote_no column may be missing */ }
       }
+      if (row.settings) {
+        const probe = await supabase.from("quotes").select("settings").limit(1);
+        if (probe.error) row = noSettings(row); // column not added yet
+      }
       let res;
       if (existingId) {
         res = await supabase.from("quotes").update(row).eq("id", existingId).select().single();
@@ -65,13 +74,13 @@ export async function saveStage(q: Quote): Promise<Quote> {
         if (res.error && colErr(res.error.message)) res = await supabase.from("quotes").insert(bareCols(row)).select().single();
       }
       if (!res.error && res.data) {
-        const rec = { ...row, ...(res.data as Quote) } as Quote;
+        const rec = { ...full, ...(res.data as Quote) } as Quote;
         upsertLs(rec, stage);
         return rec;
       }
     } catch { /* fall back to localStorage */ }
   }
-  const rec: Quote = { ...row, id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) };
+  const rec: Quote = { ...full, id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())) };
   upsertLs(rec, stage);
   return rec;
 }

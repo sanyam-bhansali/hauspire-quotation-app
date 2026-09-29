@@ -83,6 +83,19 @@ export interface Totals {
   modularPct: number;
   tpv: number;
   stages: { label: string; amount: number; desc?: string }[];
+  feeOn: boolean;     // professional fee included?
+  gstOn: boolean;     // GST added?
+  gst: number;        // GST amount (0 when off)
+  grandTotal: number; // tpv + gst — what the client pays
+}
+
+/** Per-quotation pricing choices, saved with the quote so they reopen as set. */
+export interface QuoteSettings {
+  modularPct?: number;
+  onSpot?: number;
+  onSpotLabel?: string;
+  feeOn?: boolean;
+  gstOn?: boolean;
 }
 
 // ---- Electrical bill ----
@@ -127,5 +140,6 @@ export interface Quote {
   quote_no?: string;   // stable id for the project, e.g. "2300"
   revision?: number;   // legacy — no longer accumulated
   stage?: "sales" | "design"; // the two saved quotations per project; save overrides
+  settings?: QuoteSettings;   // discounts, fee on/off, GST on/off
   created_at?: string;
 }

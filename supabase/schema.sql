@@ -116,3 +116,7 @@ create policy "app settings access"
   on app_settings for all
   to anon, authenticated
   using (true) with check (true);
+
+-- Per-quote pricing choices (modular %, extra discount, professional fee on/off,
+-- GST on/off). The app saves without it if the column is missing.
+alter table quotes add column if not exists settings jsonb;

@@ -59,25 +59,35 @@ export function lineAmount(
   }
 }
 
+export const GST_RATE = 0.18;
+
 export interface DiscountOpts {
   modularPct?: number; // e.g. 0.15 for 15%
   onSpot?: number; // flat ₹ off
+  feeOn?: boolean; // include the 7% professional fee (default: on)
+  gstOn?: boolean; // add 18% GST on the Total Project Value (default: off)
 }
 
 export function computeTotals(lines: QuoteLine[], opts: DiscountOpts = {}): Totals {
   const modularPct = opts.modularPct ?? MODULAR_DISCOUNT;
   const onSpot = opts.onSpot ?? 0;
+  const feeOn = opts.feeOn ?? true;
+  const gstOn = opts.gstOn ?? false;
   let mo = 0;
   let nm = 0;
   for (const l of lines) {
     if (l.wc === "MO-01") mo += l.amount;
     else nm += l.amount;
   }
-  const fee = Math.round((mo + nm) * FEE_RATE);
+  const fee = feeOn ? Math.round((mo + nm) * FEE_RATE) : 0;
   const subTotal = mo + nm + fee;
   const discount = Math.round(mo * modularPct);
   const tpv = subTotal - discount - onSpot;
-  const after = tpv - BOOKING_ADVANCE;
+  // GST is charged on the final project value, after all discounts.
+  const gst = gstOn ? Math.round(tpv * GST_RATE) : 0;
+  const grandTotal = tpv + gst;
+  // Payment stages split what the client actually pays (incl. GST when on).
+  const after = grandTotal - BOOKING_ADVANCE;
   const stages = [
     { label: "Booking Advance (Fully Refundable for 3 days)", amount: BOOKING_ADVANCE, desc: "Advance Booking for assigning designer to the Project and Design Start, Mood Board" },
     { label: "Design First Draft (5%)", amount: Math.round(after * 0.05), desc: "Deliverable: 2D drawings and 3D first Draft" },
@@ -86,7 +96,7 @@ export function computeTotals(lines: QuoteLine[], opts: DiscountOpts = {}): Tota
     { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4), desc: "All the materials are delivered to site for Carpentry work to start, Order and Procurement of Décor Items, Glass etc" },
     { label: "Project Handover (5%)", amount: Math.round(after * 0.05), desc: "Due prior to final handover of the site and resolution of the final snag list." },
   ];
-  return { mo, nm, fee, subTotal, discount, onSpot, modularPct, tpv, stages };
+  return { mo, nm, fee, subTotal, discount, onSpot, modularPct, tpv, stages, feeOn, gstOn, gst, grandTotal };
 }
 
 export function inr(n: number): string {

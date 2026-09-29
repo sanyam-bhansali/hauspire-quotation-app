@@ -1,5 +1,5 @@
 "use client";
-import type { QuoteLine } from "./types";
+import type { QuoteLine, QuoteSettings } from "./types";
 
 // Lightweight hand-off between First Quote and the Full Builder (same browser).
 export interface PendingQuote {
@@ -12,6 +12,7 @@ export interface PendingQuote {
   fromId?: string;    // if editing an existing saved quote
   quoteNo?: string;   // the project's quote number
   stage?: "sales" | "design"; // which of the two quotations is being edited
+  settings?: QuoteSettings;   // discounts / fee / GST as last saved
 }
 
 const KEY = "hauspire_pending_quote";

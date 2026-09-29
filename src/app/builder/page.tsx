@@ -35,6 +35,8 @@ export default function BuilderPage() {
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
   const [onSpotLabel, setOnSpotLabel] = useState("On-Spot Discount");
+  const [feeOn, setFeeOn] = useState(true);   // 7% professional fee
+  const [gstOn, setGstOn] = useState(false);  // 18% GST (optional)
 
   // rooms
   const [roomList, setRoomList] = useState<string[]>(DEFAULT_ROOMS);
@@ -84,6 +86,14 @@ export default function BuilderPage() {
       setBhk(p.bhk); setLines(p.lines); setBaseLines(p.lines); // opened state = the "Original"
       if (p.quoteNo) setQuoteNo(p.quoteNo);
       if (p.stage) setStage(p.stage as Stage);
+      const s = p.settings;
+      if (s) {
+        if (s.modularPct != null) setModularPct(s.modularPct);
+        if (s.onSpot != null) setOnSpot(s.onSpot);
+        if (s.onSpotLabel) setOnSpotLabel(s.onSpotLabel);
+        if (s.feeOn != null) setFeeOn(s.feeOn);
+        if (s.gstOn != null) setGstOn(s.gstOn);
+      }
       setBanner(
         p.quoteNo
           ? `Editing ${p.quoteNo} — ${STAGE_LABEL[(p.stage as Stage) ?? "sales"]}. Saving overrides this quotation.`
@@ -142,11 +152,15 @@ export default function BuilderPage() {
     if (!lines.length) return "";
     if (!client.trim()) { setBanner("Enter a Client name before saving."); return ""; }
     setStage(saveStageArg);
-    const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
+    // tpv stays the pre-GST project value (what later comparisons and the vendor app use).
+    const tpv = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn }).tpv;
     try {
       const no = quoteNo || (await nextQuoteNo());
       if (!quoteNo) setQuoteNo(no);
-      await saveStage({ designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, stage: saveStageArg });
+      await saveStage({
+        designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, stage: saveStageArg,
+        settings: { modularPct, onSpot, onSpotLabel, feeOn, gstOn },
+      });
       // Auto-collect any line whose product isn't in the master → pending approval.
       const newOnes = await autoProposeNewProducts(lines, products, designerId);
       setBanner(`Saved ✓  ${no} · ${STAGE_LABEL[saveStageArg]} (overrides previous)` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent to Products for approval` : ""));
@@ -154,7 +168,8 @@ export default function BuilderPage() {
     } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); return quoteNo; }
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, quoteNo, stage };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, quoteNo, stage, feeOn, gstOn };
+  const shownTotal = (() => { const t = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn }); return t.gstOn ? t.grandTotal : t.tpv; })();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr]">
@@ -228,6 +243,19 @@ export default function BuilderPage() {
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Discount</h2>
         <DiscountPicker label={onSpotLabel} amount={onSpot} onLabel={setOnSpotLabel} onAmount={setOnSpot} />
 
+        <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Fees &amp; Tax</h2>
+        <div className="space-y-1.5 text-[12.5px]">
+          <label className="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" checked={feeOn} onChange={(e) => setFeeOn(e.target.checked)} />
+            Professional fees (7%)
+          </label>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input type="checkbox" checked={gstOn} onChange={(e) => setGstOn(e.target.checked)} />
+            Add GST (18%)
+          </label>
+          <p className="text-[10.5px] text-neutral-400">Untick the fee to remove it from the quote and PDF. GST is added on the final project value, after discounts; payment stages then include GST.</p>
+        </div>
+
         {quoteNo && (
           <p className="rounded bg-brand-band px-2 py-1 text-center text-[11px] font-semibold text-brand">
             {quoteNo} · editing {STAGE_LABEL[stage]}
@@ -258,11 +286,11 @@ export default function BuilderPage() {
         ) : tab === "quote" ? (
           <>
             <div className="mb-3 flex items-end justify-between border-b-2 border-brand pb-2">
-              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">Quotation · {inr(computeTotals(lines, { modularPct, onSpot }).tpv)}</div></div>
+              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">Quotation · {inr(shownTotal)}{gstOn ? " incl. GST" : ""}</div></div>
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
             <QuoteTable lines={lines} onChange={setLines} products={products} modularPct={modularPct} />
-            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} />
+            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} feeOn={feeOn} gstOn={gstOn} onFeeOn={setFeeOn} onGstOn={setGstOn} />
           </>
         ) : tab === "final" ? (
           <>
@@ -270,7 +298,7 @@ export default function BuilderPage() {
               <button onClick={() => setBaseLines(lines.map((l) => ({ ...l })))} className="rounded border border-brand px-2 py-1 text-[11px] font-semibold text-brand">Snapshot current as “Original”</button>
               <span className="text-[11px] text-neutral-500">Original = {baseLines.length} line(s). Open a saved quote or snapshot here, then edit lines and compare.</span>
             </div>
-            <FinalCompare original={baseLines} current={lines} modularPct={modularPct} onSpot={onSpot} />
+            <FinalCompare original={baseLines} current={lines} modularPct={modularPct} onSpot={onSpot} feeOn={feeOn} gstOn={gstOn} />
           </>
         ) : tab === "finalpdf" ? (
           <PrintFinal meta={meta} original={baseLines} current={lines} />
