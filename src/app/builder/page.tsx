@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDesignerId } from "@/lib/useDesignerId";
 import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
@@ -35,6 +35,8 @@ export default function BuilderPage() {
   const [modularPct, setModularPct] = useState(0.15);
   const [onSpot, setOnSpot] = useState(0);
   const [onSpotLabel, setOnSpotLabel] = useState("On-Spot Discount");
+  const noRef = useRef("");                                  // quote number once assigned
+  const noPending = useRef<Promise<string> | null>(null);    // in-flight number lookup
   const [feeOn, setFeeOn] = useState(true);   // 7% professional fee
   const [gstOn, setGstOn] = useState(false);  // 18% GST (optional)
 
@@ -155,7 +157,10 @@ export default function BuilderPage() {
     // tpv stays the pre-GST project value (what later comparisons and the vendor app use).
     const tpv = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn }).tpv;
     try {
-      const no = quoteNo || (await nextQuoteNo());
+      // One number per project: reuse it, and let rapid repeat clicks share the
+      // same pending lookup instead of each grabbing a new number.
+      const no = quoteNo || noRef.current || (await (noPending.current ??= nextQuoteNo()));
+      noRef.current = no;
       if (!quoteNo) setQuoteNo(no);
       await saveStage({
         designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, stage: saveStageArg,

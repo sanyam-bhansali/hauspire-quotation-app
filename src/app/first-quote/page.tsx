@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDesignerId } from "@/lib/useDesignerId";
 import type { QuoteLine, Product } from "@/lib/types";
@@ -52,6 +52,8 @@ export default function FirstQuotePage() {
   const [roomLayout, setRoomLayout] = useState<RoomLayout[]>([]);
   const [tab, setTab] = useState<"quote" | "plan" | "3d" | "pdf">("quote");
   const [status, setStatus] = useState("");
+  const fqNo = useRef<{ client: string; no: string } | null>(null);                  // number assigned to this client
+  const fqPending = useRef<{ client: string; p: Promise<string> } | null>(null);    // in-flight number lookup
   const [preview, setPreview] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
   const [productsArr, setProductsArr] = useState<Product[]>(SEED);
@@ -222,7 +224,15 @@ export default function FirstQuotePage() {
     if (!lines.length) return "";
     const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
     try {
-      const no = await nextQuoteNo();
+      // Reuse this client's number on repeat saves (Save, Save & PDF, double-clicks)
+      // instead of taking a new one each time. A different client name = new number.
+      const who = (client || "").trim().toLowerCase();
+      let no = fqNo.current && fqNo.current.client === who ? fqNo.current.no : "";
+      if (!no) {
+        if (!fqPending.current || fqPending.current.client !== who) fqPending.current = { client: who, p: nextQuoteNo() };
+        no = await fqPending.current.p;
+        fqNo.current = { client: who, no };
+      }
       await saveStage({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, stage: "sales" });
       const newOnes = await autoProposeNewProducts(lines, productsArr, designerId);
       setStatus(`Saved ✓  ${no} · Sales Final` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent for approval` : ""));
@@ -232,7 +242,11 @@ export default function FirstQuotePage() {
 
   function reviseInBuilder() {
     if (!lines.length) return;
-    setPendingQuote({ client, mobile, location, bhk, kitchenRun: run, lines });
+    // If this quote was already saved, keep its number so the Full Builder
+    // overrides that record instead of creating another one.
+    const who = (client || "").trim().toLowerCase();
+    const savedNo = fqNo.current && fqNo.current.client === who ? fqNo.current.no : undefined;
+    setPendingQuote({ client, mobile, location, bhk, kitchenRun: run, lines, quoteNo: savedNo, stage: savedNo ? "sales" : undefined });
     router.push("/builder");
   }
 

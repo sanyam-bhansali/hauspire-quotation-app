@@ -120,3 +120,24 @@ create policy "app settings access"
 -- Per-quote pricing choices (modular %, extra discount, professional fee on/off,
 -- GST on/off). The app saves without it if the column is missing.
 alter table quotes add column if not exists settings jsonb;
+
+-- ---- Product Master safety (added after the 29-Sep wipe) ----
+-- Decimal rates are allowed (e.g. ₹26.5/sqft); an integer column rejected the whole save.
+alter table product_master alter column rate type numeric using rate::numeric;
+alter table product_master alter column unit type numeric using unit::numeric;
+alter table product_proposals alter column rate type numeric using rate::numeric;
+alter table product_proposals alter column unit type numeric using unit::numeric;
+
+-- Every Save snapshots the previous master here first. Insert + read only from
+-- the app (no delete policy), so a snapshot can't be wiped from the browser.
+create table if not exists product_master_backups (
+  id uuid primary key default gen_random_uuid(),
+  rows jsonb not null,
+  row_count int,
+  saved_at timestamptz default now()
+);
+alter table product_master_backups enable row level security;
+drop policy if exists "product master backups insert" on product_master_backups;
+create policy "product master backups insert" on product_master_backups for insert to anon, authenticated with check (true);
+drop policy if exists "product master backups read" on product_master_backups;
+create policy "product master backups read" on product_master_backups for select to anon, authenticated using (true);

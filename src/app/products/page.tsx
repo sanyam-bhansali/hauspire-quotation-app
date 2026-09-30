@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Product } from "@/lib/types";
-import { loadProducts, saveProducts, defaultProducts } from "@/lib/productStore";
+import { loadProductsWithSource, saveProducts, defaultProducts, type ProductSource } from "@/lib/productStore";
 import { standardPatch } from "@/lib/firstQuoteDefaults";
 import { loadProposals, deleteProposal, proposalToProduct, type Proposal } from "@/lib/proposalStore";
 import AdminGate from "@/components/AdminGate";
@@ -18,17 +18,28 @@ function ProductsInner() {
   const [status, setStatus] = useState("Loading…");
   const [q, setQ] = useState("");
   const [pending, setPending] = useState<Proposal[]>([]);
+  const [source, setSource] = useState<ProductSource>("database");
+  const [sourceReason, setSourceReason] = useState("");
+  const [savedCount, setSavedCount] = useState(0); // rows in the DB when loaded
+  const [saving, setSaving] = useState(false);
+  // Approved proposals are only removed from "Pending" after a successful Save,
+  // so a failed save can't lose them.
+  const [approved, setApproved] = useState<Proposal[]>([]);
 
   useEffect(() => {
-    loadProducts().then((p) => { setRows(p); setStatus(`${p.length} products loaded`); });
+    loadProductsWithSource().then((r) => {
+      setRows(r.products); setSource(r.source); setSourceReason(r.reason ?? "");
+      setSavedCount(r.source === "database" ? r.products.length : 0);
+      setStatus(r.source === "database" ? `${r.products.length} products loaded` : "Showing built-in defaults — see warning below");
+    });
     loadProposals().then(setPending).catch(() => {});
   }, []);
 
   async function approve(p: Proposal) {
     setRows((r) => [proposalToProduct(p), ...r]);
-    await deleteProposal(p.id);
+    setApproved((a) => [...a, p]);
     setPending((ps) => ps.filter((x) => x.id !== p.id));
-    setStatus(`Approved “${p.product}” — added to the master. Click Save to persist.`);
+    setStatus(`Approved “${p.product}” — click Save to make it permanent.`);
   }
   async function reject(p: Proposal) {
     await deleteProposal(p.id);
@@ -48,9 +59,24 @@ function ProductsInner() {
   function remove(i: number) { setRows((r) => r.filter((_, j) => j !== i)); }
 
   async function save() {
+    if (saving) return;
+    const n = rows.filter((r) => (r.product || "").trim()).length;
+    if (source === "defaults" && savedCount === 0 &&
+        !confirm(`This page is showing the BUILT-IN DEFAULT list, not your saved products.\n\nSaving will make these ${n} default products the master for everyone. Continue?`)) return;
+    if (savedCount && n < savedCount - 3 &&
+        !confirm(`You are about to save ${n} products, but ${savedCount} are currently saved. ${savedCount - n} will be removed. Continue?`)) return;
+    setSaving(true);
     setStatus("Saving…");
-    const ok = await saveProducts(rows);
-    setStatus(ok ? "Saved ✓ — changes are live for everyone." : "Save failed — Supabase not configured, or run the product_master SQL.");
+    const r = await saveProducts(rows);
+    if (r.ok) {
+      for (const p of approved) await deleteProposal(p.id);
+      setApproved([]);
+      setSource("database"); setSourceReason(""); setSavedCount(r.saved ?? n);
+      setStatus(`Saved ✓ ${r.saved} products — live for everyone.`);
+    } else {
+      setStatus(r.error || "Save failed.");
+    }
+    setSaving(false);
   }
   function reset() { setRows(defaultProducts()); setStatus("Reset to bundled defaults (not saved yet)."); }
 
@@ -82,12 +108,23 @@ function ProductsInner() {
         <h1 className="text-xl font-bold text-brand">Product Master</h1>
         <input className="input max-w-xs" placeholder="Search product…" value={q} onChange={(e) => setQ(e.target.value)} />
         <button onClick={addRow} className="rounded bg-brand px-3 py-1.5 text-sm font-bold text-white">+ Add material</button>
-        <button onClick={save} className="rounded border border-brand px-3 py-1.5 text-sm font-bold text-brand">Save</button>
+        <button onClick={save} disabled={saving} className="rounded border border-brand px-3 py-1.5 text-sm font-bold text-brand disabled:opacity-50">{saving ? "Saving…" : "Save"}</button>
         <button onClick={selectStandard} className="rounded border border-brand bg-brand-band px-3 py-1.5 text-sm font-semibold text-brand">Select standard 1st-quote set</button>
         <button onClick={clearSelection} className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600">Clear 1st-quote</button>
         <button onClick={reset} className="rounded border border-neutral-300 px-3 py-1.5 text-sm text-neutral-600">Reset to defaults</button>
-        <span className="text-xs text-neutral-500">{status}</span>
+        <span className={`text-xs ${/fail|could not|kept/i.test(status) ? "font-semibold text-red-600" : "text-neutral-500"}`}>{status}</span>
       </div>
+      {source === "defaults" && (
+        <div className="mb-3 rounded-lg border-2 border-red-300 bg-red-50 p-3 text-[12.5px] text-red-800">
+          <b>Warning — these are the app’s built-in default products, not your saved list.</b> {sourceReason}{" "}
+          Do not Save unless you mean to replace the master with this list. Reload the page to try again.
+        </div>
+      )}
+      {approved.length > 0 && (
+        <div className="mb-3 rounded border border-green-300 bg-green-50 px-3 py-2 text-[12px] text-green-800">
+          {approved.length} approved product{approved.length > 1 ? "s" : ""} not saved yet — click <b>Save</b> to make {approved.length > 1 ? "them" : "it"} permanent.
+        </div>
+      )}
       <p className="mb-3 text-[11px] text-neutral-500">
         Edit rates/units here to price with your own numbers. Area = ₹/sqft (needs Width×Height); SqFt = ₹/sqft × a floor area you type in sq ft; RFT = ₹/running-ft × a length; Unit = flat ₹.
         <b> Tick “1st Q”</b> to include a product in the auto-built first quotation, and set its default size / quantity there.
