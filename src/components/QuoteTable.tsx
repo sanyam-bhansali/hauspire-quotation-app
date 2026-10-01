@@ -3,6 +3,7 @@ import { Fragment, useState } from "react";
 import type { QuoteLine, WorkCode, Product } from "@/lib/types";
 import { inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
 import ProductCombo from "./ProductCombo";
+import { sizeDefaults } from "@/lib/productDefaults";
 
 /** Fully editable, room-grouped quotation table. Every field can be changed;
  *  editing Width/Height recomputes the amount for area lines (those with a rate). */
@@ -35,26 +36,29 @@ export default function QuoteTable({
     onChange(next);
   }
 
-  // Pick a product from the master into a row: set its code/details and re-price
-  // by the product's own type, keeping the row's dimensions/qty where sensible.
+  // Pick a product from the master into a row: set its code/details, take its
+  // standard size / quantity from the Product Master (First-Quote defaults), and
+  // re-price by the product's own type. Where the master has no default (e.g. a
+  // kitchen unit sized to the run has no width) the row keeps its current value.
   function setProduct(idx: number, name: string) {
     const next = lines.slice();
     const l: QuoteLine = { ...next[idx], product: name };
     const p = products.find((x) => x.product === name);
     if (p) {
+      const d = sizeDefaults(p);
       l.wc = p.wc; if (p.details) l.details = p.details;
       if (p.type === "Area") {
         l.rate = p.rate ?? undefined; l.unitPrice = undefined; l.qty = undefined; l.sqft = undefined; l.rft = undefined;
-        if (!l.width) l.width = 1000; if (!l.height) l.height = 1000;
+        l.width = d.w ?? (l.width || 1000); l.height = d.h ?? (l.height || 1000);
         l.amount = areaAmount(l.width, l.height, p.rate ?? 0);
       } else if (p.type === "SqFt") {
-        l.rate = p.rate ?? undefined; l.sqft = l.sqft ?? 0; l.unitPrice = undefined; l.qty = undefined; l.rft = undefined; l.width = null; l.height = null;
+        l.rate = p.rate ?? undefined; l.sqft = d.sqft ?? l.sqft ?? 0; l.unitPrice = undefined; l.qty = undefined; l.rft = undefined; l.width = null; l.height = null;
         l.amount = sqftAmount(l.sqft, p.rate ?? 0);
       } else if (p.type === "RFT") {
-        l.rate = p.rate ?? undefined; l.rft = l.rft ?? 0; l.unitPrice = undefined; l.qty = undefined; l.sqft = undefined; l.width = null; l.height = null;
+        l.rate = p.rate ?? undefined; l.rft = d.rft ?? l.rft ?? 0; l.unitPrice = undefined; l.qty = undefined; l.sqft = undefined; l.width = null; l.height = null;
         l.amount = rftAmount(l.rft, p.rate ?? 0);
       } else {
-        l.unitPrice = p.unit ?? 0; l.qty = l.qty ?? 1; l.rate = undefined; l.sqft = undefined; l.rft = undefined; l.width = null; l.height = null;
+        l.unitPrice = p.unit ?? 0; l.qty = d.qty ?? 1; l.rate = undefined; l.sqft = undefined; l.rft = undefined; l.width = null; l.height = null;
         l.amount = Math.round((l.qty ?? 1) * (l.unitPrice ?? 0));
       }
     }

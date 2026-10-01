@@ -8,6 +8,7 @@ import { saveStage, nextQuoteNo, STAGE_LABEL, type Stage } from "@/lib/quotesRep
 import { printWithFilename, quoteFilename } from "@/lib/printDoc";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
+import { sizeDefaults } from "@/lib/productDefaults";
 import { addProposal, autoProposeNewProducts } from "@/lib/proposalStore";
 import QuoteTable from "@/components/QuoteTable";
 import Totals from "@/components/Totals";
@@ -51,6 +52,7 @@ export default function BuilderPage() {
   const [products, setProducts] = useState<Product[]>(SEED);
   const [room, setRoom] = useState(DEFAULT_ROOMS[0]);
   const [productName, setProductName] = useState(SEED[0].product);
+  const pickedRef = useRef(false); // designer has chosen a product in the panel
   const [w, setW] = useState(1800);
   const [h, setH] = useState(2100);
   const [qty, setQty] = useState(1);
@@ -77,7 +79,12 @@ export default function BuilderPage() {
 
   // Load the configured Product Master (Supabase) so the picker uses your rates.
   useEffect(() => {
-    loadProducts().then(setProducts).catch(() => {});
+    loadProducts().then((ps) => {
+      setProducts(ps);
+      // Size the initially selected product from the live master too, unless
+      // the designer already picked something while it was loading.
+      if (!pickedRef.current) pickProduct(SEED[0].product, ps);
+    }).catch(() => {});
   }, []);
 
   // Receive a quote handed off from the First-Quote page or the Quotations list.
@@ -129,6 +136,18 @@ export default function BuilderPage() {
   }
 
   const product = useMemo(() => products.find((p) => p.product === productName) ?? products[0], [products, productName]);
+
+  // Picking a product loads its standard size / quantity from the Product Master
+  // (its First-Quote defaults). Fields the master leaves blank keep their value.
+  function pickProduct(name: string, list: Product[] = products) {
+    setProductName(name);
+    const d = sizeDefaults(list.find((p) => p.product === name));
+    if (d.w) setW(d.w);
+    if (d.h) setH(d.h);
+    setQty(d.qty ?? 1);
+    if (d.sqft) setSqft(d.sqft);
+    if (d.rft) setRft(d.rft);
+  }
   const previewAmt =
     product.type === "Area" ? areaAmount(w, h, product.rate ?? 0)
     : product.type === "SqFt" ? sqftAmount(sqft, product.rate ?? 0)
@@ -209,7 +228,7 @@ export default function BuilderPage() {
 
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Add a line</h2>
         <select className="input" value={room} onChange={(e) => setRoom(e.target.value)}>{roomList.map((r) => <option key={r}>{r}</option>)}</select>
-        <ProductCombo products={products} value={productName} onChange={setProductName} />
+        <ProductCombo products={products} value={productName} onChange={(name) => { pickedRef.current = true; pickProduct(name); }} />
         <p className="text-[11px] text-neutral-500">{product.wc} · {product.type} {product.type === "Area" || product.type === "SqFt" ? `· ₹${product.rate}/sqft` : product.type === "RFT" ? `· ₹${product.rate}/rft` : `· ₹${product.unit}/unit`}</p>
         {product.type === "Area" ? (
           <div className="grid grid-cols-2 gap-2">
