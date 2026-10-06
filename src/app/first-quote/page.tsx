@@ -7,7 +7,7 @@ import seed from "@/data/productMaster.json";
 import { buildFirstQuote, DEFAULT_FC_RATE } from "@/lib/buildQuote";
 import { BHK_ROOMS, feetInchesToMm, estimateKitchenRun, computeTotals, inr, areaAmount, sqftAmount, rftAmount } from "@/lib/pricing";
 import { saveStage, nextQuoteNo } from "@/lib/quotesRepo";
-import { printWithFilename, quoteFilename } from "@/lib/printDoc";
+import { printWithFilename, quoteFilename, todayIso } from "@/lib/printDoc";
 import { setPendingQuote } from "@/lib/quoteStore";
 import { ocrExtractPlan } from "@/lib/ocrPlan";
 import { loadProducts } from "@/lib/productStore";
@@ -35,6 +35,7 @@ export default function FirstQuotePage() {
   const [client, setClient] = useState("");
   const [mobile, setMobile] = useState("");
   const [location, setLocation] = useState("Pune");
+  const [quoteDate, setQuoteDate] = useState(todayIso()); // date printed on the quotation
   const [bhk, setBhk] = useState("3 BHK");
   const [run, setRun] = useState(3960);
   const [king, setKing] = useState(false);
@@ -233,7 +234,7 @@ export default function FirstQuotePage() {
         no = await fqPending.current.p;
         fqNo.current = { client: who, no };
       }
-      await saveStage({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, stage: "sales" });
+      await saveStage({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, stage: "sales", settings: { modularPct, onSpot, onSpotLabel, quoteDate } });
       const newOnes = await autoProposeNewProducts(lines, productsArr, designerId);
       setStatus(`Saved ✓  ${no} · Sales Final` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent for approval` : ""));
       return no;
@@ -246,11 +247,11 @@ export default function FirstQuotePage() {
     // overrides that record instead of creating another one.
     const who = (client || "").trim().toLowerCase();
     const savedNo = fqNo.current && fqNo.current.client === who ? fqNo.current.no : undefined;
-    setPendingQuote({ client, mobile, location, bhk, kitchenRun: run, lines, quoteNo: savedNo, stage: savedNo ? "sales" : undefined });
+    setPendingQuote({ client, mobile, location, bhk, kitchenRun: run, lines, quoteNo: savedNo, stage: savedNo ? "sales" : undefined, settings: { modularPct, onSpot, onSpotLabel, quoteDate } });
     router.push("/builder");
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, date: quoteDate };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[330px_1fr]">
@@ -277,6 +278,13 @@ export default function FirstQuotePage() {
             <input className="input" placeholder="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
             <input className="input" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
           </div>
+          <label className="flex items-center gap-2 text-xs text-neutral-600">
+            <span className="shrink-0 font-semibold">Quotation date</span>
+            <input className="input" type="date" value={quoteDate} onChange={(e) => setQuoteDate(e.target.value || todayIso())} />
+            {quoteDate !== todayIso() && (
+              <button type="button" onClick={() => setQuoteDate(todayIso())} className="shrink-0 text-[11px] font-semibold text-brand underline">Today</button>
+            )}
+          </label>
           <div className="grid grid-cols-2 gap-2">
             <select className="input" value={bhk} onChange={(e) => setBhk(e.target.value)}>
               {Object.keys(BHK_ROOMS).map((b) => <option key={b}>{b}</option>)}
@@ -371,7 +379,7 @@ export default function FirstQuotePage() {
           <Tab on={tab === "3d"} onClick={() => setTab("3d")}>3D view</Tab>
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
-            <button onClick={async () => { const no = await save(); setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, no)), 400); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
+            <button onClick={async () => { const no = await save(); setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, no, false, quoteDate)), 400); }} className="ml-auto rounded bg-brand px-3 py-1 text-sm font-bold text-white">
               ⬇ Save as PDF
             </button>
           )}

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import type { QuoteLine } from "@/lib/types";
 import { computeTotals, inr } from "@/lib/pricing";
+import { quoteDateLabel } from "@/lib/printDoc";
 import { loadTerms } from "@/lib/termsStore";
 import { DEFAULT_TERMS } from "@/data/termsDefault";
 import TermsView from "./TermsView";
@@ -20,6 +21,7 @@ export interface QuoteMeta {
   onSpotLabel?: string;
   feeOn?: boolean;
   gstOn?: boolean;
+  date?: string; // quotation date "YYYY-MM-DD"; defaults to today
 }
 export const stageLabel = (s?: "sales" | "design") => (s === "design" ? "Design Final" : "Sales Final");
 
@@ -36,7 +38,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
   // Amount after the modular discount (MO-01 lines only).
   const discOf = (l: QuoteLine) => (l.wc === "MO-01" ? Math.round(l.amount * (1 - t.modularPct)) : l.amount);
   const roomDisc = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + discOf(l), 0);
-  const date = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const date = quoteDateLabel(meta.date);
   const quoteNo = meta.quoteNo || "Draft";
 
   return (

@@ -96,6 +96,7 @@ export interface QuoteSettings {
   onSpotLabel?: string;
   feeOn?: boolean;
   gstOn?: boolean;
+  quoteDate?: string; // date printed on the quotation, "YYYY-MM-DD"
 }
 
 // ---- Electrical bill ----

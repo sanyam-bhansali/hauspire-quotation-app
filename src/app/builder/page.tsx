@@ -5,7 +5,7 @@ import productMaster from "@/data/productMaster.json";
 import type { Product, QuoteLine } from "@/lib/types";
 import { areaAmount, sqftAmount, rftAmount, computeTotals, inr, BHK_ROOMS } from "@/lib/pricing";
 import { saveStage, nextQuoteNo, STAGE_LABEL, type Stage } from "@/lib/quotesRepo";
-import { printWithFilename, quoteFilename } from "@/lib/printDoc";
+import { printWithFilename, quoteFilename, todayIso } from "@/lib/printDoc";
 import { takePendingQuote } from "@/lib/quoteStore";
 import { loadProducts } from "@/lib/productStore";
 import { sizeDefaults } from "@/lib/productDefaults";
@@ -40,6 +40,7 @@ export default function BuilderPage() {
   const noPending = useRef<Promise<string> | null>(null);    // in-flight number lookup
   const [feeOn, setFeeOn] = useState(true);   // 7% professional fee
   const [gstOn, setGstOn] = useState(false);  // 18% GST (optional)
+  const [quoteDate, setQuoteDate] = useState(todayIso()); // date printed on the quotation
 
   // rooms
   const [roomList, setRoomList] = useState<string[]>(DEFAULT_ROOMS);
@@ -102,6 +103,7 @@ export default function BuilderPage() {
         if (s.onSpotLabel) setOnSpotLabel(s.onSpotLabel);
         if (s.feeOn != null) setFeeOn(s.feeOn);
         if (s.gstOn != null) setGstOn(s.gstOn);
+        if (s.quoteDate) setQuoteDate(s.quoteDate);
       }
       setBanner(
         p.quoteNo
@@ -183,7 +185,7 @@ export default function BuilderPage() {
       if (!quoteNo) setQuoteNo(no);
       await saveStage({
         designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, stage: saveStageArg,
-        settings: { modularPct, onSpot, onSpotLabel, feeOn, gstOn },
+        settings: { modularPct, onSpot, onSpotLabel, feeOn, gstOn, quoteDate },
       });
       // Auto-collect any line whose product isn't in the master → pending approval.
       const newOnes = await autoProposeNewProducts(lines, products, designerId);
@@ -192,7 +194,7 @@ export default function BuilderPage() {
     } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); return quoteNo; }
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, quoteNo, stage, feeOn, gstOn };
+  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, quoteNo, stage, feeOn, gstOn, date: quoteDate };
   const shownTotal = (() => { const t = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn }); return t.gstOn ? t.grandTotal : t.tpv; })();
 
   return (
@@ -204,6 +206,13 @@ export default function BuilderPage() {
           <input className="input" placeholder="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
           <input className="input" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
         </div>
+        <label className="flex items-center gap-2 text-xs text-neutral-600">
+          <span className="shrink-0 font-semibold">Quotation date</span>
+          <input className="input" type="date" value={quoteDate} onChange={(e) => setQuoteDate(e.target.value || todayIso())} />
+          {quoteDate !== todayIso() && (
+            <button type="button" onClick={() => setQuoteDate(todayIso())} className="shrink-0 text-[11px] font-semibold text-brand underline">Today</button>
+          )}
+        </label>
         <select className="input" value={bhk} onChange={(e) => setBhk(e.target.value)}>
           {["1 BHK", "2 BHK", "3 BHK", "4 BHK", "Villa"].map((b) => <option key={b}>{b}</option>)}
         </select>
@@ -300,8 +309,8 @@ export default function BuilderPage() {
           <Tab on={tab === "pdf"} onClick={() => setTab("pdf")}>PDF preview</Tab>
           {lines.length > 0 && (
             <div className="ml-auto flex gap-2">
-              <button onClick={async () => { const no = await save(); setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, no || quoteNo)), 400); }} className="rounded bg-brand px-3 py-1 text-sm font-bold text-white" title="Saves this revision, then exports the PDF">⬇ Save &amp; Quotation PDF</button>
-              <button onClick={async () => { const no = await save(); setTab("finalpdf"); setTimeout(() => printWithFilename(quoteFilename(client, no || quoteNo, true)), 400); }} className="rounded border border-brand px-3 py-1 text-sm font-bold text-brand" title="Saves this revision, then exports the Original vs Final PDF">⬇ Save &amp; Final PDF</button>
+              <button onClick={async () => { const no = await save(); setTab("pdf"); setTimeout(() => printWithFilename(quoteFilename(client, no || quoteNo, false, quoteDate)), 400); }} className="rounded bg-brand px-3 py-1 text-sm font-bold text-white" title="Saves this revision, then exports the PDF">⬇ Save &amp; Quotation PDF</button>
+              <button onClick={async () => { const no = await save(); setTab("finalpdf"); setTimeout(() => printWithFilename(quoteFilename(client, no || quoteNo, true, quoteDate)), 400); }} className="rounded border border-brand px-3 py-1 text-sm font-bold text-brand" title="Saves this revision, then exports the Original vs Final PDF">⬇ Save &amp; Final PDF</button>
             </div>
           )}
         </div>

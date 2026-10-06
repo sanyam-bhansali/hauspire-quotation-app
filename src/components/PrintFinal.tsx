@@ -4,6 +4,7 @@ import type { QuoteLine } from "@/lib/types";
 import type { QuoteMeta } from "./PrintDocument";
 import { compareLines, sizeText, type ChangeStatus } from "@/lib/compare";
 import { computeTotals, inr } from "@/lib/pricing";
+import { quoteDateLabel } from "@/lib/printDoc";
 import { loadTerms } from "@/lib/termsStore";
 import { DEFAULT_TERMS } from "@/data/termsDefault";
 import TermsView from "./TermsView";
@@ -26,7 +27,7 @@ export default function PrintFinal({ meta, original, current }: { meta: QuoteMet
   const ot = computeTotals(original, opts);
   const ft = computeTotals(current, opts);
   const delta = ft.tpv - ot.tpv;
-  const date = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const date = quoteDateLabel(meta.date);
   const fmt = (n: number | null) => (n == null ? "—" : Math.round(n).toLocaleString("en-IN"));
 
   return (
