@@ -13,6 +13,9 @@ export interface PendingQuote {
   quoteNo?: string;   // the project's quote number
   stage?: "sales" | "design"; // which of the two quotations is being edited
   settings?: QuoteSettings;   // discounts / fee / GST as last saved
+  /** Set when a saved quotation is reused as a template for another client
+   *  (no quoteNo: saving creates a new quotation and folder). */
+  template?: { client: string; quoteNo?: string };
 }
 
 const KEY = "hauspire_pending_quote";

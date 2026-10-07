@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Quote } from "@/lib/types";
 import { listLatest, STAGE_LABEL } from "@/lib/quotesRepo";
@@ -12,6 +12,25 @@ export default function QuotationsPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("Loading…");
   const [openClient, setOpenClient] = useState<string | null>(null);
+  // "Use as template": which quotation row is asking for the new client name.
+  const [tplId, setTplId] = useState<string | null>(null);
+  const [tplName, setTplName] = useState("");
+
+  /** Copy a saved quotation into the builder for a different client. It gets no
+   *  quote number, so saving creates a new quotation (and a new client folder);
+   *  the original is never touched. */
+  function startFromTemplate(quote: Quote) {
+    const name = tplName.trim();
+    if (!name) return;
+    const { quoteDate, ...pricing } = quote.settings ?? {}; // fresh date for the new quote
+    setPendingQuote({
+      client: name, mobile: "", location: quote.location, bhk: quote.bhk,
+      kitchenRun: quote.kitchen_run || 0, lines: quote.lines || [],
+      settings: pricing,
+      template: { client: quote.client_name, quoteNo: quote.quote_no },
+    });
+    router.push("/builder");
+  }
 
   async function refresh(search = q) {
     setStatus("Loading…");
@@ -93,7 +112,8 @@ export default function QuotationsPage() {
                     </thead>
                     <tbody>
                       {f.list.map((r) => (
-                        <tr key={r.id} className="border-t border-brand-line">
+                        <Fragment key={r.id}>
+                        <tr className="border-t border-brand-line">
                           <td className="px-3 py-1.5 font-mono">{r.quote_no || "—"}</td>
                           <td className="px-3 py-1.5">
                             <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold text-white ${r.stage === "design" ? "bg-brand-light" : "bg-brand"}`}>{STAGE_LABEL[(r.stage as "sales" | "design") ?? "sales"]}</span>
@@ -102,10 +122,33 @@ export default function QuotationsPage() {
                           <td className="px-3 py-1.5">{r.location}</td>
                           <td className="px-3 py-1.5 text-right">{inr(r.tpv || 0)}</td>
                           <td className="px-3 py-1.5 text-neutral-500">{(r.created_at || "").slice(0, 10)}</td>
-                          <td className="px-3 py-1.5 text-right">
+                          <td className="whitespace-nowrap px-3 py-1.5 text-right">
                             <button onClick={() => openInBuilder(r)} className="rounded border border-brand px-2 py-1 text-[11px] font-semibold text-brand">Open &amp; edit</button>
+                            <button
+                              onClick={() => { setTplId(tplId === r.id ? null : (r.id ?? null)); setTplName(""); }}
+                              className="ml-1.5 rounded border border-neutral-300 px-2 py-1 text-[11px] font-semibold text-neutral-700"
+                              title="Start a new client's quotation from this one"
+                            >Use as template</button>
                           </td>
                         </tr>
+                        {tplId === r.id && (
+                          <tr className="bg-amber-50">
+                            <td colSpan={7} className="px-3 py-2">
+                              <div className="flex flex-wrap items-center gap-2 text-[12px]">
+                                <span className="text-neutral-700">New quotation from <b>{r.client_name}</b>’s {r.quote_no || "quotation"} for:</span>
+                                <input
+                                  autoFocus className="input max-w-xs py-1" placeholder="New client name"
+                                  value={tplName} onChange={(e) => setTplName(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === "Enter") startFromTemplate(r); if (e.key === "Escape") setTplId(null); }}
+                                />
+                                <button onClick={() => startFromTemplate(r)} disabled={!tplName.trim()} className="rounded bg-brand px-3 py-1 text-[11px] font-bold text-white disabled:opacity-40">Create &amp; open</button>
+                                <button onClick={() => setTplId(null)} className="text-[11px] text-neutral-500 underline">Cancel</button>
+                                <span className="w-full text-[10.5px] text-neutral-500">All items, sizes and pricing are copied. It gets its own quote number and folder when you Save; {r.client_name}’s quotation is not changed.</span>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>

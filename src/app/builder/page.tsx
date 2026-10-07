@@ -30,6 +30,14 @@ export default function BuilderPage() {
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [banner, setBanner] = useState("");
   const [quoteNo, setQuoteNo] = useState<string>("");
+  // The client the current quote number belongs to. If the designer types a
+  // different client name, saving starts a NEW quotation (new number → new
+  // folder) instead of overwriting this client's quotation.
+  const [ownerClient, setOwnerClient] = useState<string>("");
+  // Only quotations OPENED from My Quotations branch off on a name change. A quote
+  // started in this session just keeps its number (so fixing a typo after the
+  // first Save doesn't create a second quotation).
+  const [openedSaved, setOpenedSaved] = useState(false);
   const [stage, setStage] = useState<Stage>("sales");
   const [baseLines, setBaseLines] = useState<QuoteLine[]>([]); // "Original" for the Final comparison
   const [tab, setTab] = useState<"quote" | "final" | "pdf" | "finalpdf">("quote");
@@ -94,7 +102,7 @@ export default function BuilderPage() {
     if (p) {
       setClient(p.client); setMobile(p.mobile); setLocation(p.location);
       setBhk(p.bhk); setLines(p.lines); setBaseLines(p.lines); // opened state = the "Original"
-      if (p.quoteNo) setQuoteNo(p.quoteNo);
+      if (p.quoteNo) { setQuoteNo(p.quoteNo); setOwnerClient(p.client); setOpenedSaved(true); }
       if (p.stage) setStage(p.stage as Stage);
       const s = p.settings;
       if (s) {
@@ -106,8 +114,10 @@ export default function BuilderPage() {
         if (s.quoteDate) setQuoteDate(s.quoteDate);
       }
       setBanner(
-        p.quoteNo
-          ? `Editing ${p.quoteNo} — ${STAGE_LABEL[(p.stage as Stage) ?? "sales"]}. Saving overrides this quotation.`
+        p.template
+          ? `New quotation for ${p.client}, started from ${p.template.client}'s ${p.template.quoteNo || "quotation"}. Edit it, then Save — this creates ${p.client}'s own folder; ${p.template.client}'s quotation is not changed.`
+          : p.quoteNo
+          ? `Editing ${p.quoteNo} — ${STAGE_LABEL[(p.stage as Stage) ?? "sales"]}. Saving overrides this quotation. (Change the client name to save it as a new quotation instead.)`
           : `Revising first quote for ${p.client || "client"} — edit lines, then Save.`
       );
     }
@@ -171,6 +181,10 @@ export default function BuilderPage() {
       rft: isRft ? rft : undefined,
     }]);
   }
+  // Client name differs from the client this quote number belongs to?
+  const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const isRenamed = openedSaved && !!quoteNo && !!ownerClient.trim() && !!client.trim() && normName(client) !== normName(ownerClient);
+
   async function save(saveStageArg: Stage = stage): Promise<string> {
     if (!lines.length) return "";
     if (!client.trim()) { setBanner("Enter a Client name before saving."); return ""; }
@@ -178,18 +192,29 @@ export default function BuilderPage() {
     // tpv stays the pre-GST project value (what later comparisons and the vendor app use).
     const tpv = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn }).tpv;
     try {
+      // A different client name than the one this quote belongs to = a new
+      // quotation for a new client (the opened one is used as a template).
+      const renamed = isRenamed;
+      const fromNo = quoteNo, fromClient = ownerClient;
+      if (renamed) { noRef.current = ""; noPending.current = null; setOpenedSaved(false); }
       // One number per project: reuse it, and let rapid repeat clicks share the
       // same pending lookup instead of each grabbing a new number.
-      const no = quoteNo || noRef.current || (await (noPending.current ??= nextQuoteNo()));
+      const no = (renamed ? "" : quoteNo) || noRef.current || (await (noPending.current ??= nextQuoteNo()));
       noRef.current = no;
-      if (!quoteNo) setQuoteNo(no);
+      if (no !== quoteNo) setQuoteNo(no);
+      setOwnerClient(client);
       await saveStage({
         designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, stage: saveStageArg,
         settings: { modularPct, onSpot, onSpotLabel, feeOn, gstOn, quoteDate },
       });
       // Auto-collect any line whose product isn't in the master → pending approval.
       const newOnes = await autoProposeNewProducts(lines, products, designerId);
-      setBanner(`Saved ✓  ${no} · ${STAGE_LABEL[saveStageArg]} (overrides previous)` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent to Products for approval` : ""));
+      const extra = newOnes.length ? ` · ${newOnes.length} new item(s) sent to Products for approval` : "";
+      setBanner(
+        renamed
+          ? `Saved ✓  New quotation ${no} for ${client.trim()} (new folder). ${fromClient.trim()}'s quotation ${fromNo} is unchanged.` + extra
+          : `Saved ✓  ${no} · ${STAGE_LABEL[saveStageArg]} (overrides previous)` + extra
+      );
       return no;
     } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); return quoteNo; }
   }
@@ -202,6 +227,11 @@ export default function BuilderPage() {
       <aside className="no-print space-y-3 border-r border-brand-line bg-white p-4">
         <h2 className="text-xs font-bold uppercase tracking-wide text-brand-light">Project</h2>
         <input className="input" placeholder="Client name" value={client} onChange={(e) => setClient(e.target.value)} />
+        {isRenamed && (
+          <p className="rounded border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
+            Name changed — saving creates a <b>new quotation &amp; folder for “{client.trim()}”</b>. {ownerClient.trim()}’s quotation {quoteNo} stays as it is.
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <input className="input" placeholder="Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
           <input className="input" placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
@@ -289,9 +319,14 @@ export default function BuilderPage() {
           <p className="text-[10.5px] text-neutral-400">Untick the fee to remove it from the quote and PDF. GST is added on the final project value, after discounts; payment stages then include GST.</p>
         </div>
 
-        {quoteNo && (
+        {quoteNo && !isRenamed && (
           <p className="rounded bg-brand-band px-2 py-1 text-center text-[11px] font-semibold text-brand">
             {quoteNo} · editing {STAGE_LABEL[stage]}
+          </p>
+        )}
+        {isRenamed && (
+          <p className="rounded bg-amber-50 px-2 py-1 text-center text-[11px] font-semibold text-amber-800">
+            New quotation for {client.trim()} · gets a new number on Save
           </p>
         )}
         <div className="grid grid-cols-2 gap-2">
