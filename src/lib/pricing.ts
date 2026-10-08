@@ -88,13 +88,15 @@ export function computeTotals(lines: QuoteLine[], opts: DiscountOpts = {}): Tota
   const grandTotal = tpv + gst;
   // Payment stages split what the client actually pays (incl. GST when on).
   const after = grandTotal - BOOKING_ADVANCE;
+  // Payments are made at the START of each stage; `desc` is the End Deliverable
+  // the client receives once that stage is complete. **text** prints in bold.
   const stages = [
-    { label: "Booking Advance (Fully Refundable for 3 days)", amount: BOOKING_ADVANCE, desc: "Advance Booking for assigning designer to the Project and Design Start, Mood Board" },
-    { label: "Design First Draft (5%)", amount: Math.round(after * 0.05), desc: "Deliverable: 2D drawings and 3D first Draft" },
-    { label: "Design Closure (10%)", amount: Math.round(after * 0.1), desc: "Deliverable: Final Renders, BOQ (Bill of Quantity), Design Walkthrough and Final Quotation" },
-    { label: "Material Procurement (40%)", amount: Math.round(after * 0.4), desc: "All materials procured and sent to factory for manufacturing, False ceiling and electrical work starts" },
-    { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4), desc: "All the materials are delivered to site for Carpentry work to start, Order and Procurement of Décor Items, Glass etc" },
-    { label: "Project Handover (5%)", amount: Math.round(after * 0.05), desc: "Due prior to final handover of the site and resolution of the final snag list." },
+    { label: "Booking Advance (Fully refundable within 3 days)", amount: BOOKING_ADVANCE, desc: "Your dedicated designer is assigned. You receive your **Mood Board, 2D Layout and Furniture Layout**." },
+    { label: "Design Advance (5%)", amount: Math.round(after * 0.05), desc: "Your design comes to life: **2D drawing revisions, first 3D design, final 3D renders** and your **Final Quotation**." },
+    { label: "Design Closure (10%)", amount: Math.round(after * 0.1), desc: "Your design is locked. You receive the **detailed technical drawings** our factory and site team build from." },
+    { label: "Material Procurement (40%)", amount: Math.round(after * 0.4), desc: "All materials for your home are **purchased and sent to our factory** for manufacturing. **All on-site work begins** at your home, such as false ceiling, electrical and civil work." },
+    { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4), desc: "Your furniture is **delivered to your home and carpentry installation begins**. Décor items, glass and finishing materials are ordered." },
+    { label: "Project Handover (5%)", amount: Math.round(after * 0.05), desc: "Once this payment is received, we **resolve the final snag list** and **hand over your home**, ready to move in." },
   ];
   return { mo, nm, fee, subTotal, discount, onSpot, modularPct, tpv, stages, feeOn, gstOn, gst, grandTotal };
 }

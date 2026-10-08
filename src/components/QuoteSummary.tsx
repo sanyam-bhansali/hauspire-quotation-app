@@ -61,17 +61,20 @@ export default function QuoteSummary({ lines, modularPct, onSpot, onSpotLabel, f
       <div className="mt-5">
         <div className="roomhdr bg-brand px-2 py-1 font-bold text-white">Payment Stages{t.gstOn ? " (incl. GST)" : ""}</div>
         <table className="w-full border-collapse text-[11px]">
-          <thead><tr className="bg-brand-light text-left text-white"><Th>Stage</Th><Th>Deliverable</Th><Th right>Amount (₹)</Th></tr></thead>
+          <thead><tr className="bg-brand-light text-left text-white"><Th>Payment Stage</Th><Th>End Deliverable</Th><Th right>Amount (₹)</Th></tr></thead>
           <tbody>
             {t.stages.map((s) => (
               <tr key={s.label} className="align-top">
                 <Td><b>{s.label}</b></Td>
-                <Td className="text-[10px] text-neutral-600">{s.desc ?? ""}</Td>
+                <Td className="text-[10px] text-neutral-700">{withBold(s.desc ?? "")}</Td>
                 <Td right>{fmt(s.amount)}</Td>
               </tr>
             ))}
           </tbody>
         </table>
+        <p className="mt-1 px-1 text-[10px] italic text-neutral-600">
+          Each payment is made at the start of its stage. The End Deliverable is what you receive once that stage is complete.
+        </p>
       </div>
 
       {/* Material Specification */}
@@ -98,4 +101,10 @@ function Td({ children, right, colSpan, className = "" }: { children: React.Reac
 }
 function Row({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
   return <tr className={bold ? "font-bold" : ""}><td className="border border-brand-line px-2 py-1">{k}</td><td className="border border-brand-line px-2 py-1 text-right">{v}</td></tr>;
+}
+/** Render "**bold**" segments of a description in bold (used for End Deliverables). */
+function withBold(text: string) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 === 1 ? <b key={i} className="font-semibold text-neutral-900">{part}</b> : <span key={i}>{part}</span>
+  );
 }
