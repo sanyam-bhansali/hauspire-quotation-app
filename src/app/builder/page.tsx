@@ -21,6 +21,13 @@ import PrintFinal from "@/components/PrintFinal";
 const SEED = productMaster as unknown as Product[];
 const DEFAULT_ROOMS = ["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Living, Dining & Foyer", "Other Services"];
 
+/** Distinct room names used by a quotation's lines, in the order they appear. */
+function roomsOf(lines: QuoteLine[]): string[] {
+  const out: string[] = [];
+  for (const l of lines) if (l.room && !out.includes(l.room)) out.push(l.room);
+  return out;
+}
+
 export default function BuilderPage() {
   const designerId = useDesignerId();
   const [client, setClient] = useState("");
@@ -102,6 +109,10 @@ export default function BuilderPage() {
     if (p) {
       setClient(p.client); setMobile(p.mobile); setLocation(p.location);
       setBhk(p.bhk); setLines(p.lines); setBaseLines(p.lines); // opened state = the "Original"
+      // Use the quotation's own rooms (e.g. "Kids Bedroom (Ayona)", "Living Balcony")
+      // instead of the default room set.
+      const opened = roomsOf(p.lines);
+      if (opened.length) { setRoomList(opened); setRoom(opened[0]); }
       if (p.quoteNo) { setQuoteNo(p.quoteNo); setOwnerClient(p.client); setOpenedSaved(true); }
       if (p.stage) setStage(p.stage as Stage);
       const s = p.settings;
@@ -133,21 +144,36 @@ export default function BuilderPage() {
     setBanner(`${bhk} configuration applied — ${list.length} rooms.`);
   }
   function renameRoom() {
-    const from = renameFrom.trim(); const to = renameTo.trim();
-    if (!from || !to) return;
-    setRoomList((rl) => rl.map((r) => (r === from ? to : r)));
+    const from = renameFrom; const to = renameTo.trim();
+    if (!from || !to || to === from) return;
+    // Rename everywhere: the room list (merging if `to` already exists) and every line in it.
+    setRoomList((rl) => {
+      const next = rl.map((r) => (r === from ? to : r));
+      return next.filter((r, i) => next.indexOf(r) === i);
+    });
+    const n = lines.filter((l) => l.room === from).length;
     setLines((ls) => ls.map((l) => (l.room === from ? { ...l, room: to } : l)));
     if (room === from) setRoom(to);
     setRenameFrom(""); setRenameTo("");
-    setBanner(`Renamed “${from}” → “${to}”.`);
+    setBanner(`Renamed “${from}” → “${to}”` + (n ? ` (${n} item${n > 1 ? "s" : ""}).` : "."));
   }
   function addRoom() {
     const n = newRoom.trim();
-    if (!n || roomList.includes(n)) { setNewRoom(""); return; }
+    if (!n || rooms.includes(n)) { setNewRoom(""); return; }
     setRoomList((rl) => [...rl, n]); setRoom(n); setNewRoom("");
   }
 
   const product = useMemo(() => products.find((p) => p.product === productName) ?? products[0], [products, productName]);
+
+  // Live room list: every room used by the quotation's lines (in quotation order —
+  // reflects renames and rooms typed into the table), then any extra rooms added
+  // or configured that have no lines yet.
+  const rooms = useMemo(() => {
+    const out = roomsOf(lines);
+    for (const r of roomList) if (!out.includes(r)) out.push(r);
+    return out;
+  }, [lines, roomList]);
+  const activeRoom = rooms.includes(room) ? room : rooms[0];
 
   // Picking a product loads its standard size / quantity from the Product Master
   // (its First-Quote defaults). Fields the master leaves blank keep their value.
@@ -171,7 +197,7 @@ export default function BuilderPage() {
     const isSqft = product.type === "SqFt";
     const isRft = product.type === "RFT";
     setLines([...lines, {
-      room, product: product.product, wc: product.wc, details: product.details,
+      room: activeRoom, product: product.product, wc: product.wc, details: product.details,
       width: isArea ? w : null, height: isArea ? h : null,
       amount: previewAmt,
       rate: isArea || isSqft || isRft ? product.rate ?? undefined : undefined,
@@ -253,9 +279,12 @@ export default function BuilderPage() {
         </label>
         <button onClick={applyConfig} className="btn-sec w-full">Apply {bhk} configuration</button>
         <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-1">
-          <select className="input" value={renameFrom} onChange={(e) => setRenameFrom(e.target.value)}>
+          <select className="input" value={renameFrom} onChange={(e) => { setRenameFrom(e.target.value); setRenameTo(e.target.value); }}>
             <option value="">Rename room…</option>
-            {roomList.map((r) => <option key={r}>{r}</option>)}
+            {rooms.map((r) => {
+              const n = lines.filter((l) => l.room === r).length;
+              return <option key={r} value={r}>{r}{n ? ` (${n})` : ""}</option>;
+            })}
           </select>
           <input className="input" placeholder="New name" value={renameTo} onChange={(e) => setRenameTo(e.target.value)} />
           <button onClick={renameRoom} className="rounded border border-brand px-2 py-1 text-xs font-semibold text-brand">↺</button>
@@ -266,7 +295,7 @@ export default function BuilderPage() {
         </div>
 
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Add a line</h2>
-        <select className="input" value={room} onChange={(e) => setRoom(e.target.value)}>{roomList.map((r) => <option key={r}>{r}</option>)}</select>
+        <select className="input" value={activeRoom} onChange={(e) => setRoom(e.target.value)}>{rooms.map((r) => <option key={r} value={r}>{r}</option>)}</select>
         <ProductCombo products={products} value={productName} onChange={(name) => { pickedRef.current = true; pickProduct(name); }} />
         <p className="text-[11px] text-neutral-500">{product.wc} · {product.type} {product.type === "Area" || product.type === "SqFt" ? `· ₹${product.rate}/sqft` : product.type === "RFT" ? `· ₹${product.rate}/rft` : `· ₹${product.unit}/unit`}</p>
         {product.type === "Area" ? (
