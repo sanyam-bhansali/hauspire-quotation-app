@@ -21,6 +21,13 @@ import PrintFinal from "@/components/PrintFinal";
 const SEED = productMaster as unknown as Product[];
 const DEFAULT_ROOMS = ["Kitchen", "Master Bedroom", "Kids Bedroom", "Guest Bedroom", "Living, Dining & Foyer", "Other Services"];
 
+/** Reorder lines so rooms follow `order` (stable: items keep their order inside a
+ *  room). Rooms not in `order` keep their relative place at the end. */
+function sortByRooms(lines: QuoteLine[], order: string[]): QuoteLine[] {
+  const rank = (r: string) => { const i = order.indexOf(r); return i < 0 ? order.length : i; };
+  return lines.map((l, i) => ({ l, i })).sort((a, b) => rank(a.l.room) - rank(b.l.room) || a.i - b.i).map((x) => x.l);
+}
+
 /** Distinct room names used by a quotation's lines, in the order they appear. */
 function roomsOf(lines: QuoteLine[]): string[] {
   const out: string[] = [];
@@ -139,7 +146,9 @@ export default function BuilderPage() {
     const list = base.filter((r) => r !== "Other Services");
     if (hasStudy || /villa/i.test(bhk)) list.push("Office / Study");
     list.push("Other Services");
+    for (const r of roomsOf(lines)) if (!list.includes(r)) list.push(r); // keep rooms already in the quote
     setRoomList(list);
+    setLines((ls) => sortByRooms(ls, list));
     if (!list.includes(room)) setRoom(list[0]);
     setBanner(`${bhk} configuration applied — ${list.length} rooms.`);
   }
@@ -165,14 +174,24 @@ export default function BuilderPage() {
 
   const product = useMemo(() => products.find((p) => p.product === productName) ?? products[0], [products, productName]);
 
-  // Live room list: every room used by the quotation's lines (in quotation order —
-  // reflects renames and rooms typed into the table), then any extra rooms added
-  // or configured that have no lines yet.
+  // The ONE room order used by the pickers, the table and the PDF: the room list
+  // (as opened, configured, added and reordered), then any room that only exists
+  // in the lines (e.g. typed into the table). Adding items never reshuffles rooms.
   const rooms = useMemo(() => {
-    const out = roomsOf(lines);
-    for (const r of roomList) if (!out.includes(r)) out.push(r);
+    const out = roomList.filter((r, i) => roomList.indexOf(r) === i);
+    for (const r of roomsOf(lines)) if (!out.includes(r)) out.push(r);
     return out;
   }, [lines, roomList]);
+
+  // Move a room up/down; the quotation's lines follow the new room order.
+  function moveRoom(r: string, dir: -1 | 1) {
+    const i = rooms.indexOf(r), j = i + dir;
+    if (i < 0 || j < 0 || j >= rooms.length) return;
+    const next = rooms.slice();
+    [next[i], next[j]] = [next[j], next[i]];
+    setRoomList(next);
+    setLines((ls) => sortByRooms(ls, next));
+  }
   const activeRoom = rooms.includes(room) ? room : rooms[0];
 
   // Picking a product loads its standard size / quantity from the Product Master
@@ -196,7 +215,7 @@ export default function BuilderPage() {
     const isArea = product.type === "Area";
     const isSqft = product.type === "SqFt";
     const isRft = product.type === "RFT";
-    setLines([...lines, {
+    setLines(sortByRooms([...lines, {
       room: activeRoom, product: product.product, wc: product.wc, details: product.details,
       width: isArea ? w : null, height: isArea ? h : null,
       amount: previewAmt,
@@ -205,7 +224,7 @@ export default function BuilderPage() {
       unitPrice: product.type === "Unit" ? product.unit ?? undefined : undefined,
       sqft: isSqft ? sqft : undefined,
       rft: isRft ? rft : undefined,
-    }]);
+    }], rooms));
   }
   // Client name differs from the client this quote number belongs to?
   const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
@@ -293,6 +312,22 @@ export default function BuilderPage() {
           <input className="input" placeholder="Add custom room" value={newRoom} onChange={(e) => setNewRoom(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addRoom(); }} />
           <button onClick={addRoom} className="rounded border border-brand px-2 py-1 text-xs font-semibold text-brand">＋</button>
         </div>
+        <details className="rounded border border-brand-line" open={lines.length > 0}>
+          <summary className="cursor-pointer select-none px-2 py-1 text-[11.5px] font-semibold text-brand">Room order <span className="font-normal text-neutral-400">— as shown in the quotation &amp; PDF</span></summary>
+          <ul className="divide-y divide-brand-line">
+            {rooms.map((r, i) => {
+              const n = lines.filter((l) => l.room === r).length;
+              return (
+                <li key={r} className="flex items-center gap-1 px-2 py-0.5 text-[12px]">
+                  <span className="w-4 text-right text-[10px] text-neutral-400">{i + 1}</span>
+                  <span className={`flex-1 truncate ${n ? "" : "text-neutral-400"}`} title={r}>{r}{n ? <span className="text-neutral-400"> ({n})</span> : " · empty"}</span>
+                  <button onClick={() => moveRoom(r, -1)} disabled={i === 0} className="rounded px-1.5 text-brand hover:bg-brand-band disabled:opacity-25" title="Move up" aria-label={`Move ${r} up`}>↑</button>
+                  <button onClick={() => moveRoom(r, 1)} disabled={i === rooms.length - 1} className="rounded px-1.5 text-brand hover:bg-brand-band disabled:opacity-25" title="Move down" aria-label={`Move ${r} down`}>↓</button>
+                </li>
+              );
+            })}
+          </ul>
+        </details>
 
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Add a line</h2>
         <select className="input" value={activeRoom} onChange={(e) => setRoom(e.target.value)}>{rooms.map((r) => <option key={r} value={r}>{r}</option>)}</select>
