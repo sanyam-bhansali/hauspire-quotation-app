@@ -17,6 +17,7 @@ export interface QuoteMeta {
   revision?: number;
   stage?: "sales" | "design";
   modularPct?: number;
+  modularOff?: boolean; // "No modular discount": no discount, no Discounted column
   onSpot?: number;
   onSpotLabel?: string;
   feeOn?: boolean;
@@ -33,11 +34,12 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
   useEffect(() => { loadTerms().then(setTerms).catch(() => {}); }, []);
 
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
-  const t = computeTotals(lines, { modularPct: meta.modularPct, onSpot: meta.onSpot, feeOn: meta.feeOn, gstOn: meta.gstOn });
+  const t = computeTotals(lines, { modularPct: meta.modularPct, modularOff: meta.modularOff, onSpot: meta.onSpot, feeOn: meta.feeOn, gstOn: meta.gstOn });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
   // Amount after the modular discount (MO-01 lines only).
   const discOf = (l: QuoteLine) => (l.wc === "MO-01" ? Math.round(l.amount * (1 - t.modularPct)) : l.amount);
   const roomDisc = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + discOf(l), 0);
+  const showDisc = !t.modularOff;
   const date = quoteDateLabel(meta.date);
   const quoteNo = meta.quoteNo || "Draft";
 
@@ -66,7 +68,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
               <thead>
                 <tr className="bg-brand-light text-left text-[11px] text-white">
                   <Th>S.No.</Th><Th>Product</Th><Th>Work Code</Th><Th>Details</Th>
-                  <Th right>Units</Th><Th right>Width(mm)</Th><Th right>Height(mm)</Th><Th right>Amount (₹)</Th><Th right>Discounted (₹)</Th>
+                  <Th right>Units</Th><Th right>Width(mm)</Th><Th right>Height(mm)</Th><Th right>Amount (₹)</Th>{showDisc && <Th right>Discounted (₹)</Th>}
                 </tr>
               </thead>
               <tbody>
@@ -79,14 +81,14 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
                     <Td right>{l.unitPrice != null ? (l.qty ?? 1) : ""}</Td>
                     <Td right>{l.width ?? ""}</Td>
                     <Td right>{l.height ?? ""}</Td>
-                    <Td right className={l.wc === "MO-01" ? "text-neutral-400 line-through" : ""}>{fmt(l.amount)}</Td>
-                    <Td right className={l.wc === "MO-01" ? "font-semibold text-green-700" : "text-neutral-600"}>{fmt(discOf(l))}</Td>
+                    <Td right className={showDisc && l.wc === "MO-01" ? "text-neutral-400 line-through" : ""}>{fmt(l.amount)}</Td>
+                    {showDisc && <Td right className={l.wc === "MO-01" ? "font-semibold text-green-700" : "text-neutral-600"}>{fmt(discOf(l))}</Td>}
                   </tr>
                 ))}
                 <tr className="bg-brand-band font-bold">
                   <Td colSpan={7}>{room} (Sub-total)</Td>
                   <Td right>{fmt(roomTotal(room))}</Td>
-                  <Td right>{fmt(roomDisc(room))}</Td>
+                  {showDisc && <Td right>{fmt(roomDisc(room))}</Td>}
                 </tr>
               </tbody>
             </table>
@@ -94,7 +96,7 @@ export default function PrintDocument({ meta, lines }: { meta: QuoteMeta; lines:
         ))}
 
         {/* Summary by room, totals, payment stages, material spec */}
-        <QuoteSummary lines={lines} modularPct={meta.modularPct} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} feeOn={meta.feeOn} gstOn={meta.gstOn} />
+        <QuoteSummary lines={lines} modularPct={meta.modularPct} modularOff={meta.modularOff} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} feeOn={meta.feeOn} gstOn={meta.gstOn} />
       </section>
 
       {/* Terms & Conditions — editable, branded page */}

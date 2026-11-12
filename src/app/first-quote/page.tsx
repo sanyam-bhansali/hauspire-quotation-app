@@ -47,6 +47,7 @@ export default function FirstQuotePage() {
   const [fcRate, setFcRate] = useState(DEFAULT_FC_RATE);
   const [roomDims, setRoomDims] = useState<Record<string, { w: number; h: number }>>({});
   const [modularPct, setModularPct] = useState(0.15);
+  const [modularOff, setModularOff] = useState(false); // "No modular discount"
   const [onSpot, setOnSpot] = useState(0);
   const [onSpotLabel, setOnSpotLabel] = useState("On-Spot Discount");
   const [lines, setLines] = useState<QuoteLine[]>([]);
@@ -223,7 +224,7 @@ export default function FirstQuotePage() {
 
   async function save(): Promise<string> {
     if (!lines.length) return "";
-    const tpv = computeTotals(lines, { modularPct, onSpot }).tpv;
+    const tpv = computeTotals(lines, { modularPct, modularOff, onSpot }).tpv;
     try {
       // Reuse this client's number on repeat saves (Save, Save & PDF, double-clicks)
       // instead of taking a new one each time. A different client name = new number.
@@ -234,7 +235,7 @@ export default function FirstQuotePage() {
         no = await fqPending.current.p;
         fqNo.current = { client: who, no };
       }
-      await saveStage({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, stage: "sales", settings: { modularPct, onSpot, onSpotLabel, quoteDate } });
+      await saveStage({ designer_id: designerId, client_name: client || "—", mobile, location, bhk, kitchen_run: run, lines, tpv, quote_no: no, stage: "sales", settings: { modularPct, modularOff, onSpot, onSpotLabel, quoteDate } });
       const newOnes = await autoProposeNewProducts(lines, productsArr, designerId);
       setStatus(`Saved ✓  ${no} · Sales Final` + (newOnes.length ? ` · ${newOnes.length} new item(s) sent for approval` : ""));
       return no;
@@ -247,11 +248,11 @@ export default function FirstQuotePage() {
     // overrides that record instead of creating another one.
     const who = (client || "").trim().toLowerCase();
     const savedNo = fqNo.current && fqNo.current.client === who ? fqNo.current.no : undefined;
-    setPendingQuote({ client, mobile, location, bhk, kitchenRun: run, lines, quoteNo: savedNo, stage: savedNo ? "sales" : undefined, settings: { modularPct, onSpot, onSpotLabel, quoteDate } });
+    setPendingQuote({ client, mobile, location, bhk, kitchenRun: run, lines, quoteNo: savedNo, stage: savedNo ? "sales" : undefined, settings: { modularPct, modularOff, onSpot, onSpotLabel, quoteDate } });
     router.push("/builder");
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, date: quoteDate };
+  const meta = { client, mobile, location, bhk, modularPct, modularOff, onSpot, onSpotLabel, date: quoteDate };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[330px_1fr]">
@@ -321,6 +322,11 @@ export default function FirstQuotePage() {
         </Section>
         <Section title="5 · Discount (optional)">
           <DiscountPicker label={onSpotLabel} amount={onSpot} onLabel={setOnSpotLabel} onAmount={setOnSpot} />
+          <label className="flex cursor-pointer items-center gap-2 text-[12.5px] font-semibold">
+            <input type="checkbox" checked={modularOff} onChange={(e) => setModularOff(e.target.checked)} />
+            No modular discount
+          </label>
+          <p className="text-[10.5px] text-neutral-400">{modularOff ? "Modular discount removed: no struck-through amounts, no Discounted column and no discount line on the quote or PDF." : `Modular discount is ${Math.round(modularPct * 100)}% (change it in the totals). Tick to remove it completely from this quotation and its PDF.`}</p>
         </Section>
         <button onClick={() => build()} className="btn">Build first quotation ▸</button>
         <button onClick={save} className="btn-sec">Save</button>
@@ -389,11 +395,11 @@ export default function FirstQuotePage() {
         ) : tab === "quote" ? (
           <>
             <div className="mb-3 flex items-end justify-between border-b-2 border-brand pb-2">
-              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">First-draft quotation · {inr(computeTotals(lines, { modularPct, onSpot }).tpv)}</div></div>
+              <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">First-draft quotation · {inr(computeTotals(lines, { modularPct, modularOff, onSpot }).tpv)}</div></div>
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
-            <QuoteTable lines={lines} onChange={setLines} products={productsArr} modularPct={modularPct} />
-            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} />
+            <QuoteTable lines={lines} onChange={setLines} products={productsArr} modularPct={modularPct} modularOff={modularOff} />
+            <Totals lines={lines} modularPct={modularPct} modularOff={modularOff} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} />
           </>
         ) : tab === "plan" ? (
           <Plan2D lines={lines} />

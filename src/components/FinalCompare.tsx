@@ -12,12 +12,12 @@ const TAG: Record<ChangeStatus, { t: string; c: string } | null> = {
 };
 
 export default function FinalCompare({
-  original, current, modularPct, onSpot, feeOn, gstOn,
-}: { original: QuoteLine[]; current: QuoteLine[]; modularPct: number; onSpot: number; feeOn?: boolean; gstOn?: boolean }) {
+  original, current, modularPct, modularOff, onSpot, feeOn, gstOn,
+}: { original: QuoteLine[]; current: QuoteLine[]; modularPct: number; modularOff?: boolean; onSpot: number; feeOn?: boolean; gstOn?: boolean }) {
   const rows = compareLines(original, current);
   const rooms = Array.from(new Set(rows.map((r) => r.room)));
-  const ot = computeTotals(original, { modularPct, onSpot, feeOn, gstOn });
-  const ft = computeTotals(current, { modularPct, onSpot, feeOn, gstOn });
+  const ot = computeTotals(original, { modularPct, modularOff, onSpot, feeOn, gstOn });
+  const ft = computeTotals(current, { modularPct, modularOff, onSpot, feeOn, gstOn });
   const delta = ft.tpv - ot.tpv;
 
   return (

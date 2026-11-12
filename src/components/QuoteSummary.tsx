@@ -5,9 +5,9 @@ import { computeTotals, inr, FEE_RATE, GST_RATE } from "@/lib/pricing";
 import { MATERIAL_SPEC } from "@/lib/boilerplate";
 import RoomDonut from "./RoomDonut";
 
-export default function QuoteSummary({ lines, modularPct, onSpot, onSpotLabel, feeOn, gstOn }: { lines: QuoteLine[]; modularPct?: number; onSpot?: number; onSpotLabel?: string; feeOn?: boolean; gstOn?: boolean }) {
+export default function QuoteSummary({ lines, modularPct, modularOff, onSpot, onSpotLabel, feeOn, gstOn }: { lines: QuoteLine[]; modularPct?: number; modularOff?: boolean; onSpot?: number; onSpotLabel?: string; feeOn?: boolean; gstOn?: boolean }) {
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
-  const t = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn });
+  const t = computeTotals(lines, { modularPct, modularOff, onSpot, feeOn, gstOn });
   const roomTotal = (r: string) => lines.filter((l) => l.room === r).reduce((s, l) => s + l.amount, 0);
   const fmt = (n: number) => Math.round(n).toLocaleString("en-IN");
 
@@ -36,7 +36,7 @@ export default function QuoteSummary({ lines, modularPct, onSpot, onSpotLabel, f
             <Row k="Sum-Total (NM-01)  ·  Non-Modular" v={fmt(t.nm)} />
             {t.feeOn && <Row k={`Professional fees (${Math.round(FEE_RATE * 100)}%)`} v={fmt(t.fee)} />}
             <Row k="Sub-Total" v={fmt(t.subTotal)} bold />
-            <Row k={`Discount on Modular (${Math.round(t.modularPct * 100)}%)`} v={fmt(t.discount)} />
+            {!t.modularOff && <Row k={`Discount on Modular (${Math.round(t.modularPct * 100)}%)`} v={fmt(t.discount)} />}
             {t.onSpot ? <Row k={`${onSpotLabel || "On-Spot Discount"} (₹)`} v={fmt(t.onSpot)} /> : null}
             {t.gstOn ? (
               <>

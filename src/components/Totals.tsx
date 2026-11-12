@@ -5,6 +5,7 @@ import { computeTotals, inr, FEE_RATE, GST_RATE } from "@/lib/pricing";
 export default function Totals({
   lines,
   modularPct,
+  modularOff = false,
   onSpot,
   onSpotLabel = "On-Spot Discount",
   onModularPct,
@@ -15,6 +16,7 @@ export default function Totals({
 }: {
   lines: QuoteLine[];
   modularPct: number; // fraction, e.g. 0.15
+  modularOff?: boolean;
   onSpot: number;
   onSpotLabel?: string;
   onModularPct: (v: number) => void;
@@ -25,7 +27,7 @@ export default function Totals({
   /** When given, a tick-box lets the user add GST. */
   onGstOn?: (v: boolean) => void;
 }) {
-  const t = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn });
+  const t = computeTotals(lines, { modularPct, modularOff, onSpot, feeOn, gstOn });
   const feePct = Math.round(FEE_RATE * 100);
   const gstPct = Math.round(GST_RATE * 100);
   const Row = ({ l, v, cls = "" }: { l: string; v: number; cls?: string }) => (
@@ -55,6 +57,12 @@ export default function Totals({
             </tr>
           )}
           <Row l="Sub-Total" v={t.subTotal} />
+          {t.modularOff ? (
+            <tr className="no-print text-neutral-400">
+              <td className="border border-brand-line px-2 py-1 font-medium">Discount on Modular — removed (not shown on the PDF)</td>
+              <td className="border border-brand-line px-2 py-1 text-right">—</td>
+            </tr>
+          ) : (
           <tr className="text-red-700">
             <td className="border border-brand-line px-2 py-1 font-medium">
               Discount on Modular
@@ -68,6 +76,7 @@ export default function Totals({
             </td>
             <td className="border border-brand-line px-2 py-1 text-right">− {inr(t.discount)}</td>
           </tr>
+          )}
           {t.onSpot ? (
             <tr className="text-red-700">
               <td className="border border-brand-line px-2 py-1 font-medium">{onSpotLabel}</td>
