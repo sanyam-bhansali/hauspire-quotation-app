@@ -56,6 +56,7 @@ export default function BuilderPage() {
   const [baseLines, setBaseLines] = useState<QuoteLine[]>([]); // "Original" for the Final comparison
   const [tab, setTab] = useState<"quote" | "final" | "pdf" | "finalpdf">("quote");
   const [modularPct, setModularPct] = useState(0.15);
+  const [modularOff, setModularOff] = useState(false); // "No modular discount"
   const [onSpot, setOnSpot] = useState(0);
   const [onSpotLabel, setOnSpotLabel] = useState("On-Spot Discount");
   const noRef = useRef("");                                  // quote number once assigned
@@ -125,6 +126,7 @@ export default function BuilderPage() {
       const s = p.settings;
       if (s) {
         if (s.modularPct != null) setModularPct(s.modularPct);
+        setModularOff(!!s.modularOff);
         if (s.onSpot != null) setOnSpot(s.onSpot);
         if (s.onSpotLabel) setOnSpotLabel(s.onSpotLabel);
         if (s.feeOn != null) setFeeOn(s.feeOn);
@@ -235,7 +237,7 @@ export default function BuilderPage() {
     if (!client.trim()) { setBanner("Enter a Client name before saving."); return ""; }
     setStage(saveStageArg);
     // tpv stays the pre-GST project value (what later comparisons and the vendor app use).
-    const tpv = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn }).tpv;
+    const tpv = computeTotals(lines, { modularPct, modularOff, onSpot, feeOn, gstOn }).tpv;
     try {
       // A different client name than the one this quote belongs to = a new
       // quotation for a new client (the opened one is used as a template).
@@ -250,7 +252,7 @@ export default function BuilderPage() {
       setOwnerClient(client);
       await saveStage({
         designer_id: designerId, client_name: client, mobile, location, bhk, kitchen_run: 0, lines, tpv, quote_no: no, stage: saveStageArg,
-        settings: { modularPct, onSpot, onSpotLabel, feeOn, gstOn, quoteDate },
+        settings: { modularPct, modularOff, onSpot, onSpotLabel, feeOn, gstOn, quoteDate },
       });
       // Auto-collect any line whose product isn't in the master → pending approval.
       const newOnes = await autoProposeNewProducts(lines, products, designerId);
@@ -264,8 +266,8 @@ export default function BuilderPage() {
     } catch { setBanner("Save failed — configure Supabase (or it saved locally in this browser)."); return quoteNo; }
   }
 
-  const meta = { client, mobile, location, bhk, modularPct, onSpot, onSpotLabel, quoteNo, stage, feeOn, gstOn, date: quoteDate };
-  const shownTotal = (() => { const t = computeTotals(lines, { modularPct, onSpot, feeOn, gstOn }); return t.gstOn ? t.grandTotal : t.tpv; })();
+  const meta = { client, mobile, location, bhk, modularPct, modularOff, onSpot, onSpotLabel, quoteNo, stage, feeOn, gstOn, date: quoteDate };
+  const shownTotal = (() => { const t = computeTotals(lines, { modularPct, modularOff, onSpot, feeOn, gstOn }); return t.gstOn ? t.grandTotal : t.tpv; })();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr]">
@@ -369,6 +371,11 @@ export default function BuilderPage() {
 
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Discount</h2>
         <DiscountPicker label={onSpotLabel} amount={onSpot} onLabel={setOnSpotLabel} onAmount={setOnSpot} />
+        <label className="flex cursor-pointer items-center gap-2 text-[12.5px] font-semibold">
+          <input type="checkbox" checked={modularOff} onChange={(e) => setModularOff(e.target.checked)} />
+          No modular discount
+        </label>
+        <p className="text-[10.5px] text-neutral-400">{modularOff ? "Modular discount removed: no struck-through amounts, no Discounted column and no discount line on the quote or PDF." : `Modular discount is ${Math.round(modularPct * 100)}% (change it in the totals). Tick to remove it completely from this quotation and its PDF.`}</p>
 
         <h2 className="mt-3 text-xs font-bold uppercase tracking-wide text-brand-light">Fees &amp; Tax</h2>
         <div className="space-y-1.5 text-[12.5px]">
@@ -421,8 +428,8 @@ export default function BuilderPage() {
               <div><div className="text-2xl font-extrabold text-brand">HAUSPIRE</div><div className="text-xs text-neutral-500">Quotation · {inr(shownTotal)}{gstOn ? " incl. GST" : ""}</div></div>
               <div className="text-right text-xs"><b>{client || "—"}</b><br />{location} · {bhk}</div>
             </div>
-            <QuoteTable lines={lines} onChange={setLines} products={products} modularPct={modularPct} />
-            <Totals lines={lines} modularPct={modularPct} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} feeOn={feeOn} gstOn={gstOn} onFeeOn={setFeeOn} onGstOn={setGstOn} />
+            <QuoteTable lines={lines} onChange={setLines} products={products} modularPct={modularPct} modularOff={modularOff} />
+            <Totals lines={lines} modularPct={modularPct} modularOff={modularOff} onSpot={onSpot} onSpotLabel={onSpotLabel} onModularPct={setModularPct} feeOn={feeOn} gstOn={gstOn} onFeeOn={setFeeOn} onGstOn={setGstOn} />
           </>
         ) : tab === "final" ? (
           <>
@@ -430,7 +437,7 @@ export default function BuilderPage() {
               <button onClick={() => setBaseLines(lines.map((l) => ({ ...l })))} className="rounded border border-brand px-2 py-1 text-[11px] font-semibold text-brand">Snapshot current as “Original”</button>
               <span className="text-[11px] text-neutral-500">Original = {baseLines.length} line(s). Open a saved quote or snapshot here, then edit lines and compare.</span>
             </div>
-            <FinalCompare original={baseLines} current={lines} modularPct={modularPct} onSpot={onSpot} feeOn={feeOn} gstOn={gstOn} />
+            <FinalCompare original={baseLines} current={lines} modularPct={modularPct} modularOff={modularOff} onSpot={onSpot} feeOn={feeOn} gstOn={gstOn} />
           </>
         ) : tab === "finalpdf" ? (
           <PrintFinal meta={meta} original={baseLines} current={lines} />

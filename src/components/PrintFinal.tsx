@@ -23,7 +23,7 @@ export default function PrintFinal({ meta, original, current }: { meta: QuoteMet
   const rows = compareLines(original, current);
   const rooms = Array.from(new Set(rows.map((r) => r.room)));
   // Both sides use the same fee/GST choice so the change reflects the work only.
-  const opts = { modularPct: meta.modularPct, onSpot: meta.onSpot, feeOn: meta.feeOn, gstOn: meta.gstOn };
+  const opts = { modularPct: meta.modularPct, modularOff: meta.modularOff, onSpot: meta.onSpot, feeOn: meta.feeOn, gstOn: meta.gstOn };
   const ot = computeTotals(original, opts);
   const ft = computeTotals(current, opts);
   const delta = ft.tpv - ot.tpv;
@@ -100,7 +100,7 @@ export default function PrintFinal({ meta, original, current }: { meta: QuoteMet
         </table>
 
         {/* Full final summary: room split + donut, totals, payment stages, materials */}
-        <QuoteSummary lines={current} modularPct={meta.modularPct} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} feeOn={meta.feeOn} gstOn={meta.gstOn} />
+        <QuoteSummary lines={current} modularPct={meta.modularPct} modularOff={meta.modularOff} onSpot={meta.onSpot} onSpotLabel={meta.onSpotLabel} feeOn={meta.feeOn} gstOn={meta.gstOn} />
       </section>
 
       <section className="brk-before px-2 pt-6">

@@ -81,6 +81,7 @@ export interface Totals {
   discount: number;
   onSpot: number;
   modularPct: number;
+  modularOff: boolean; // "No modular discount" ticked: no discount, shown nowhere
   tpv: number;
   stages: { label: string; amount: number; desc?: string }[];
   feeOn: boolean;     // professional fee included?
@@ -92,6 +93,7 @@ export interface Totals {
 /** Per-quotation pricing choices, saved with the quote so they reopen as set. */
 export interface QuoteSettings {
   modularPct?: number;
+  modularOff?: boolean; // "No modular discount": removes it from the quote and PDF
   onSpot?: number;
   onSpotLabel?: string;
   feeOn?: boolean;

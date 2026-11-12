@@ -63,13 +63,15 @@ export const GST_RATE = 0.18;
 
 export interface DiscountOpts {
   modularPct?: number; // e.g. 0.15 for 15%
+  modularOff?: boolean; // "No modular discount" ticked: discount is 0 and hidden everywhere
   onSpot?: number; // flat ₹ off
   feeOn?: boolean; // include the 7% professional fee (default: on)
   gstOn?: boolean; // add 18% GST on the Total Project Value (default: off)
 }
 
 export function computeTotals(lines: QuoteLine[], opts: DiscountOpts = {}): Totals {
-  const modularPct = opts.modularPct ?? MODULAR_DISCOUNT;
+  const modularOff = opts.modularOff ?? false;
+  const modularPct = modularOff ? 0 : opts.modularPct ?? MODULAR_DISCOUNT;
   const onSpot = opts.onSpot ?? 0;
   const feeOn = opts.feeOn ?? true;
   const gstOn = opts.gstOn ?? false;
@@ -98,7 +100,7 @@ export function computeTotals(lines: QuoteLine[], opts: DiscountOpts = {}): Tota
     { label: "Material Dispatch (40%)", amount: Math.round(after * 0.4), desc: "Your furniture is **delivered to your home and carpentry installation begins**. Décor items, glass and finishing materials are ordered." },
     { label: "Project Handover (5%)", amount: Math.round(after * 0.05), desc: "Once this payment is received, we **resolve the final snag list** and **hand over your home**, ready to move in." },
   ];
-  return { mo, nm, fee, subTotal, discount, onSpot, modularPct, tpv, stages, feeOn, gstOn, gst, grandTotal };
+  return { mo, nm, fee, subTotal, discount, onSpot, modularPct, modularOff, tpv, stages, feeOn, gstOn, gst, grandTotal };
 }
 
 export function inr(n: number): string {

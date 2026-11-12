@@ -12,17 +12,20 @@ export default function QuoteTable({
   onChange,
   products = [],
   modularPct = 0.15,
+  modularOff = false,
 }: {
   lines: QuoteLine[];
   onChange: (lines: QuoteLine[]) => void;
   products?: Product[];
   modularPct?: number;
+  modularOff?: boolean; // "No modular discount": hide the Discounted column
 }) {
   const rooms = Array.from(new Set(lines.map((l) => l.room)));
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
   // Amount after the modular discount: MO-01 lines get the discount, NM-01 don't.
-  const discountedOf = (l: QuoteLine) => (l.wc === "MO-01" ? Math.round(l.amount * (1 - modularPct)) : l.amount);
+  const discountedOf = (l: QuoteLine) => (l.wc === "MO-01" && !modularOff ? Math.round(l.amount * (1 - modularPct)) : l.amount);
+  const cols = modularOff ? 8 : 9;
 
   // Drag-and-drop reorder within the same room.
   function drop(target: number) {
@@ -119,7 +122,7 @@ export default function QuoteTable({
           return (
             <Fragment key={room}>
               <tr className="bg-brand font-bold text-white">
-                <td colSpan={9} className="border border-brand-line px-2 py-1">{room}</td>
+                <td colSpan={cols} className="border border-brand-line px-2 py-1">{room}</td>
               </tr>
               <tr className="bg-brand-light text-left text-white">
                 <th className="border border-brand-line px-2 py-1">#</th>
@@ -130,7 +133,7 @@ export default function QuoteTable({
                 <th className="border border-brand-line px-2 py-1 text-right">W</th>
                 <th className="border border-brand-line px-2 py-1 text-right">H</th>
                 <th className="border border-brand-line px-2 py-1 text-right">Amount</th>
-                <th className="border border-brand-line px-2 py-1 text-right">Discounted</th>
+                {!modularOff && <th className="border border-brand-line px-2 py-1 text-right">Discounted</th>}
               </tr>
               {items.map((x, n) => (
                 <tr
@@ -194,14 +197,19 @@ export default function QuoteTable({
                     <input type="number" className="cell w-16 text-right" value={x.l.height ?? ""} onChange={(e) => setField(x.i, { height: numOrNull(e.target.value) })} />
                   </td>
                   <td className="border border-brand-line px-1 py-1 text-right">
-                    <input type="number" className={`cell w-24 text-right ${x.l.wc === "MO-01" ? "text-neutral-400 line-through" : ""}`} value={x.l.amount} onChange={(e) => setField(x.i, { amount: Number(e.target.value) || 0 })} />
+                    <div className="flex items-center justify-end gap-1">
+                      <input type="number" className={`cell w-24 text-right ${x.l.wc === "MO-01" && !modularOff ? "text-neutral-400 line-through" : ""}`} value={x.l.amount} onChange={(e) => setField(x.i, { amount: Number(e.target.value) || 0 })} />
+                      {modularOff && <button onClick={() => remove(x.i)} className="no-print text-red-500" title="Remove line">✕</button>}
+                    </div>
                   </td>
+                  {!modularOff && (
                   <td className="border border-brand-line px-1 py-1 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <span className={x.l.wc === "MO-01" ? "font-semibold text-green-600" : "text-neutral-500"}>{inr(discountedOf(x.l))}</span>
                       <button onClick={() => remove(x.i)} className="no-print text-red-500" title="Remove line">✕</button>
                     </div>
                   </td>
+                  )}
                 </tr>
               ))}
               <tr className="bg-brand-band font-bold">
@@ -210,7 +218,7 @@ export default function QuoteTable({
                   <button onClick={() => addLine(room)} className="no-print ml-2 rounded border border-brand px-1.5 text-[11px] font-semibold text-brand">+ add item</button>
                 </td>
                 <td className="border border-brand-line px-2 py-1 text-right">{inr(sub)}</td>
-                <td className="border border-brand-line px-2 py-1 text-right">{inr(subDisc)}</td>
+                {!modularOff && <td className="border border-brand-line px-2 py-1 text-right">{inr(subDisc)}</td>}
               </tr>
             </Fragment>
           );
